@@ -1,0 +1,92 @@
+{
+  "queries": [],
+  "params": [],
+  "pages": [
+    {
+      "page_width": 18,
+      "page_height": 29.7,
+      "page_margin_left": 2,
+      "page_margin_right": 1,
+      "page_margin_top": 1,
+      "page_margin_bottom": 1,
+      "columns": [
+        {
+          "widths": [
+            "50%",
+            "2",
+            "0",
+            "4"
+          ],
+          "rows": [
+            {
+              "heights": [
+                "0-0",
+                "0-0",
+                "0-0"
+              ],
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "group": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "cells": {
+                "0,0": {
+                  "data": "row 1"
+                },
+                "1,0": {
+                  "style": {
+                    "text-align": "center",
+                    "border-width": "2 2 2 5"
+                  },
+                  "data": "row 2 <b>row</b> 2 <br>row 2 row 2 row 2 row 2 row 2 row 2 row 2 row 2 row 2 row 2 " 
+                },
+                "1,1": {
+                  "data": "span <b>ce</b>ll",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "font-size": "8pt",
+                    "text-align": "center",
+                    "vertical-align": "middle"
+                  }
+                },
+                "1,3": {
+                  "data": "ddddd",
+                  "rowspan": 2,
+                  "colspan": 1,
+                  "style": {
+                    "font-size": "8pt",
+                    "text-align": "center",
+                    "vertical-align": "middle"
+                  }
+                },
+                "2,1": {
+                  "data": "right <u>alig</u>nment",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "font-size": "10pt",
+                    "text-align": "right",
+                    "vertical-align": "top"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "style": {
+    "font-family": "Arial",
+    "font-size": "13pt",
+    "font-weight": "normal",
+    "border-width": "1 1 1 1",
+    "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+    "text-align": "left",
+    "vertical-align": "top"
+  }
+}
