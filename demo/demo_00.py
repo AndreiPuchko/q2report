@@ -17,7 +17,7 @@ def demo():
             }
         )
 
-    demo_data1 = {
+    demo_data = {
         "cursor": [
             {"data1": "XyDlguzuz", "num1": "5", "grp": 0, "tom": 1},
             {"data1": "XInjlysVB", "num1": "4", "grp": 0, "tom": 1},
@@ -32,14 +32,15 @@ def demo():
         ]
     }
 
-    app = Q2Report()
-    app.load("test_data/report_01.json")
-    # app.load("test_data/report_02.json")
+    report = Q2Report()
+    # app.load("test_data/report_01.json")
+    report.load("test_data/report_02.json")
+    report.params["p1"] = " <b>123</b> "
     # app.load("test_data/report_03.json")
     # app.run(data=demo_data)
 
-    # app.run("tmp/repo.html", data=demo_data)
-    app.run("tmp/repo.xlsx", data=demo_data)
+    report.run("tmp/repo.html", data=demo_data)
+    # app.run("tmp/repo.xlsx", data=demo_data)
     # app.run("tmp/repo.docx", data=demo_data)
 
 

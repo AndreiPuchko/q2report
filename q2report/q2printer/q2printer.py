@@ -36,6 +36,8 @@ class Q2Printer:
         self.open_output_file()
 
     def open_output_file(self):
+        if not os.path.isdir(os.path.dirname(self.output_file)):
+            os.mkdir(os.path.dirname(self.output_file))
         self._OF = open(self.output_file, "w", encoding="utf8")
 
     def render_rows_section(self, rows, style, outline_level):

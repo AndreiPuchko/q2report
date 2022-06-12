@@ -9,7 +9,7 @@
       "sql": "select 3333\nunion all\nselect 3333"
     }
   ],
-  "params": [],
+  "params": {},
   "pages": [
     {
       "page_width": "21.00",
@@ -215,7 +215,7 @@
                 ],
                 "cells": {
                   "0,0": {
-                    "data": "Header 1"
+                    "data": "{p1}Header 1"
                   },
                   "0,1": {
                     "data": "Header 2",
@@ -304,7 +304,7 @@
               ],
               "cells": {
                 "0,0": {
-                  "data": "QQQQQQQQQQQQQQQ",
+                  "data": "QQQQQQQ{p1}QQQQQQQQ",
                   "style": {
                     "vertical-align": "middle",
                     "text-align": "right"
