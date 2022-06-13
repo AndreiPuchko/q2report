@@ -11,6 +11,8 @@ import json
 from copy import deepcopy
 import re
 import os
+
+from attr import has
 from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num
 
@@ -100,7 +102,7 @@ class Q2Report:
         row_style.update(rows_section.get("style", {}))
         self.printer.render_rows_section(rows_section, row_style, self.outline_level)
 
-    def run(self, output_file="tmp/repo.html", output_type=None, data={}):
+    def run(self, output_file="tmp/repo.html", output_type=None, data={}, open_output_file=True):
         self.printer: Q2Printer = get_printer(output_file, output_type)
         report_style = dict(self.report_content["style"])
 
@@ -121,19 +123,22 @@ class Q2Report:
                             continue
                         # table rows
                         self.aggregators_reset(rows_section)
-                        self.data["_row_count"] = len(data_set)
+                        if hasattr(data_set, "len"):
+                            self.data["_row_count"] = len(data_set)
 
                         self.render_table_header(rows_section, column_style)
-                        for data_set_row_number in range(len(data_set)):
+                        data_set_row_number = 0
+                        for data_row in data_set:
                             self.data["_row_number"] = data_set_row_number + 1
-                            self.data.update(data_set[data_set_row_number])
+                            self.data.update(data_row)
 
                             self.render_table_groups(rows_section, column_style)
                             self.aggregators_calc()
                             self.outline_level += 1
                             self.render_rows_section(rows_section, column_style)
                             self.outline_level -= 1
-                            self.prevrowdata.update(data_set[data_set_row_number])
+                            self.prevrowdata.update(data_row)
+                            data_set_row_number += 1
 
                         self.render_table_groups(rows_section, column_style, True)
                         self.render_table_footer(rows_section, column_style)
@@ -141,7 +146,8 @@ class Q2Report:
                         self.render_rows_section(rows_section, column_style)
 
         self.printer.save()
-        self.printer.show()
+        if open_output_file:
+            self.printer.show()
 
     def render_table_header(self, rows_section, column_style):
         if rows_section.get("table_header"):
@@ -187,9 +193,11 @@ class Q2Report:
             self.render_rows_section(rows_section["table_footer"], column_style)
 
     def aggregators_detect(self, rows_section, aggregator):
+        if not rows_section:
+            return
         formulas = []
         for cell_data in rows_section.get("cells").items():
-            cell_data = cell_data[1].get("data")
+            cell_data = cell_data[1].get("data", "")
             for x in re_calc.findall(cell_data):
                 f = x[1:-1]
                 if f not in formulas:
@@ -204,7 +212,7 @@ class Q2Report:
                     }
 
         aggregator["_row_number"] = {
-            "a": mode,  # aggregate function - sum, avg and etc
+            "a": "sum",  # aggregate function - sum, avg and etc
             "f": "",  # cell formula
             "v": num(0),  # initial value
         }

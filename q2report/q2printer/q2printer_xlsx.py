@@ -390,8 +390,9 @@ collapsed="false"
             border_width += border_width
         border = []
         for index, side in enumerate(("top", "right", "bottom", "left")):
-            bw = self.get_border_width(border_width[index])
-            border.append(f'<{side} style="{bw}"><color auto="1"/></{side}>')
+            if int_(border_width[index]):
+                bw = self.get_border_width(border_width[index])
+                border.append(f'<{side} style="{bw}"><color auto="1"/></{side}>')
         border.append("<diagonal/>")
 
         borders = "\n".join(border)

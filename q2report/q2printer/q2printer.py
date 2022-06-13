@@ -8,6 +8,8 @@ if __name__ == "__main__":
 
 import os
 from q2report.q2utils import num
+import sys
+import subprocess
 
 
 def get_printer(output_file, output_type=None):
@@ -91,4 +93,9 @@ class Q2Printer:
 
     def show(self):
         if os.path.isfile(self.output_file):
-            os.system(f"open  {self.output_file}")
+            if sys.platform[:3] == "win":
+                os.startfile(self.output_file)
+            # elif sys.platform == 'darwin':
+            #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
+            else:
+                subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)

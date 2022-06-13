@@ -53,6 +53,7 @@ class Q2PrinterHtml(Q2Printer):
         super().reset_columns(widths)
         self.close_html_table()
         self.html.append('<table style="border-collapse:collapse;">')
+        self.html.append("<thead></thead>")
         self.html.append("<colgroup>")
         for col in self._cm_columns_widths:
             self.html.append(f'\t<col span="1" style="width: {col*10}mm;">')
@@ -103,6 +104,8 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("\t</tr>")
         if rows["role"] == "table_header":
             self.html.append("\t</thead>")
+        if rows["role"] == "table_footer":
+            self.html.append("<thead></thead>")
 
     def show(self):
         webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")
