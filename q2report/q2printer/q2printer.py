@@ -38,8 +38,8 @@ class Q2Printer:
         self.open_output_file()
 
     def open_output_file(self):
-        if not os.path.isdir(os.path.dirname(self.output_file)):
-            os.mkdir(os.path.dirname(self.output_file))
+        # if not os.path.isdir(os.path.dirname(self.output_file)):
+        #     os.mkdir(os.path.dirname(self.output_file))
         self._OF = open(self.output_file, "w", encoding="utf8")
 
     def render_rows_section(self, rows, style, outline_level):
@@ -86,7 +86,7 @@ class Q2Printer:
                 if prc == 0:
                     prc = (num(100) - sum(_procent_columns_width)) / _float_columns_count
                 self._cm_columns_widths[x] = round(_procent_width * prc, 2)
-        self._cm_columns_widths = [round(x) for x in self._cm_columns_widths]
+        self._cm_columns_widths = [round(x, 2) for x in self._cm_columns_widths]
 
     def save(self):
         self._OF.close()

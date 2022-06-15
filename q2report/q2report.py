@@ -12,7 +12,6 @@ from copy import deepcopy
 import re
 import os
 
-from attr import has
 from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num
 
