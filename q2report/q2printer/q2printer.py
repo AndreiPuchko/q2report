@@ -94,7 +94,7 @@ class Q2Printer:
     def show(self):
         if os.path.isfile(self.output_file):
             if sys.platform[:3] == "win":
-                os.startfile(self.output_file)
+                os.startfile(self.output_file.replace("/", "\\"))
             # elif sys.platform == 'darwin':
             #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
             else:

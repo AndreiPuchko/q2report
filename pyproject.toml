@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "q2report"
-version = "0.1.3"
+version = "0.1.16"
 description = ""
 authors = ["Andrei Puchko <andrei.puchko@gmx.de>"]
 readme = "README.md"
