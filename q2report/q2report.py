@@ -13,7 +13,7 @@ import re
 import os
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
-from q2report.q2utils import num
+from q2report.q2utils import num, Q2Heap
 
 re_calc = re.compile(r"\{.*?\}")
 
@@ -56,6 +56,12 @@ class Q2Report:
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self.outline_level = 0
+        self.data_section = []
+        self.current_data_set = -1
+        self.current_data_set_name = ""
+        self.current_data_set_row_number = 0
+        self.current_data_set_lenght = 0
+        self.heap = Q2Heap()
 
     def load(self, content):
         if os.path.isfile(content):
@@ -63,6 +69,21 @@ class Q2Report:
         else:
             self.report_content = json.loads(content)
         self.params = self.report_content["params"]
+        # count datasources
+        for page in self.report_content.get("pages", []):
+            for column in page.get("columns", []):
+                for rows_section in column.get("rows", []):
+                    if rows_section["role"] == "table":
+                        self.data_section.append(rows_section["data_source"])
+
+    def data_start(self):
+        self.current_data_set_row_number = 0
+
+    def data_step(self):
+        self.current_data_set_row_number += 1
+
+    def data_stop(self):
+        self.current_data_set_name = ""
 
     def formulator(self, formula):
         formula = formula[0][1:-1]
@@ -121,14 +142,18 @@ class Q2Report:
                         if not data_set:
                             continue
                         # table rows
+                        self.current_data_set_name = rows_section["data_source"]
                         self.aggregators_reset(rows_section)
+                        self.current_data_set_lenght = 0
                         if hasattr(data_set, "len"):
                             self.data["_row_count"] = len(data_set)
-
+                            self.current_data_set_lenght = len(data_set)
                         self.render_table_header(rows_section, column_style)
-                        data_set_row_number = 0
+                        
+                        self.current_data_set += 1
+                        self.data_start()
                         for data_row in data_set:
-                            self.data["_row_number"] = data_set_row_number + 1
+                            self.data["_row_number"] = self.current_data_set_row_number + 1
                             self.data.update(data_row)
 
                             self.render_table_groups(rows_section, column_style)
@@ -137,8 +162,10 @@ class Q2Report:
                             self.render_rows_section(rows_section, column_style)
                             self.outline_level -= 1
                             self.prevrowdata.update(data_row)
-                            data_set_row_number += 1
-
+                            
+                            self.data_step()
+                        self.data_stop()
+                        
                         self.render_table_groups(rows_section, column_style, True)
                         self.render_table_footer(rows_section, column_style)
                     else:  # Free rows

@@ -69,3 +69,7 @@ pt = num(1.0)
 twip = num(20.0)
 
 reMultiSpaceDelete = re.compile(r"[\s]+")
+
+
+class Q2Heap:
+    pass
