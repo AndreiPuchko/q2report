@@ -39,9 +39,9 @@ def demo():
     # app.load("test_data/report_03.json")
     # app.run(data=demo_data)
 
-    report.run("tmp/repo.html", data=demo_data)
-    # app.run("tmp/repo.xlsx", data=demo_data)
-    # app.run("tmp/repo.docx", data=demo_data)
+    report.run("temp/repo.html", data=demo_data)
+    # app.run("temp/repo.xlsx", data=demo_data)
+    # app.run("temp/repo.docx", data=demo_data)
 
 
 if __name__ == "__main__":

@@ -108,4 +108,5 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("<thead></thead>")
 
     def show(self):
+        print(f"file://{os.path.abspath(self.output_file)}")
         webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")

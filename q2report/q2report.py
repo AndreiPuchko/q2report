@@ -11,6 +11,7 @@ import json
 from copy import deepcopy
 import re
 import os
+import html
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num, Q2Heap
@@ -92,9 +93,10 @@ class Q2Report:
         else:
             data = self.data
         if formula in data:
-            return str(data[formula])
+            rez = str(data[formula])
         else:
-            return self.evaluator(formula)
+            rez = self.evaluator(formula)
+        return html.escape(rez)
 
     def evaluator(self, formula):
         try:
@@ -122,7 +124,7 @@ class Q2Report:
         row_style.update(rows_section.get("style", {}))
         self.printer.render_rows_section(rows_section, row_style, self.outline_level)
 
-    def run(self, output_file="tmp/repo.html", output_type=None, data={}, open_output_file=True):
+    def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         self.printer: Q2Printer = get_printer(output_file, output_type)
         report_style = dict(self.report_content["style"])
 
@@ -149,7 +151,7 @@ class Q2Report:
                             self.data["_row_count"] = len(data_set)
                             self.current_data_set_lenght = len(data_set)
                         self.render_table_header(rows_section, column_style)
-                        
+
                         self.current_data_set += 1
                         self.data_start()
                         for data_row in data_set:
@@ -162,10 +164,10 @@ class Q2Report:
                             self.render_rows_section(rows_section, column_style)
                             self.outline_level -= 1
                             self.prevrowdata.update(data_row)
-                            
+
                             self.data_step()
                         self.data_stop()
-                        
+
                         self.render_table_groups(rows_section, column_style, True)
                         self.render_table_footer(rows_section, column_style)
                     else:  # Free rows
