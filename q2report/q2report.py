@@ -17,8 +17,13 @@ from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num, Q2Heap
 
 re_calc = re.compile(r"\{.*?\}")
+re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
 
 engine_name = None
+
+
+def q2image(image, height, width):
+    return f"{image}:{height}:{width}"
 
 
 def set_engine(engine2="PyQt6"):
@@ -117,12 +122,25 @@ class Q2Report:
         rows_section = deepcopy(rows_section)
         for cell in rows_section["cells"]:
             cell_data = rows_section["cells"][cell].get("data")
-            if cell_data and re_calc.findall(cell_data):
+            if cell_data:
+                #  images
+                cell_data, rows_section["cells"][cell]["images"] = self.extract_images(cell_data)
+                #  text data
                 rows_section["cells"][cell]["data"] = re_calc.sub(self.formulator, cell_data)
 
         row_style = dict(row_style)
         row_style.update(rows_section.get("style", {}))
         self.printer.render_rows_section(rows_section, row_style, self.outline_level)
+
+    def extract_images(self, cell_data):
+        images_list = []
+
+        def extract_image(formula):
+            images_list.append(self.formulator(formula))
+            return ""
+
+        cell_data = re_q2image.sub(extract_image, cell_data)
+        return cell_data, images_list
 
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         self.printer: Q2Printer = get_printer(output_file, output_type)
