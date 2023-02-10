@@ -11,8 +11,13 @@ from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.docx_parts import docx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 import zipfile
+import base64
+from io import BytesIO
+from PIL import Image
 
-twip = num(28.35) * num(20)
+points_in_mm = 2.834645669
+points_in_cm = num(points_in_mm) * num(10)
+twip_in_cm = num(points_in_cm) * num(20)
 
 
 class Q2PrinterDocx(Q2Printer):
@@ -20,6 +25,7 @@ class Q2PrinterDocx(Q2Printer):
         super().__init__(output_file, output_type)
         self.document = []
         self.xmlImageList = []
+        self.images_size_list = []
         self.document.append(docx_parts["doc_start"])
         self.page_params = None
         self.table_opened = False
@@ -36,8 +42,9 @@ class Q2PrinterDocx(Q2Printer):
 
         relImage = []
         for x in range(len(self.xmlImageList)):
-            zipf.writestr("word/media/image%s.jpg" % x, self.xmlImageList[x].decode("hex"))
+            zipf.writestr("word/media/image%s.png" % x, base64.b64decode(self.xmlImageList[x]))
             relImage.append(docx_parts["images"] % (x, x))
+
         zipf.writestr("_rels/.rels", docx_parts["rels"])
         zipf.writestr("[Content_Types].xml", docx_parts["content_type"])
         zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(relImage))
@@ -73,12 +80,12 @@ class Q2PrinterDocx(Q2Printer):
     <w:pPr>
         <w:sectPr>
             <w:type w:val="nextPage"/>
-            <w:pgSz w:w="{self.page_width * twip}" w:h="{self.page_height * twip}"/>
+            <w:pgSz w:w="{self.page_width * twip_in_cm}" w:h="{self.page_height * twip_in_cm}"/>
             <w:pgMar w:gutter="0" w:header="708" w:footer="708"
-                    w:top="{self.page_margin_top * twip}"
-                    w:right="{self.page_margin_right * twip}"
-                    w:bottom="{self.page_margin_bottom * twip}"
-                    w:left="{self.page_margin_left * twip}"
+                    w:top="{self.page_margin_top * twip_in_cm}"
+                    w:right="{self.page_margin_right * twip_in_cm}"
+                    w:bottom="{self.page_margin_bottom * twip_in_cm}"
+                    w:left="{self.page_margin_left * twip_in_cm}"
             />
             <w:cols w:space="708"/>
             <w:docGrid w:linePitch="360"/>
@@ -100,7 +107,8 @@ class Q2PrinterDocx(Q2Printer):
         self.close_docx_table()
         super().reset_columns(widths)
         self.table_opened = True
-        self.document.append("""<w:tbl>
+        self.document.append(
+            """<w:tbl>
                                 <w:tblPr>
                                     <w:tblLayout w:type="fixed"/>
                                     <w:tblInd w:w="28" w:type="dxa"/>
@@ -111,10 +119,11 @@ class Q2PrinterDocx(Q2Printer):
                                         <w:right w:w="28" w:type="dxa"/>
                                     </w:tblCellMar>
                                 </w:tblPr>
-                                <w:tblGrid>\n""")
+                                <w:tblGrid>\n"""
+        )
 
         for col in self._cm_columns_widths:
-            self.document.append(f'\t\t<w:gridCol w:w="{int_(col * twip)}"/>\n')
+            self.document.append(f'\t\t<w:gridCol w:w="{int_(col * twip_in_cm)}"/>\n')
         self.document.append("""\t</w:tblGrid>\n""")
 
     def close_docx_table(self):
@@ -140,6 +149,7 @@ class Q2PrinterDocx(Q2Printer):
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = dict(style)
+                col_width = int(self._cm_columns_widths[col] * twip_in_cm)
 
                 if key in spanned_cells:
                     if spanned_cells[key] == "":
@@ -164,9 +174,46 @@ class Q2PrinterDocx(Q2Printer):
                             else:
                                 spanned_cells[span_key] = ""
 
-                self.add_table_cell(cell_style, cell_text, col, merge_str)
+                self.add_table_cell(
+                    cell_style,
+                    cell_text,
+                    col,
+                    merge_str,
+                    self.get_cell_images(cell_data.get("images"), col_width),
+                )
 
             self.close_table_row()
+
+    def get_cell_images(self, images_list, col_width):
+        cell_images_list = []
+        if not images_list:
+            return
+        for x in images_list:
+            image = x["image"]
+            width = x["width"]
+            height = x["height"]
+            pixel_width = x["pixel_width"]
+            pixel_height = x["pixel_height"]
+
+            if image not in self.xmlImageList:
+                self.xmlImageList.append(image)
+                self.images_size_list.append((pixel_width, pixel_height))
+                imageIndex = len(self.xmlImageList) - 1
+            else:
+                imageIndex = self.xmlImageList.index(image)
+
+            if height == 0:
+                if width == 0:
+                    width = num(col_width) / num(twip_in_cm)
+                height = width * self.images_size_list[imageIndex][1] / self.images_size_list[imageIndex][0]
+            elif width == 0 and height != 0:
+                width = height * self.images_size_list[imageIndex][0] / self.images_size_list[imageIndex][1]
+
+            width = num(width) * num(12700) * points_in_cm
+            height = num(height) * num(12700) * points_in_cm
+
+            cell_images_list.append(docx_parts["image"] % locals())
+        return "\n".join(cell_images_list)
 
     def open_table_row(self):
         self.document.append("\n\t<w:tr>")
@@ -178,7 +225,7 @@ class Q2PrinterDocx(Q2Printer):
     def close_table_row(self):
         self.document.append("\n\t</w:tr>")
 
-    def add_table_cell(self, cell_style, cell_text, col, merge_str):
+    def add_table_cell(self, cell_style, cell_text, col, merge_str, images=[]):
         borders = self.get_cell_borders(cell_style)
         margins = self.get_cell_paddings(cell_style)
         para_params = self.get_paragraph_params(cell_style)
@@ -189,7 +236,7 @@ class Q2PrinterDocx(Q2Printer):
             f"""
                 <w:tc>
                     <w:tcPr>
-                        <w:tcW w:w="{int(self._cm_columns_widths[col] * twip)}" w:type="dxa"/>
+                        <w:tcW w:w="{int(self._cm_columns_widths[col] * twip_in_cm)}" w:type="dxa"/>
                         {valign}
                         {merge_str}
                         {borders}
@@ -198,6 +245,7 @@ class Q2PrinterDocx(Q2Printer):
                     <w:p>
                         {para_params}
                         {para_text}
+                        {images}
                     </w:p>
                 </w:tc>
         """
@@ -303,6 +351,6 @@ class Q2PrinterDocx(Q2Printer):
         margins = []
         margins.append("\n\t<w:tcMar>")
         for index, side in enumerate(("top", "right", "bottom", "left")):
-            margins.append(f'\n\t\t<w:{side} w:w="{int(num(padding[index])*twip)}" w:type="dxa"/>')
+            margins.append(f'\n\t\t<w:{side} w:w="{int(num(padding[index])*twip_in_cm)}" w:type="dxa"/>')
         margins.append("\n\t</w:tcMar>\n")
         return "".join(margins)

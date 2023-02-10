@@ -14,41 +14,57 @@ docx_parts['doc_start'] = """<?xml version="1.0" encoding="UTF-8" standalone="ye
 
 """
 docx_parts['image'] = """
+    <w:r>
     <w:drawing>
-        <wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="0" behindDoc="1" locked="0" 
-                        layoutInCell="0" allowOverlap="1">
-            <wp:simplePos x="0" y="0"/>
+        <wp:anchor
+            behindDoc="1"
+            distT="0"
+            distB="0"
+            distL="0"
+            distR="0"
+            simplePos="0"
+            locked="0"
+            layoutInCell="0"
+            allowOverlap="1"
+            relativeHeight="2"
+            >
+            <wp:simplePos   x="0"
+                            y="0"/>
             <wp:positionH relativeFrom="column">
-                <wp:posOffset>%s</wp:posOffset> 
+                <wp:align>left</wp:align>
             </wp:positionH>
             <wp:positionV relativeFrom="paragraph">
                 <wp:posOffset>0</wp:posOffset>
             </wp:positionV>
-            <wp:extent cx="%s" cy="%s"/>
-            <wp:effectExtent l="0" t="0" r="0" b="0"/>
+
+            <wp:effectExtent
+                    l="0"
+                    t="0"
+                    r="0"
+                    b="0"/>
             <wp:wrapNone/>
-            <wp:docPr id="%s" name="Picture %s"/>
+            
             <wp:cNvGraphicFramePr>
-                <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
+                <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                    noChangeAspect="1"/>
             </wp:cNvGraphicFramePr>
             <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
                 <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
                     <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                        <pic:nvPicPr>
-                            <pic:cNvPr id="0" name="Picture %s"/>
-                            <pic:cNvPicPr preferRelativeResize="0">
-                                <a:picLocks noChangeArrowheads="1"/>
-                            </pic:cNvPicPr>
-                        </pic:nvPicPr>
                         <pic:blipFill>
-                            <a:blip r:embed="rId0"/><a:srcRect/>
+                            <a:blip r:embed="rId%(imageIndex)s"/>
                             <a:stretch>
                                 <a:fillRect/>
                             </a:stretch>
                         </pic:blipFill>
                         <pic:spPr bwMode="auto">
-                            <a:xfrm><a:off x="0" y="0"/>
-                                <a:ext cx="%s" cy="%s"/>
+                            <a:xfrm>
+                                <a:off
+                                    x="0"
+                                    y="0"/>
+                                <a:ext
+                                    cx="%(width)s"
+                                    cy="%(height)s"/>
                             </a:xfrm>
                             <a:prstGeom prst="rect">
                                 <a:avLst/>
@@ -58,7 +74,9 @@ docx_parts['image'] = """
                 </a:graphicData>
             </a:graphic>
         </wp:anchor>
-    </w:drawing>"""
+    </w:drawing>
+    </w:r>
+    """
 docx_parts['rels'] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
@@ -73,5 +91,6 @@ docx_parts['word_rels'] = """<?xml version="1.0" encoding="UTF-8" standalone="ye
     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     %s
     </Relationships>"""
-docx_parts['images'] = """<Relationship Id="rId%s" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" 
-    Target="media/image%s.jpg"/>"""
+docx_parts['images'] = """<Relationship Id="rId%s" 
+    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+    Target="media/image%s.png"/>"""

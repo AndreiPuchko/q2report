@@ -12,6 +12,10 @@ from copy import deepcopy
 import re
 import os
 import html
+from io import BytesIO
+from PIL import Image
+import base64
+
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num, Q2Heap
@@ -22,8 +26,9 @@ re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
 engine_name = None
 
 
-def q2image(image, height, width):
-    return f"{image}:{height}:{width}"
+def q2image(image, width=0, height=0):
+    im = Image.open(BytesIO(base64.b64decode(image)))
+    return f"{image}:{width}:{height}:{im.width}:{im.height}"
 
 
 def set_engine(engine2="PyQt6"):
@@ -136,7 +141,16 @@ class Q2Report:
         images_list = []
 
         def extract_image(formula):
-            images_list.append(self.formulator(formula))
+            image_data = self.formulator(formula).split(":")
+            images_list.append(
+                {
+                    "image": image_data[0],
+                    "width": num(image_data[1]),
+                    "height": num(image_data[2]),
+                    "pixel_width": num(image_data[3]),
+                    "pixel_height": num(image_data[4]),
+                }
+            )
             return ""
 
         cell_data = re_q2image.sub(extract_image, cell_data)
