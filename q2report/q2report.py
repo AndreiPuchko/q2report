@@ -27,8 +27,13 @@ engine_name = None
 
 
 def q2image(image, width=0, height=0):
+    if os.path.isfile(image):
+        image = base64.b64encode(open(image, "rb").read()).decode()
     im = Image.open(BytesIO(base64.b64decode(image)))
-    return f"{image}:{width}:{height}:{im.width}:{im.height}"
+    return f"{image}:{width}:{height}:{im.width}:{im.height}:{im.format}"
+
+
+q2image(r"C:\Users\andre\Desktop\bike.jpg", 9)
 
 
 def set_engine(engine2="PyQt6"):

@@ -33,6 +33,7 @@ class Q2Printer:
         if output_type is None and isinstance(self.output_file, str):
             output_type = os.path.splitext(output_file)[1]
         self.output_type = output_type.lower().replace(".", "")
+        self.xmlImageList = []
         self._OF = None
         self._columns_count = None
         self.open_output_file()
@@ -87,6 +88,29 @@ class Q2Printer:
                     prc = (num(100) - sum(_procent_columns_width)) / _float_columns_count
                 self._cm_columns_widths[x] = round(_procent_width * prc, 2)
         self._cm_columns_widths = [round(x, 2) for x in self._cm_columns_widths]
+
+    def prepare_image(self, image_dict, col):
+        col_width = self._cm_columns_widths[col]
+        image = image_dict["image"]
+        width = image_dict["width"]
+        height = image_dict["height"]
+        pixel_width = image_dict["pixel_width"]
+        pixel_height = image_dict["pixel_height"]
+
+        if image not in self.xmlImageList:
+            self.xmlImageList.append(image)
+            imageIndex = len(self.xmlImageList) - 1
+        else:
+            imageIndex = self.xmlImageList.index(image)
+
+        if height == 0:
+            if width == 0:
+                width = num(col_width)
+            height = width * pixel_height / pixel_width
+        elif width == 0 and height != 0:
+            width = height * pixel_width / pixel_height
+
+        return width, height, imageIndex
 
     def save(self):
         self._OF.close()

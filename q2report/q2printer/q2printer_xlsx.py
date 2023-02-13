@@ -13,6 +13,7 @@ from q2report.q2utils import num, int_, reMultiSpaceDelete
 
 import zipfile
 import re
+import base64
 
 reSpaces = re.compile(r"\s*", re.IGNORECASE)
 reFormula = re.compile(r"\[[^]^[]+\]")
@@ -41,6 +42,9 @@ reUnderLineBegin = re.compile(r"<\s*u\s*>", re.IGNORECASE)
 reUnderLineEnd = re.compile(r"<\s*/\s*U\s*>", re.IGNORECASE)
 
 cm_2_inch = num(2.5396)
+points_in_mm = 2.834645669
+points_in_cm = num(points_in_mm) * num(10)
+twip_in_cm = num(points_in_cm) * num(20)
 
 
 class Q2PrinterXlsx(Q2Printer):
@@ -55,6 +59,8 @@ class Q2PrinterXlsx(Q2Printer):
         self.borders = ["""<left/><right/><top/><bottom/><diagonal/>"""]
         self.cell_xfs = ["""<xf borderId="0" fillId="0" fontId="0" numFmtId="0" xfId="0"/>"""]
         self.xmlImageList = []
+        self.images_size_list = []
+
         self.cellStyleXfs = []
         self.cellStyles = []
         self.sharedStrings = []
@@ -88,7 +94,7 @@ class Q2PrinterXlsx(Q2Printer):
         wb_content_types = []
 
         for img in range(0, len(self.xmlImageList)):
-            zipf.writestr("xl\media\image%s.jpg" % (img + 1), self.xmlImageList[(img)].decode("hex"))
+            zipf.writestr(r"xl\media\image%s.png" % (img + 1), base64.b64decode(self.xmlImageList[img]))
             wb_images.append(xlsx_parts["images"] % ((img + 1), (img + 1)))
 
         for x in range(0, len(self.xlsx_sheets)):
@@ -97,23 +103,23 @@ class Q2PrinterXlsx(Q2Printer):
             if self.xlsx_sheets[x]["drawing"]:
                 for img in range(0, len(self.xlsx_sheets[x]["drawing"])):
                     drawing_det.append(
-                        xlsx_parts["xl/drawings/drawing.xml(jpg)"] % self.xlsx_sheets[x]["drawing"][img]
+                        xlsx_parts["xl/drawings/drawing.xml(png)"] % self.xlsx_sheets[x]["drawing"][img]
                     )
 
             zipf.writestr(
                 "xl/drawings/_rels/drawing%s.xml.rels" % (x + 1),
-                xlsx_parts["xl/drawings/_rels/drawing.xml.rels"] % "".join(wb_images).encode("utf8"),
+                xlsx_parts["xl/drawings/_rels/drawing.xml.rels"] % "".join(wb_images),
             )
             zipf.writestr(
                 "xl/drawings/drawing%s.xml" % (x + 1),
-                (xlsx_parts["xl/drawings/drawing.xml"] % "".join(drawing_det)).encode("utf8"),
+                (xlsx_parts["xl/drawings/drawing.xml"] % "".join(drawing_det)),
             )
 
             if drawing_det:
                 wb_content_types.append(xlsx_parts["wb_content_types_image"] % (x + 1))
                 zipf.writestr(
                     "xl/worksheets/_rels/sheet%s.xml.rels" % (x + 1),
-                    (xlsx_parts["xl/worksheets/_rels/sheet.xml.rels"] % (x + 1)).encode("utf8"),
+                    (xlsx_parts["xl/worksheets/_rels/sheet.xml.rels"] % (x + 1)),
                 )
                 drawing = '<drawing r:id="rId1"/>'
             else:
@@ -126,29 +132,29 @@ class Q2PrinterXlsx(Q2Printer):
             )
             wb_workbook_rels.append(xlsx_parts["xl/_rels/workbook.xml.rels-line"] % (x + 9, x + 1))
 
-#             sheet_data = "".join(
-#                 """
-# <row r="%s" customHeight="1" ht="%s" outlineLevel="%s" collapsed="false"> %s \n
-# </row>"""
-#                 % (
-#                     z + 1,
-#                     self.xlsx_sheets[x]["sheetData"][z]["height"],
-#                     self.xlsx_sheets[x]["sheetData"][z]["outline_level"],
-#                     "".join(self.xlsx_sheets[x]["sheetData"][z]["cells"]),
-#                 )
-#                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
-#             )
+            #             sheet_data = "".join(
+            #                 """
+            # <row r="%s" customHeight="1" ht="%s" outlineLevel="%s" collapsed="false"> %s \n
+            # </row>"""
+            #                 % (
+            #                     z + 1,
+            #                     self.xlsx_sheets[x]["sheetData"][z]["height"],
+            #                     self.xlsx_sheets[x]["sheetData"][z]["outline_level"],
+            #                     "".join(self.xlsx_sheets[x]["sheetData"][z]["cells"]),
+            #                 )
+            #                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
+            #             )
 
             sheet_data = "".join(
                 f"""
-<row 
-\tr="{z+1}" 
-\tcustomHeight="1" ht="{self.xlsx_sheets[x]["sheetData"][z]["height"]}"
-\toutlineLevel="{self.xlsx_sheets[x]["sheetData"][z]["outline_level"]}"
-collapsed="false"
-> 
-{"".join(self.xlsx_sheets[x]["sheetData"][z]["cells"])}
-</row>"""
+                    <row
+                    \tr="{z+1}"
+                    \tcustomHeight="1" ht="{self.xlsx_sheets[x]["sheetData"][z]["height"]}"
+                    \toutlineLevel="{self.xlsx_sheets[x]["sheetData"][z]["outline_level"]}"
+                    collapsed="false"
+                    >
+                    {"".join(self.xlsx_sheets[x]["sheetData"][z]["cells"])}
+                    </row>"""
                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
             )
 
@@ -163,7 +169,7 @@ collapsed="false"
                 (
                     xlsx_parts["xl/worksheets/sheet.xml"]
                     % (self.xlsx_sheets[x]["cols"], sheet_data, merges, self.xlsx_sheets[x]["page"], drawing)
-                ).encode("utf8"),
+                ),
             )
 
         zipf.writestr(
@@ -192,7 +198,7 @@ collapsed="false"
         for col_index, col in enumerate(self._cm_columns_widths):
             cols.append(
                 f'\n\t<col min="{col_index+1}" max="{col_index+1}" '
-                f' width="{col * num(4.05)}" bestFit="0" customWidth="1"/>'
+                f' width="{col * num(5.105)}" bestFit="0" customWidth="1"/>'
             )
         cols.append("\n</cols>")
         self.current_sheet["cols"] = "".join(cols)
@@ -234,11 +240,14 @@ collapsed="false"
                 cell_address = self.get_cell_address(self.sheet_current_row, col)
                 cell_data = rows.get("cells", {}).get(key, {})
                 cell_text = cell_data.get("data", "")
+
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = dict(style)
                 if cell_data.get("style", {}):
                     cell_style.update(cell_data.get("style", {}))
+
+                self.make_image(cell_data, row, col)
                 cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_text)
                 sheet_row["cells"].append(cell_xml)
                 if row_span > 1 or col_span > 1:
@@ -303,6 +312,21 @@ collapsed="false"
         # else:
         font_id = self.fonts.index(font_style)
         return font_id
+
+    def make_image(self, cell_data, row, col):
+        for x in cell_data.get("images", []):
+            width, height, imageIndex = self.prepare_image(x, col)
+
+            width = num(width) * num(12700) * points_in_cm
+            height = num(height) * num(12700) * points_in_cm
+
+            tmp_drawing = {}
+            tmp_drawing["_id"] = imageIndex + 1
+            tmp_drawing["_row"] = self.sheet_current_row - 1
+            tmp_drawing["_col"] = col
+            tmp_drawing["_height"] = int(height)
+            tmp_drawing["_width"] = int(width)
+            self.current_sheet["drawing"].append(tmp_drawing)
 
     def make_xlsx_cell(self, cell_address, cell_style, cell_text):
         fontsizemod = fontsize = cell_style["font-size"].replace("pt", "")
@@ -425,7 +449,3 @@ collapsed="false"
             col = int((col - 1) / 26)
             rez = chr(ord("A") + part - 1) + rez
         return rez
-
-    # def show(self):
-    #     pass
-    # webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")

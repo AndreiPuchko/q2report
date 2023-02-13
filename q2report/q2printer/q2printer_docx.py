@@ -12,8 +12,6 @@ from q2report.q2printer.docx_parts import docx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 import zipfile
 import base64
-from io import BytesIO
-from PIL import Image
 
 points_in_mm = 2.834645669
 points_in_cm = num(points_in_mm) * num(10)
@@ -149,7 +147,7 @@ class Q2PrinterDocx(Q2Printer):
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = dict(style)
-                col_width = int(self._cm_columns_widths[col] * twip_in_cm)
+                # col_width = int(self._cm_columns_widths[col] * twip_in_cm)
 
                 if key in spanned_cells:
                     if spanned_cells[key] == "":
@@ -179,35 +177,17 @@ class Q2PrinterDocx(Q2Printer):
                     cell_text,
                     col,
                     merge_str,
-                    self.get_cell_images(cell_data.get("images"), col_width),
+                    self.get_cell_images(cell_data.get("images"), col),
                 )
 
             self.close_table_row()
 
-    def get_cell_images(self, images_list, col_width):
+    def get_cell_images(self, images_list, col):
         cell_images_list = []
         if not images_list:
-            return
+            return ""
         for x in images_list:
-            image = x["image"]
-            width = x["width"]
-            height = x["height"]
-            pixel_width = x["pixel_width"]
-            pixel_height = x["pixel_height"]
-
-            if image not in self.xmlImageList:
-                self.xmlImageList.append(image)
-                self.images_size_list.append((pixel_width, pixel_height))
-                imageIndex = len(self.xmlImageList) - 1
-            else:
-                imageIndex = self.xmlImageList.index(image)
-
-            if height == 0:
-                if width == 0:
-                    width = num(col_width) / num(twip_in_cm)
-                height = width * self.images_size_list[imageIndex][1] / self.images_size_list[imageIndex][0]
-            elif width == 0 and height != 0:
-                width = height * self.images_size_list[imageIndex][0] / self.images_size_list[imageIndex][1]
+            width, height, imageIndex = self.prepare_image(x, col)
 
             width = num(width) * num(12700) * points_in_cm
             height = num(height) * num(12700) * points_in_cm

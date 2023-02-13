@@ -30,6 +30,7 @@ class Q2PrinterHtml(Q2Printer):
             '\n\t\t<style type="text/css">'
         )
         html += "".join([f"\n.{self.style[x]} {x}" for x in self.style])
+        html += "@media print {body {print-color-adjust: exact;}}"
         html += "\n\t\t</style>" "\n\t</head>" "\n\t<body>\n\n"
 
         html += "\n".join(self.html)
@@ -87,6 +88,19 @@ class Q2PrinterHtml(Q2Printer):
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = cell_data.get("style", {})
+                if cell_data.get("images"):
+                    for x in cell_data.get("images"):
+                        image = x["image"]
+                        width, height, imageIndex = self.prepare_image(x, col)
+                        cell_text = f"""
+                                    <div style="background-image:url(data:image/jpeg;base64,{image});
+                                                background-repeat:no-repeat;
+                                                background-size: {width}cm {height}cm;
+                                                width:{self._cm_columns_widths[col]}cm;
+                                                height:{height}cm;
+                                    ">
+                                    {cell_text}
+                                    </div>"""
                 if cell_style:
                     tmp_style = dict(style)
                     tmp_style.update(cell_style)
@@ -108,5 +122,5 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("<thead></thead>")
 
     def show(self):
-        print(f"file://{os.path.abspath(self.output_file)}")
+        # print(f"file://{os.path.abspath(self.output_file)}")
         webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")
