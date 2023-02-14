@@ -101,10 +101,13 @@ class Q2PrinterDocx(Q2Printer):
 </w:p>"""
         return page_xml
 
-    def reset_columns(self, widths):
+    def reset_columns(self, widths=None):
         self.close_docx_table()
-        super().reset_columns(widths)
-        self.table_opened = True
+        if widths:
+            super().reset_columns(widths)
+        self.open_docx_table()
+
+    def open_docx_table(self):
         self.document.append(
             """<w:tbl>
                                 <w:tblPr>
@@ -123,6 +126,7 @@ class Q2PrinterDocx(Q2Printer):
         for col in self._cm_columns_widths:
             self.document.append(f'\t\t<w:gridCol w:w="{int_(col * twip_in_cm)}"/>\n')
         self.document.append("""\t</w:tblGrid>\n""")
+        self.table_opened = True
 
     def close_docx_table(self):
         if self._columns_count and self.table_opened:
@@ -134,20 +138,20 @@ class Q2PrinterDocx(Q2Printer):
         super().render_rows_section(rows, style, outline_level)
         row_count = len(rows["heights"])
         spanned_cells = {}
+        if rows["role"] == "table_header":
+            self.reset_columns()
 
         for row in range(row_count):  # вывод - по строкам
-            self.open_table_row()
-            if rows["role"] == "table_header":
-                self.document.append('<w:trPr><w:tblHeader w:val="true"/></w:trPr>')
+            self.open_table_row(row, rows)
 
             for col in range(self._columns_count):  # цикл по клеткам строки
                 key = f"{row},{col}"
                 cell_data = rows.get("cells", {}).get(key, {})
+
                 cell_text = cell_data.get("data", "")
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = dict(style)
-                # col_width = int(self._cm_columns_widths[col] * twip_in_cm)
 
                 if key in spanned_cells:
                     if spanned_cells[key] == "":
@@ -177,17 +181,19 @@ class Q2PrinterDocx(Q2Printer):
                     cell_text,
                     col,
                     merge_str,
-                    self.get_cell_images(cell_data.get("images"), col),
+                    self.get_cell_images(cell_data),
                 )
 
             self.close_table_row()
 
-    def get_cell_images(self, images_list, col):
+    def get_cell_images(self, cell_data):
+        images_list = cell_data.get("images")
+        cell_width = cell_data.get("width")
         cell_images_list = []
         if not images_list:
             return ""
         for x in images_list:
-            width, height, imageIndex = self.prepare_image(x, col)
+            width, height, imageIndex = self.prepare_image(x, cell_width)
 
             width = num(width) * num(12700) * points_in_cm
             height = num(height) * num(12700) * points_in_cm
@@ -195,11 +201,14 @@ class Q2PrinterDocx(Q2Printer):
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
 
-    def open_table_row(self):
+    def open_table_row(self, row, rows):
         self.document.append("\n\t<w:tr>")
-        # self.document.append("\n\t\t<w:trPr>")
-        # self.document.append('\n\t\t\t<w:trHeight w:val="2268" w:hRule="exact"/>')
-        # self.document.append("\n\t\t</w:trPr>")
+        self.document.append("\n\t\t<w:trPr>")
+        if rows["role"] == "table_header":
+            self.document.append('<w:tblHeader/>')
+        if rows["real_heights"][row]:
+            self.document.append(f'\n\t\t\t<w:trHeight w:val="{rows["real_heights"][row]*twip_in_cm}" w:hRule="exact"/>')
+        self.document.append("\n\t\t</w:trPr>")
         pass
 
     def close_table_row(self):

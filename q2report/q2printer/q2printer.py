@@ -36,6 +36,7 @@ class Q2Printer:
         self.xmlImageList = []
         self._OF = None
         self._columns_count = None
+        self._cm_columns_widths = []
         self.open_output_file()
 
     def open_output_file(self):
@@ -43,8 +44,27 @@ class Q2Printer:
         #     os.mkdir(os.path.dirname(self.output_file))
         self._OF = open(self.output_file, "w", encoding="utf8")
 
+    def calculate_real_sizes(self, rows, style):
+        row_count = len(rows["heights"])
+        rows["real_heights"] = [0 for x in range(row_count)]
+        for row in range(row_count):
+            for col in range(self._columns_count):
+                key = f"{row},{col}"
+                cell_data = rows.get("cells", {}).get(key, {})
+                if not cell_data:
+                    continue
+                if cell_data.get("colspan", 0) > 1:
+                    cell_data["width"] = sum(self._cm_columns_widths[col : col + cell_data["colspan"]])
+                else:
+                    cell_data["width"] = self._cm_columns_widths[col]
+                for image in cell_data.get("images", []):
+                    w, h, i = self.prepare_image(image, cell_data.get("width"))
+                    rows["real_heights"][row] = (
+                        rows["real_heights"][row] if rows["real_heights"][row] >= h else h
+                    )
+
     def render_rows_section(self, rows, style, outline_level):
-        pass
+        self.calculate_real_sizes(rows, style)
 
     def reset_page(
         self,
@@ -89,8 +109,8 @@ class Q2Printer:
                 self._cm_columns_widths[x] = round(_procent_width * prc, 2)
         self._cm_columns_widths = [round(x, 2) for x in self._cm_columns_widths]
 
-    def prepare_image(self, image_dict, col):
-        col_width = self._cm_columns_widths[col]
+    def prepare_image(self, image_dict, col_width):
+        # col_width = self._cm_columns_widths[col]
         image = image_dict["image"]
         width = image_dict["width"]
         height = image_dict["height"]

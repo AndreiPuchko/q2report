@@ -42,7 +42,7 @@ reUnderLineBegin = re.compile(r"<\s*u\s*>", re.IGNORECASE)
 reUnderLineEnd = re.compile(r"<\s*/\s*U\s*>", re.IGNORECASE)
 
 cm_2_inch = num(2.5396)
-points_in_mm = 2.834645669
+points_in_mm = num(2.834645669)
 points_in_cm = num(points_in_mm) * num(10)
 twip_in_cm = num(points_in_cm) * num(20)
 
@@ -229,7 +229,7 @@ class Q2PrinterXlsx(Q2Printer):
 
         sheet_row = {}
         for row in range(row_count):  # вывод - по строкам
-            sheet_row["height"] = 15
+            sheet_row["height"] = rows["real_heights"][row] * points_in_cm
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level
             for col in range(self._columns_count):  # цикл по клеткам строки
@@ -315,7 +315,7 @@ class Q2PrinterXlsx(Q2Printer):
 
     def make_image(self, cell_data, row, col):
         for x in cell_data.get("images", []):
-            width, height, imageIndex = self.prepare_image(x, col)
+            width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
 
             width = num(width) * num(12700) * points_in_cm
             height = num(height) * num(12700) * points_in_cm

@@ -50,11 +50,14 @@ class Q2PrinterHtml(Q2Printer):
         style = '<style type="text/css"> @page {size:' + size + "margin:" + margin + "}" + "</style>"
         self.html.append(style)
 
-    def reset_columns(self, widths):
-        super().reset_columns(widths)
+    def reset_columns(self, widths=None):
         self.close_html_table()
+        if widths:
+            super().reset_columns(widths)
+        self.open_html_table()
+
+    def open_html_table(self):
         self.html.append('<table style="border-collapse:collapse;">')
-        self.html.append("<thead></thead>")
         self.html.append("<colgroup>")
         for col in self._cm_columns_widths:
             self.html.append(f'\t<col span="1" style="width: {col*10}mm;">')
@@ -76,6 +79,7 @@ class Q2PrinterHtml(Q2Printer):
         row_count = len(rows["heights"])
         spanned_cells = []
         if rows["role"] == "table_header":
+            self.reset_columns()
             self.html.append("\t<thead>")
         for row in range(row_count):
             self.html.append("\t<tr>")
@@ -84,23 +88,11 @@ class Q2PrinterHtml(Q2Printer):
                 if key in spanned_cells:
                     continue
                 cell_data = rows.get("cells", {}).get(key, {})
-                cell_text = cell_data.get("data", "&nbsp;")
+                # cell_text = cell_data.get("data", "&nbsp;")
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = cell_data.get("style", {})
-                if cell_data.get("images"):
-                    for x in cell_data.get("images"):
-                        image = x["image"]
-                        width, height, imageIndex = self.prepare_image(x, col)
-                        cell_text = f"""
-                                    <div style="background-image:url(data:image/jpeg;base64,{image});
-                                                background-repeat:no-repeat;
-                                                background-size: {width}cm {height}cm;
-                                                width:{self._cm_columns_widths[col]}cm;
-                                                height:{height}cm;
-                                    ">
-                                    {cell_text}
-                                    </div>"""
+                cell_text = self.render_cell_images(cell_data)
                 if cell_style:
                     tmp_style = dict(style)
                     tmp_style.update(cell_style)
@@ -118,8 +110,25 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("\t</tr>")
         if rows["role"] == "table_header":
             self.html.append("\t</thead>")
-        if rows["role"] == "table_footer":
-            self.html.append("<thead></thead>")
+        # if rows["role"] == "table_footer":
+        #     self.html.append("<thead></thead>")
+
+    def render_cell_images(self, cell_data):
+        cell_text = cell_data.get("data", "&nbsp;")
+        if cell_data.get("images"):
+            for x in cell_data.get("images"):
+                image = x["image"]
+                width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
+                cell_text = f"""
+                                    <div style="background-image:url(data:image/jpeg;base64,{image});
+                                                background-repeat:no-repeat;
+                                                background-size: {width}cm {height}cm;
+                                                width:{width}cm;
+                                                height:{height}cm;
+                                    ">
+                                    {cell_text}
+                                    </div>"""
+        return cell_text
 
     def show(self):
         # print(f"file://{os.path.abspath(self.output_file)}")
