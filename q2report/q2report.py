@@ -15,6 +15,7 @@ import html
 from io import BytesIO
 from PIL import Image
 import base64
+import datetime
 
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
@@ -31,9 +32,6 @@ def q2image(image, width=0, height=0):
         image = base64.b64encode(open(image, "rb").read()).decode()
     im = Image.open(BytesIO(base64.b64decode(image)))
     return f"{image}:{width}:{height}:{im.width}:{im.height}:{im.format}"
-
-
-q2image(r"C:\Users\andre\Desktop\bike.jpg", 9)
 
 
 def set_engine(engine2="PyQt6"):
@@ -120,6 +118,18 @@ class Q2Report:
             rez = f"Evaluating error: {formula}"
         return rez
 
+    def format(self, cell):
+        format = cell.get("format", "")
+        if format == "D":
+            cell["data"] = datetime.datetime.strptime(cell["data"],  "%Y-%m-%d").strftime("%d.%m.%Y")
+        elif format.upper() == "F":
+            cell["xlsx_data"] = num(cell["data"])
+            cell["numFmtId"] = "165"
+            cell["data"] = ("{:,.2f}".format(num(cell["data"]))).replace(",", " ")
+        elif format.upper() == "N":
+            cell["xlsx_data"] = num(cell["data"])
+            cell["numFmtId"] = "164"
+
     def render_rows_section(self, rows_section, row_style, aggregator=None):
         if aggregator is None:
             self.use_prevrowdata = False
@@ -137,6 +147,7 @@ class Q2Report:
                 cell_data, rows_section["cells"][cell]["images"] = self.extract_images(cell_data)
                 #  text data
                 rows_section["cells"][cell]["data"] = re_calc.sub(self.formulator, cell_data)
+                self.format(rows_section["cells"][cell])
 
         row_style = dict(row_style)
         row_style.update(rows_section.get("style", {}))

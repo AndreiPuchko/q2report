@@ -243,12 +243,14 @@ class Q2PrinterXlsx(Q2Printer):
 
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
+
                 cell_style = dict(style)
                 if cell_data.get("style", {}):
                     cell_style.update(cell_data.get("style", {}))
+                cell_data["style"] = cell_style
 
                 self.make_image(cell_data, row, col)
-                cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_text)
+                cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_text, cell_data)
                 sheet_row["cells"].append(cell_xml)
                 if row_span > 1 or col_span > 1:
                     merge_str = ":".join(
@@ -285,18 +287,16 @@ class Q2PrinterXlsx(Q2Printer):
 
         zipf.writestr("xl/styles.xml", (xlsx_parts["xl/styles.xml"] % locals()).encode("utf8"))
 
-    def get_cell_xf_id(self, style):
+    def get_cell_xf_id(self, style, numFmtId=0):
         border = f'borderId="{self.get_cell_borders(style)}"'
         fill = f'fillId="{0}"'
         font = f'fontId="{self.get_font_id(style)}"'
-        num_fmt = f'numFmtId="{0}"'
+        num_fmt = f'numFmtId="{numFmtId}"'
         align = self.get_cell_align(style)
 
         cell_xfs = f'<xf {border} {fill} {font} {num_fmt} xfId="0" applyAlignment="true"> {align} </xf>'
         if cell_xfs not in self.cell_xfs:
             self.cell_xfs.append(cell_xfs)
-        #     xf_id = len(self.cell_xfs) - 1
-        # else:
         xf_id = self.cell_xfs.index(cell_xfs)
 
         return xf_id
@@ -328,7 +328,15 @@ class Q2PrinterXlsx(Q2Printer):
             tmp_drawing["_width"] = int(width)
             self.current_sheet["drawing"].append(tmp_drawing)
 
-    def make_xlsx_cell(self, cell_address, cell_style, cell_text):
+    def make_xlsx_cell(self, cell_address, cell_style, cell_text, cell_data={}):
+        if cell_data.get("numFmtId"):
+            xf_id = self.get_cell_xf_id(cell_style, cell_data.get("numFmtId"))
+            return f"""\n\t<c r="{cell_address}"
+                            s="{xf_id}"
+                            t="n">
+                    <v>{cell_data.get("xlsx_data")}</v>
+                    \n\t</c>"""
+
         fontsizemod = fontsize = cell_style["font-size"].replace("pt", "")
         fontfamily = cell_style["font-family"]
 
@@ -370,7 +378,9 @@ class Q2PrinterXlsx(Q2Printer):
                     )
         elif cell_text != "":
             cell_content.append(f'<t xml:space="preserve">{cell_text}</t>')
+
         xf_id = self.get_cell_xf_id(cell_style)
+
         if cell_content:
             cell_content = "".join(cell_content)
             if cell_content not in self.sharedStrings:
@@ -378,9 +388,18 @@ class Q2PrinterXlsx(Q2Printer):
                 shared_strings_id = len(self.sharedStrings) - 1
             else:
                 shared_strings_id = self.sharedStrings.index(cell_content)
-            return (
-                f'\n\t<c r="{cell_address}" s="{xf_id}" ' f't="s"> \n\t\t<v>{shared_strings_id}</v> \n\t</c>'
-            )
+            return f"""\n\t<c r="{cell_address}"
+                            s="{xf_id}"
+                            t="s">
+                    \n\t\t<v>{shared_strings_id}</v>
+                    \n\t</c>"""
+            # return (
+            #     f'''\n\t<c r="{cell_address}"
+            #                 s="2"
+            #                 t="n">
+            #         <v>123</v>
+            #         \n\t</c>'''
+            # )
         else:
             return f'\n\t<c r="{cell_address}" s="{xf_id}"/> '
 
