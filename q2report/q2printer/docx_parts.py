@@ -1,19 +1,23 @@
-docx_parts={}
-docx_parts['doc_start'] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document 
-    xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" 
-    xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" 
-    xmlns:w10="urn:schemas-microsoft-com:office:word" 
-    xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" 
-    xmlns:v="urn:schemas-microsoft-com:vml" 
-    xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" 
-    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" 
-    xmlns:o="urn:schemas-microsoft-com:office:office" 
+docx_parts = {}
+docx_parts[
+    "doc_start"
+] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document
+    xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"
+    xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    xmlns:w10="urn:schemas-microsoft-com:office:word"
+    xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+    xmlns:v="urn:schemas-microsoft-com:vml"
+    xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:ve="http://schemas.openxmlformats.org/markup-compatibility/2006">
 <w:body>
 
 """
-docx_parts['image'] = """
+docx_parts[
+    "image"
+] = """
     <w:r>
     <w:drawing>
         <wp:anchor
@@ -43,7 +47,7 @@ docx_parts['image'] = """
                     r="0"
                     b="0"/>
             <wp:wrapNone/>
-            
+
             <wp:cNvGraphicFramePr>
                 <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
                     noChangeAspect="1"/>
@@ -77,20 +81,59 @@ docx_parts['image'] = """
     </w:drawing>
     </w:r>
     """
-docx_parts['rels'] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+docx_parts[
+    "rels"
+] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+    <Relationship Id="rId1"
+        Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+        Target="word/document.xml"/>
+        %s
     </Relationships>"""
-docx_parts['content_type'] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+docx_parts[
+    "content_type"
+] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
     <Default Extension="jpg" ContentType="image/jpg"/>
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-    <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+    <Override PartName="/word/document.xml"
+        ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
     </Types>"""
-docx_parts['word_rels'] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+docx_parts[
+    "word_rels"
+] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
     %s
     </Relationships>"""
-docx_parts['images'] = """<Relationship Id="rId%s" 
+docx_parts[
+    "images"
+] = """<Relationship Id="rId%s"
     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
     Target="media/image%s.png"/>"""
+
+docx_parts[
+    "headers"
+] = """	<Relationship Id="rId%s"
+	              Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"
+	              Target="header%s.xml"/>
+"""
+
+docx_parts[
+    "header"
+] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <w:hdr xmlns:o="urn:schemas-microsoft-com:office:office"
+                    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                    xmlns:v="urn:schemas-microsoft-com:vml"
+                    xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                    xmlns:w10="urn:schemas-microsoft-com:office:word"
+                    xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+                    xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+                    xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing"
+                    xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+                    xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"
+                    mc:Ignorable="w14 wp14 w15">
+                    %s
+                </w:hdr>
+                    """

@@ -121,7 +121,7 @@ class Q2Report:
     def format(self, cell):
         format = cell.get("format", "")
         if format == "D":
-            cell["data"] = datetime.datetime.strptime(cell["data"],  "%Y-%m-%d").strftime("%d.%m.%Y")
+            cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
         elif format.upper() == "F":
             cell["xlsx_data"] = num(cell["data"])
             cell["numFmtId"] = "165"
@@ -158,15 +158,16 @@ class Q2Report:
 
         def extract_image(formula):
             image_data = self.formulator(formula).split(":")
-            images_list.append(
-                {
-                    "image": image_data[0],
-                    "width": num(image_data[1]),
-                    "height": num(image_data[2]),
-                    "pixel_width": num(image_data[3]),
-                    "pixel_height": num(image_data[4]),
-                }
-            )
+            if len(image_data) == 6:
+                images_list.append(
+                    {
+                        "image": image_data[0],
+                        "width": num(image_data[1]),
+                        "height": num(image_data[2]),
+                        "pixel_width": num(image_data[3]),
+                        "pixel_height": num(image_data[4]),
+                    }
+                )
             return ""
 
         cell_data = re_q2image.sub(extract_image, cell_data)

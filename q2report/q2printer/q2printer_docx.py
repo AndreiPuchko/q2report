@@ -26,26 +26,39 @@ class Q2PrinterDocx(Q2Printer):
         self.images_size_list = []
         self.document.append(docx_parts["doc_start"])
         self.page_params = None
+        self.current_page_header = None
+        self.headers = []
         self.table_opened = False
 
     def save(self):
         super().save()
-        self.close_docx_table()
-
-        self.document.append(self.page_params)
+        self.close_docx_page()
         self.document.append("</w:body>")
         self.document.append("</w:document>")
 
         zipf = zipfile.ZipFile(self.output_file, "w", zipfile.ZIP_DEFLATED)
 
-        relImage = []
+        document_xml_rels = []
         for x in range(len(self.xmlImageList)):
             zipf.writestr("word/media/image%s.png" % x, base64.b64decode(self.xmlImageList[x]))
-            relImage.append(docx_parts["images"] % (x, x))
+            document_xml_rels.append(docx_parts["images"] % (x, x))
+
+        document_xml_headers = []
+        for pos, x in enumerate(self.headers):
+            zipf.writestr("word/header%s.xml" % (pos + 100), x)
+            document_xml_headers.append(docx_parts["headers"] % (pos + 100, pos + 100))
+
+            zipf.writestr(
+                "word/_rels/header%s.xml.rels" % (pos + 100),
+                docx_parts["word_rels"] % "".join(document_xml_rels),
+            )
 
         zipf.writestr("_rels/.rels", docx_parts["rels"])
         zipf.writestr("[Content_Types].xml", docx_parts["content_type"])
-        zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(relImage))
+
+        document_xml_rels.extend(document_xml_headers)
+
+        zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(document_xml_rels))
         zipf.writestr("word/document.xml", "".join(self.document).encode("utf8"))
         zipf.close()
 
@@ -58,6 +71,9 @@ class Q2PrinterDocx(Q2Printer):
         page_margin_right=1,
         page_margin_bottom=1,
     ):
+
+        self.close_docx_page()
+
         super().reset_page(
             page_width,
             page_height,
@@ -67,39 +83,50 @@ class Q2PrinterDocx(Q2Printer):
             page_margin_bottom,
         )
 
+        self.page_params = True
+
+    def close_docx_page(self):
         self.close_docx_table()
         if self.page_params:
-            self.document.append(self.page_params)
-        self.page_params = self.get_page_params()
+            if self.current_page_header:
+                self.headers.append(self.current_page_header)
+                header_link_xml = """<w:headerReference w:type="default" r:id="rId%s"/>""" % (
+                    len(self.headers) + 100 - 1
+                )
+            else:
+                header_link_xml = ""
 
-    def get_page_params(self):
-        page_xml = f"""
-<w:p>
-    <w:pPr>
-        <w:sectPr>
-            <w:type w:val="nextPage"/>
-            <w:pgSz w:w="{self.page_width * twip_in_cm}" w:h="{self.page_height * twip_in_cm}"/>
-            <w:pgMar w:gutter="0" w:header="708" w:footer="708"
-                    w:top="{self.page_margin_top * twip_in_cm}"
-                    w:right="{self.page_margin_right * twip_in_cm}"
-                    w:bottom="{self.page_margin_bottom * twip_in_cm}"
-                    w:left="{self.page_margin_left * twip_in_cm}"
-            />
-            <w:cols w:space="708"/>
-            <w:docGrid w:linePitch="360"/>
-            <w:formProt w:val="false"/>
-            <w:textDirection w:val="lrTb"/>
-        </w:sectPr>
-        <w:rPr/>
-    </w:pPr>
-    <w:r>
-        <w:rPr/>
-    </w:r>
-    <w:r>
-        <w:br w:type="page"/>
-    </w:r>
-</w:p>"""
-        return page_xml
+            page_param_xml = f"""
+                <w:p>
+                    <w:pPr>
+                        <w:sectPr>
+                            {header_link_xml}
+                            <w:type w:val="nextPage"/>
+                            <w:pgSz 
+                                w:w="{self.page_width * twip_in_cm}" 
+                                w:h="{self.page_height * twip_in_cm}"/>
+                            <w:pgMar w:gutter="0" w:header="708" w:footer="708"
+                                    w:top="{self.page_margin_top * twip_in_cm}"
+                                    w:right="{self.page_margin_right * twip_in_cm}"
+                                    w:bottom="{self.page_margin_bottom * twip_in_cm}"
+                                    w:left="{self.page_margin_left * twip_in_cm}"
+                            />
+                            <w:cols w:space="708"/>
+                            <w:docGrid w:linePitch="360"/>
+                            <w:formProt w:val="false"/>
+                            <w:textDirection w:val="lrTb"/>
+                        </w:sectPr>
+                        <w:rPr/>
+                    </w:pPr>
+                    <w:r>
+                        <w:rPr/>
+                    </w:r>
+                    <w:r>
+                        <w:br w:type="page"/>
+                    </w:r>
+                </w:p>"""
+
+            self.document.append(page_param_xml)
 
     def reset_columns(self, widths=None):
         self.close_docx_table()
@@ -108,24 +135,7 @@ class Q2PrinterDocx(Q2Printer):
         self.open_docx_table()
 
     def open_docx_table(self):
-        self.document.append(
-            """<w:tbl>
-                                <w:tblPr>
-                                    <w:tblLayout w:type="fixed"/>
-                                    <w:tblInd w:w="28" w:type="dxa"/>
-                                    <w:tblCellMar>
-                                        <w:top w:w="28" w:type="dxa"/>
-                                        <w:left w:w="28" w:type="dxa"/>
-                                        <w:bottom w:w="28" w:type="dxa"/>
-                                        <w:right w:w="28" w:type="dxa"/>
-                                    </w:tblCellMar>
-                                </w:tblPr>
-                                <w:tblGrid>\n"""
-        )
-
-        for col in self._cm_columns_widths:
-            self.document.append(f'\t\t<w:gridCol w:w="{int_(col * twip_in_cm)}"/>\n')
-        self.document.append("""\t</w:tblGrid>\n""")
+        self.document.append(self.open_docs_table_xml())
         self.table_opened = True
 
     def close_docx_table(self):
@@ -134,6 +144,28 @@ class Q2PrinterDocx(Q2Printer):
             self.document.append("<w:p><w:r><w:rPr/></w:r></w:p>\n")
             self.table_opened = False
 
+    def open_docs_table_xml(self):
+        open_docs_table_xml = []
+        open_docs_table_xml.append(
+            """<w:tbl>
+                    <w:tblPr>
+                        <w:tblLayout w:type="fixed"/>
+                        <w:tblInd w:w="28" w:type="dxa"/>
+                        <w:tblCellMar>
+                            <w:top w:w="28" w:type="dxa"/>
+                            <w:left w:w="28" w:type="dxa"/>
+                            <w:bottom w:w="28" w:type="dxa"/>
+                            <w:right w:w="28" w:type="dxa"/>
+                        </w:tblCellMar>
+                    </w:tblPr>
+                    <w:tblGrid>\n"""
+        )
+
+        for col in self._cm_columns_widths:
+            open_docs_table_xml.append(f'\t\t<w:gridCol w:w="{int_(col * twip_in_cm)}"/>\n')
+        open_docs_table_xml.append("""\t</w:tblGrid>\n""")
+        return "\n".join(open_docs_table_xml)
+
     def render_rows_section(self, rows, style, outline_level):
         super().render_rows_section(rows, style, outline_level)
         row_count = len(rows["heights"])
@@ -141,8 +173,13 @@ class Q2PrinterDocx(Q2Printer):
         if rows["role"] == "table_header":
             self.reset_columns()
 
+        row_section_xml = []
+
+        if rows["role"] == "header":
+            row_section_xml.append(self.open_docs_table_xml())
+
         for row in range(row_count):  # вывод - по строкам
-            self.open_table_row(row, rows)
+            row_section_xml.append(self.open_table_row(row, rows))
 
             for col in range(self._columns_count):  # цикл по клеткам строки
                 key = f"{row},{col}"
@@ -157,7 +194,7 @@ class Q2PrinterDocx(Q2Printer):
                     if spanned_cells[key] == "":
                         continue
                     else:
-                        self.add_table_cell(cell_style, "", col, spanned_cells[key])
+                        row_section_xml.append(self.add_table_cell(cell_style, "", col, spanned_cells[key]))
                     continue
 
                 if cell_data.get("style", {}):
@@ -176,15 +213,24 @@ class Q2PrinterDocx(Q2Printer):
                             else:
                                 spanned_cells[span_key] = ""
 
-                self.add_table_cell(
-                    cell_style,
-                    cell_text,
-                    col,
-                    merge_str,
-                    self.get_cell_images(cell_data),
+                row_section_xml.append(
+                    self.add_table_cell(
+                        cell_style,
+                        cell_text,
+                        col,
+                        merge_str,
+                        self.get_cell_images(cell_data),
+                    )
                 )
 
-            self.close_table_row()
+            row_section_xml.append(self.close_table_row())
+
+        if rows["role"] == "header":
+            row_section_xml.append("</w:tbl>\n")
+
+            self.current_page_header = docx_parts["header"] % ("".join(row_section_xml))
+        else:
+            self.document.extend(row_section_xml)
 
     def get_cell_images(self, cell_data):
         images_list = cell_data.get("images")
@@ -202,17 +248,18 @@ class Q2PrinterDocx(Q2Printer):
         return "\n".join(cell_images_list)
 
     def open_table_row(self, row, rows):
-        self.document.append("\n\t<w:tr>")
-        self.document.append("\n\t\t<w:trPr>")
+        row_xml = ""
+        row_xml += "\n\t<w:tr>"
+        row_xml += "\n\t\t<w:trPr>"
         if rows["role"] == "table_header":
-            self.document.append('<w:tblHeader/>')
+            row_xml += "<w:tblHeader/>"
         if rows["real_heights"][row]:
-            self.document.append(f'\n\t\t\t<w:trHeight w:val="{rows["real_heights"][row]*twip_in_cm}" w:hRule="exact"/>')
-        self.document.append("\n\t\t</w:trPr>")
-        pass
+            row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["real_heights"][row]*twip_in_cm}" w:hRule="exact"/>'
+        row_xml += "\n\t\t</w:trPr>"
+        return row_xml
 
     def close_table_row(self):
-        self.document.append("\n\t</w:tr>")
+        return "\n\t</w:tr>"
 
     def add_table_cell(self, cell_style, cell_text, col, merge_str, images=[]):
         borders = self.get_cell_borders(cell_style)
@@ -221,8 +268,8 @@ class Q2PrinterDocx(Q2Printer):
         para_text = self.get_paragraph_text(cell_style, cell_text)
         valign = self.get_vertical_align(cell_style)
 
-        self.document.append(
-            f"""
+        # self.document.append(
+        return f"""
                 <w:tc>
                     <w:tcPr>
                         <w:tcW w:w="{int(self._cm_columns_widths[col] * twip_in_cm)}" w:type="dxa"/>
@@ -238,7 +285,6 @@ class Q2PrinterDocx(Q2Printer):
                     </w:p>
                 </w:tc>
         """
-        )
 
     def get_paragraph_text(self, cell_style, cell_text):
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
