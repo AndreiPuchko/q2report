@@ -26,8 +26,13 @@ class Q2PrinterDocx(Q2Printer):
         self.images_size_list = []
         self.document.append(docx_parts["doc_start"])
         self.page_params = None
+
         self.current_page_header = None
         self.headers = []
+
+        self.current_page_footer = None
+        self.footers = []
+
         self.table_opened = False
 
     def save(self):
@@ -39,10 +44,11 @@ class Q2PrinterDocx(Q2Printer):
         zipf = zipfile.ZipFile(self.output_file, "w", zipfile.ZIP_DEFLATED)
 
         document_xml_rels = []
+        # images
         for x in range(len(self.xmlImageList)):
             zipf.writestr("word/media/image%s.png" % x, base64.b64decode(self.xmlImageList[x]))
             document_xml_rels.append(docx_parts["images"] % (x, x))
-
+        # headers
         document_xml_headers = []
         for pos, x in enumerate(self.headers):
             zipf.writestr("word/header%s.xml" % (pos + 100), x)
@@ -52,13 +58,24 @@ class Q2PrinterDocx(Q2Printer):
                 "word/_rels/header%s.xml.rels" % (pos + 100),
                 docx_parts["word_rels"] % "".join(document_xml_rels),
             )
+        # footers
+        document_xml_footers = []
+        for pos, x in enumerate(self.footers):
+            zipf.writestr("word/footer%s.xml" % (pos + 200), x)
+            document_xml_footers.append(docx_parts["footers"] % (pos + 200, pos + 200))
+
+            zipf.writestr(
+                "word/_rels/footer%s.xml.rels" % (pos + 200),
+                docx_parts["word_rels"] % "".join(document_xml_rels),
+            )
+
+        document_xml_rels.extend(document_xml_headers)
+        document_xml_rels.extend(document_xml_footers)
+        zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(document_xml_rels))
 
         zipf.writestr("_rels/.rels", docx_parts["rels"])
         zipf.writestr("[Content_Types].xml", docx_parts["content_type"])
 
-        document_xml_rels.extend(document_xml_headers)
-
-        zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(document_xml_rels))
         zipf.writestr("word/document.xml", "".join(self.document).encode("utf8"))
         zipf.close()
 
@@ -88,19 +105,32 @@ class Q2PrinterDocx(Q2Printer):
     def close_docx_page(self):
         self.close_docx_table()
         if self.page_params:
+            header_ref_xml = ""
+            footer_ref_xml = ""
             if self.current_page_header:
                 self.headers.append(self.current_page_header)
-                header_link_xml = """<w:headerReference w:type="default" r:id="rId%s"/>""" % (
+                self.current_page_header = None
+                header_ref_xml = """<w:headerReference w:type="default" r:id="rId%s"/>""" % (
                     len(self.headers) + 100 - 1
                 )
-            else:
-                header_link_xml = ""
+            if self.current_page_footer:
+                self.footers.append(self.current_page_footer)
+                self.current_page_footer = None
+                footer_ref_xml = """<w:footerReference w:type="default" r:id="rId%s"/>""" % (
+                    len(self.footers) + 200 - 1
+                )
 
-            page_param_xml = f"""
+            page_param_xml = self.page_parm_xml(header_ref_xml, footer_ref_xml)
+
+            self.document.append(page_param_xml)
+
+    def page_parm_xml(self, header_ref_xml, footer_ref_xml):
+        page_param_xml = f"""
                 <w:p>
                     <w:pPr>
                         <w:sectPr>
-                            {header_link_xml}
+                            {header_ref_xml}
+                            {footer_ref_xml}
                             <w:type w:val="nextPage"/>
                             <w:pgSz 
                                 w:w="{self.page_width * twip_in_cm}" 
@@ -126,7 +156,7 @@ class Q2PrinterDocx(Q2Printer):
                     </w:r>
                 </w:p>"""
 
-            self.document.append(page_param_xml)
+        return page_param_xml
 
     def reset_columns(self, widths=None):
         self.close_docx_table()
@@ -168,17 +198,16 @@ class Q2PrinterDocx(Q2Printer):
 
     def render_rows_section(self, rows, style, outline_level):
         super().render_rows_section(rows, style, outline_level)
-        row_count = len(rows["heights"])
         spanned_cells = {}
         if rows["role"] == "table_header":
             self.reset_columns()
 
         row_section_xml = []
 
-        if rows["role"] == "header":
+        if rows["role"] in ("header", "footer"):
             row_section_xml.append(self.open_docs_table_xml())
 
-        for row in range(row_count):  # вывод - по строкам
+        for row in range(len(rows["heights"])):  # вывод - по строкам
             row_section_xml.append(self.open_table_row(row, rows))
 
             for col in range(self._columns_count):  # цикл по клеткам строки
@@ -227,8 +256,10 @@ class Q2PrinterDocx(Q2Printer):
 
         if rows["role"] == "header":
             row_section_xml.append("</w:tbl>\n")
-
             self.current_page_header = docx_parts["header"] % ("".join(row_section_xml))
+        elif rows["role"] == "footer":
+            row_section_xml.append("</w:tbl>\n")
+            self.current_page_footer = docx_parts["footer"] % ("".join(row_section_xml))
         else:
             self.document.extend(row_section_xml)
 
