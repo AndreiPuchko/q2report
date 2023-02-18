@@ -88,7 +88,6 @@ docx_parts[
     <Relationship Id="rId1"
         Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
         Target="word/document.xml"/>
-        %s
     </Relationships>"""
 docx_parts[
     "content_type"

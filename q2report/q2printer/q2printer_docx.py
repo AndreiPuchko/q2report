@@ -44,20 +44,25 @@ class Q2PrinterDocx(Q2Printer):
         zipf = zipfile.ZipFile(self.output_file, "w", zipfile.ZIP_DEFLATED)
 
         document_xml_rels = []
+
         # images
         for x in range(len(self.xmlImageList)):
             zipf.writestr("word/media/image%s.png" % x, base64.b64decode(self.xmlImageList[x]))
             document_xml_rels.append(docx_parts["images"] % (x, x))
+
         # headers
         document_xml_headers = []
         for pos, x in enumerate(self.headers):
-            zipf.writestr("word/header%s.xml" % (pos + 100), x)
-            document_xml_headers.append(docx_parts["headers"] % (pos + 100, pos + 100))
+            zipf.writestr("word/header%s.xml" % (pos), x)
+            document_xml_headers.append(
+                docx_parts["headers"] % (self.get_header_rid(len(self.headers)  - 1), pos)
+            )
 
             zipf.writestr(
-                "word/_rels/header%s.xml.rels" % (pos + 100),
+                "word/_rels/header%s.xml.rels" % (pos ),
                 docx_parts["word_rels"] % "".join(document_xml_rels),
             )
+
         # footers
         document_xml_footers = []
         for pos, x in enumerate(self.footers):
@@ -111,8 +116,9 @@ class Q2PrinterDocx(Q2Printer):
                 self.headers.append(self.current_page_header)
                 self.current_page_header = None
                 header_ref_xml = """<w:headerReference w:type="default" r:id="rId%s"/>""" % (
-                    len(self.headers) + 100 - 1
+                    self.get_header_rid(len(self.headers) - 1)
                 )
+
             if self.current_page_footer:
                 self.footers.append(self.current_page_footer)
                 self.current_page_footer = None
@@ -123,6 +129,9 @@ class Q2PrinterDocx(Q2Printer):
             page_param_xml = self.page_parm_xml(header_ref_xml, footer_ref_xml)
 
             self.document.append(page_param_xml)
+
+    def get_header_rid(self, id):
+        return f"_header_{id}"
 
     def page_parm_xml(self, header_ref_xml, footer_ref_xml):
         page_param_xml = f"""
