@@ -281,8 +281,8 @@ class Q2PrinterDocx(Q2Printer):
         for x in images_list:
             width, height, imageIndex = self.prepare_image(x, cell_width)
 
-            width = num(width) * num(12700) * points_in_cm
-            height = num(height) * num(12700) * points_in_cm
+            width = round(num(width) * num(12700) * points_in_cm)
+            height = round(num(height) * num(12700) * points_in_cm)
 
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
