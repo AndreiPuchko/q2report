@@ -52,14 +52,16 @@ class Q2PrinterDocx(Q2Printer):
 
         # headers
         document_xml_headers = []
+        headers_footers_content_types = []
         for pos, x in enumerate(self.headers):
-            zipf.writestr("word/header%s.xml" % (pos), x)
+            zipf.writestr("word/header%s.xml" % pos, x)
             document_xml_headers.append(
-                docx_parts["headers"] % (self.get_header_rid(len(self.headers)  - 1), pos)
+                docx_parts["headers"] % (self.get_header_rid(len(self.headers)), pos)
             )
+            headers_footers_content_types.append(docx_parts["headers_footers_content_type"] % ("header", pos, "header"))
 
             zipf.writestr(
-                "word/_rels/header%s.xml.rels" % (pos ),
+                "word/_rels/header%s.xml.rels" % pos,
                 docx_parts["word_rels"] % "".join(document_xml_rels),
             )
 
@@ -68,6 +70,7 @@ class Q2PrinterDocx(Q2Printer):
         for pos, x in enumerate(self.footers):
             zipf.writestr("word/footer%s.xml" % (pos + 200), x)
             document_xml_footers.append(docx_parts["footers"] % (pos + 200, pos + 200))
+            headers_footers_content_types.append(docx_parts["headers_footers_content_type"] % ("footer", pos + 200, "footer"))
 
             zipf.writestr(
                 "word/_rels/footer%s.xml.rels" % (pos + 200),
@@ -79,7 +82,9 @@ class Q2PrinterDocx(Q2Printer):
         zipf.writestr("word/_rels/document.xml.rels", docx_parts["word_rels"] % "".join(document_xml_rels))
 
         zipf.writestr("_rels/.rels", docx_parts["rels"])
-        zipf.writestr("[Content_Types].xml", docx_parts["content_type"])
+
+        content_type = "\n".join(headers_footers_content_types)
+        zipf.writestr("[Content_Types].xml", docx_parts["content_type"] % content_type)
 
         zipf.writestr("word/document.xml", "".join(self.document).encode("utf8"))
         zipf.close()
@@ -116,7 +121,7 @@ class Q2PrinterDocx(Q2Printer):
                 self.headers.append(self.current_page_header)
                 self.current_page_header = None
                 header_ref_xml = """<w:headerReference w:type="default" r:id="rId%s"/>""" % (
-                    self.get_header_rid(len(self.headers) - 1)
+                    self.get_header_rid(len(self.headers))
                 )
 
             if self.current_page_footer:
@@ -132,6 +137,9 @@ class Q2PrinterDocx(Q2Printer):
 
     def get_header_rid(self, id):
         return f"_header_{id}"
+
+    def get_footer_rid(self, id):
+        return f"_footer_{id}"
 
     def page_parm_xml(self, header_ref_xml, footer_ref_xml):
         page_param_xml = f"""
@@ -156,7 +164,7 @@ class Q2PrinterDocx(Q2Printer):
                             <w:textDirection w:val="lrTb"/>
                         </w:sectPr>
                         <w:rPr/>
-                    </w:pPr>
+                     </w:pPr>
                     <w:r>
                         <w:rPr/>
                     </w:r>
@@ -186,10 +194,12 @@ class Q2PrinterDocx(Q2Printer):
     def open_docs_table_xml(self):
         open_docs_table_xml = []
         open_docs_table_xml.append(
-            """<w:tbl>
+            f"""<w:tbl>
                     <w:tblPr>
                         <w:tblLayout w:type="fixed"/>
                         <w:tblInd w:w="28" w:type="dxa"/>
+                        <w:tblW w:w="{round(sum(int_(x * twip_in_cm) for x in self._cm_columns_widths))}"
+                             w:type="dxa"/>
                         <w:tblCellMar>
                             <w:top w:w="28" w:type="dxa"/>
                             <w:left w:w="28" w:type="dxa"/>
@@ -199,7 +209,6 @@ class Q2PrinterDocx(Q2Printer):
                     </w:tblPr>
                     <w:tblGrid>\n"""
         )
-
         for col in self._cm_columns_widths:
             open_docs_table_xml.append(f'\t\t<w:gridCol w:w="{int_(col * twip_in_cm)}"/>\n')
         open_docs_table_xml.append("""\t</w:tblGrid>\n""")

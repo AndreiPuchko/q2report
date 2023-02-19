@@ -107,7 +107,12 @@ docx_parts[
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/word/document.xml"
         ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+    %s
     </Types>"""
+docx_parts["headers_footers_content_type"] = """
+            <Override PartName="/word/%s%s.xml"
+                ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.%s+xml"/>
+"""
 docx_parts[
     "word_rels"
 ] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
