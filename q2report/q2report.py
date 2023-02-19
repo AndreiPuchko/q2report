@@ -177,10 +177,14 @@ class Q2Report:
         self.printer: Q2Printer = get_printer(output_file, output_type)
         report_style = dict(self.report_content["style"])
 
-        for page in self.report_content.get("pages", []):
+        pages = self.report_content.get("pages", [])
+        for index, page in enumerate(pages):
+            self.printer.reset_page(
+                **{x: page[x] for x in page if x.startswith("page_")}, last_page=(index == (len(pages) - 1))
+            )
+
             page_style = dict(report_style)
             page_style.update(page.get("style", {}))
-            self.printer.reset_page(**{x: page[x] for x in page if x.startswith("page_")})
 
             for column in page.get("columns", []):
                 column_style = dict(page_style)

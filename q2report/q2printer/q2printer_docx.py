@@ -37,7 +37,7 @@ class Q2PrinterDocx(Q2Printer):
 
     def save(self):
         super().save()
-        self.close_docx_page()
+        self.close_docx_page(True)
         self.document.append("</w:body>")
         self.document.append("</w:document>")
 
@@ -97,9 +97,10 @@ class Q2PrinterDocx(Q2Printer):
         page_margin_top=1,
         page_margin_right=1,
         page_margin_bottom=1,
+        last_page=False
     ):
 
-        self.close_docx_page()
+        self.close_docx_page(last_page)
 
         super().reset_page(
             page_width,
@@ -112,7 +113,7 @@ class Q2PrinterDocx(Q2Printer):
 
         self.page_params = True
 
-    def close_docx_page(self):
+    def close_docx_page(self, last_page):
         self.close_docx_table()
         if self.page_params:
             header_ref_xml = ""
@@ -131,7 +132,7 @@ class Q2PrinterDocx(Q2Printer):
                     len(self.footers) + 200 - 1
                 )
 
-            page_param_xml = self.page_parm_xml(header_ref_xml, footer_ref_xml)
+            page_param_xml = self.page_parm_xml(header_ref_xml, footer_ref_xml, last_page)
 
             self.document.append(page_param_xml)
 
@@ -141,10 +142,25 @@ class Q2PrinterDocx(Q2Printer):
     def get_footer_rid(self, id):
         return f"_footer_{id}"
 
-    def page_parm_xml(self, header_ref_xml, footer_ref_xml):
-        page_param_xml = f"""
+    def page_parm_xml(self, header_ref_xml, footer_ref_xml, last_page):
+        if last_page:
+            pre_page_param = "%s"
+        else:
+            pre_page_param = """
                 <w:p>
                     <w:pPr>
+                    %s
+                    <w:rPr/>
+                    </w:pPr>
+                <w:r>
+                    <w:rPr/>
+                </w:r>
+                <w:r>
+                    <w:br w:type="page"/>
+                </w:r>
+            </w:p>
+            """
+        page_param = f"""
                         <w:sectPr>
                             {header_ref_xml}
                             {footer_ref_xml}
@@ -163,15 +179,8 @@ class Q2PrinterDocx(Q2Printer):
                             <w:formProt w:val="false"/>
                             <w:textDirection w:val="lrTb"/>
                         </w:sectPr>
-                        <w:rPr/>
-                     </w:pPr>
-                    <w:r>
-                        <w:rPr/>
-                    </w:r>
-                    <w:r>
-                        <w:br w:type="page"/>
-                    </w:r>
-                </w:p>"""
+                """
+        page_param_xml  = pre_page_param % page_param
 
         return page_param_xml
 
