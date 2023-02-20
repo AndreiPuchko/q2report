@@ -46,7 +46,7 @@ class Q2Printer:
 
     def calculate_real_sizes(self, rows, style):
         row_count = len(rows["heights"])
-        rows["real_heights"] = [0 for x in range(row_count)]
+        rows["real_heights"] = [1 for x in range(row_count)]
         for row in range(row_count):
             for col in range(self._columns_count):
                 key = f"{row},{col}"

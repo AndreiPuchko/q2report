@@ -145,6 +145,7 @@ class Q2PrinterXlsx(Q2Printer):
             #                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
             #             )
 
+
             sheet_data = "".join(
                 f"""
                     <row
@@ -432,7 +433,7 @@ class Q2PrinterXlsx(Q2Printer):
         while len(border_width) < 4:
             border_width += border_width
         border = []
-        for index, side in enumerate(("top", "right", "bottom", "left")):
+        for index, side in enumerate(("left", "right", "top", "bottom")):
             if int_(border_width[index]):
                 bw = self.get_border_width(border_width[index])
                 border.append(f'<{side} style="{bw}"><color auto="1"/></{side}>')

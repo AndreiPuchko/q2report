@@ -3,44 +3,50 @@ xlsx_parts = {}
 xlsx_parts[
     "xl/drawings/drawing.xml(png)"
 ] = """
- <xdr:oneCellAnchor>
-    <xdr:from>
-        <xdr:col>%(_col)s</xdr:col>
-        <xdr:colOff>0</xdr:colOff>
-        <xdr:row>%(_row)s</xdr:row>
-        <xdr:rowOff>0</xdr:rowOff>
-    </xdr:from>
-    <xdr:ext cx="%(_width)s" cy="%(_height)s"/>
-    <xdr:pic>
-        <xdr:blipFill>
-            <a:blip r:embed="rId%(_id)s"/>
-        </xdr:blipFill>
-        <xdr:spPr bwMode="auto">
-            <a:xfrm>
-                <a:off x="3030990" y="328576"/>
-                <a:ext cx="996723" cy="491254"/>
-            </a:xfrm>
-            <a:prstGeom prst="rect">
-                <a:avLst/>
-            </a:prstGeom>
-            <a:noFill/>
-            <a:ln w="9525">
-                <a:noFill/>
-                <a:miter lim="800000"/>
-                <a:headEnd/>
-                <a:tailEnd/>
-            </a:ln>
-        </xdr:spPr>
-    </xdr:pic>
+    <xdr:oneCellAnchor>
+        <xdr:from>
+            <xdr:col>%(_col)s</xdr:col>
+            <xdr:colOff>0</xdr:colOff>
+            <xdr:row>%(_row)s</xdr:row>
+            <xdr:rowOff>0</xdr:rowOff>
+        </xdr:from>
+        <xdr:ext
+            cx="%(_width)s"
+            cy="%(_height)s"/>
+        <xdr:pic>
+			<xdr:nvPicPr>
+                <xdr:cNvPr id="%(_id)s"
+                        name="image%(_id)s"/>
+                <xdr:cNvPicPr>
+                    <a:picLocks noChangeAspect="1"/>
+                </xdr:cNvPicPr>
+            </xdr:nvPicPr>
+            <xdr:blipFill>
+                <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                        r:embed="rId%(_id)s">
+                </a:blip>
+                <a:stretch>
+                    <a:fillRect/>
+                </a:stretch>
+            </xdr:blipFill>
+            <xdr:spPr bwMode="auto">
+                <a:xfrm>
+                    <a:off x="0" y="0"/>
+                    <a:ext cx="%(_width)s" cy="%(_height)s"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                    <a:avLst/>
+                </a:prstGeom>
+            </xdr:spPr>
+        </xdr:pic>
+        <xdr:clientData/>
  </xdr:oneCellAnchor>"""
 
 
 xlsx_parts[
     "xl/drawings/drawing.xml"
-] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+] = """<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+          xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
             %s
     </xdr:wsDr>"""
 xlsx_parts[
