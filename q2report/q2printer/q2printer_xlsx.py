@@ -145,7 +145,6 @@ class Q2PrinterXlsx(Q2Printer):
             #                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
             #             )
 
-
             sheet_data = "".join(
                 f"""
                     <row
@@ -223,14 +222,16 @@ class Q2PrinterXlsx(Q2Printer):
         if self.current_sheet:
             self.xlsx_sheets.append(self.current_sheet)
 
-    def render_rows_section(self, rows, style, outline_level):
-        super().render_rows_section(rows, style, outline_level)
-        row_count = len(rows["heights"])
+    def render_rows_section(self, rows_section, style, outline_level):
+        super().render_rows_section(rows_section, style, outline_level)
+        row_count = len(rows_section["heights"])
         spanned_cells = {}
 
         sheet_row = {}
         for row in range(row_count):  # вывод - по строкам
-            sheet_row["height"] = rows["real_heights"][row] * points_in_cm
+            sheet_row["height"] = (
+                rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
+            ) * points_in_cm
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level
             for col in range(self._columns_count):  # цикл по клеткам строки
@@ -239,16 +240,16 @@ class Q2PrinterXlsx(Q2Printer):
                     sheet_row["cells"].append(spanned_cells[key])
                     continue
                 cell_address = self.get_cell_address(self.sheet_current_row, col)
-                cell_data = rows.get("cells", {}).get(key, {})
+                cell_data = rows_section.get("cells", {}).get(key, {})
                 cell_text = cell_data.get("data", "")
 
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
 
-                cell_style = dict(style)
-                if cell_data.get("style", {}):
-                    cell_style.update(cell_data.get("style", {}))
-                cell_data["style"] = cell_style
+                cell_style = cell_data.get("style", {})
+                if cell_style == {}:
+                    cell_style = dict(style)
+                    # cell_data["style"] = cell_style
 
                 self.make_image(cell_data, row, col)
                 cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_text, cell_data)

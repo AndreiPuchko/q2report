@@ -37,6 +37,7 @@ class Q2Printer:
         self._OF = None
         self._columns_count = None
         self._cm_columns_widths = []
+        self.q2report = None
         self.open_output_file()
 
     def open_output_file(self):
@@ -46,7 +47,7 @@ class Q2Printer:
 
     def calculate_real_sizes(self, rows, style):
         row_count = len(rows["heights"])
-        rows["real_heights"] = [1 for x in range(row_count)]
+        rows["real_heights"] = [0 for x in range(row_count)]
         for row in range(row_count):
             for col in range(self._columns_count):
                 key = f"{row},{col}"
@@ -57,6 +58,9 @@ class Q2Printer:
                     cell_data["width"] = sum(self._cm_columns_widths[col : col + cell_data["colspan"]])
                 else:
                     cell_data["width"] = self._cm_columns_widths[col]
+                if cell_data.get("data"):
+                    self.q2report.get_cell_height(cell_data)
+                # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
                     rows["real_heights"][row] = (
@@ -64,6 +68,7 @@ class Q2Printer:
                     )
 
     def render_rows_section(self, rows, style, outline_level):
+        # TODO apply style to every cell - to simplify real render_rows_section
         self.calculate_real_sizes(rows, style)
 
     def reset_page(

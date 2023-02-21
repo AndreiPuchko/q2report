@@ -94,9 +94,7 @@ class Q2PrinterHtml(Q2Printer):
                 cell_style = cell_data.get("style", {})
                 cell_text = self.render_cell_images(cell_data)
                 if cell_style:
-                    tmp_style = dict(style)
-                    tmp_style.update(cell_style)
-                    style_index = self.get_style_index(tmp_style)
+                    style_index = self.get_style_index(cell_style)
                 else:
                     style_index = self.get_style_index(style)
                 if row_span > 1 or col_span > 1:

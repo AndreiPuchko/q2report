@@ -99,6 +99,10 @@ class Q2Report:
     def data_stop(self):
         self.current_data_set_name = ""
 
+    def get_cell_height(self, cell_data):
+        # print(cell_data["data"])
+        pass
+
     def formulator(self, formula):
         formula = formula[0][1:-1]
         if self.use_prevrowdata:
@@ -130,7 +134,7 @@ class Q2Report:
             cell["xlsx_data"] = num(cell["data"])
             cell["numFmtId"] = "164"
 
-    def render_rows_section(self, rows_section, row_style, aggregator=None):
+    def render_rows_section(self, rows_section, column_style, aggregator=None):
         if aggregator is None:
             self.use_prevrowdata = False
             self.data.update({x: self.table_aggregators[x]["v"] for x in self.table_aggregators})
@@ -139,19 +143,24 @@ class Q2Report:
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
             self.prevrowdata.update(self.params)
             self.use_prevrowdata = True
+
+        rows_section_style = dict(column_style)
+        rows_section_style.update(rows_section.get("style", {}))
         rows_section = deepcopy(rows_section)
+        rows_section["style"] = rows_section_style
         for cell in rows_section["cells"]:
-            cell_data = rows_section["cells"][cell].get("data")
-            if cell_data:
+            cell_text = rows_section["cells"][cell].get("data")
+            cell_style = dict(rows_section_style)
+            cell_style.update(rows_section["cells"][cell].get("style", {}))
+            rows_section["cells"][cell]["style"] = cell_style
+            if cell_text:
                 #  images
-                cell_data, rows_section["cells"][cell]["images"] = self.extract_images(cell_data)
+                cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text)
                 #  text data
-                rows_section["cells"][cell]["data"] = re_calc.sub(self.formulator, cell_data)
+                rows_section["cells"][cell]["data"] = re_calc.sub(self.formulator, cell_text)
                 self.format(rows_section["cells"][cell])
 
-        row_style = dict(row_style)
-        row_style.update(rows_section.get("style", {}))
-        self.printer.render_rows_section(rows_section, row_style, self.outline_level)
+        self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
 
     def extract_images(self, cell_data):
         images_list = []
@@ -175,6 +184,7 @@ class Q2Report:
 
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         self.printer: Q2Printer = get_printer(output_file, output_type)
+        self.printer.q2report = self
         report_style = dict(self.report_content["style"])
 
         pages = self.report_content.get("pages", [])

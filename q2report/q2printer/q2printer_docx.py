@@ -223,28 +223,31 @@ class Q2PrinterDocx(Q2Printer):
         open_docs_table_xml.append("""\t</w:tblGrid>\n""")
         return "\n".join(open_docs_table_xml)
 
-    def render_rows_section(self, rows, style, outline_level):
-        super().render_rows_section(rows, style, outline_level)
+    def render_rows_section(self, rows_section, style, outline_level):
+        super().render_rows_section(rows_section, style, outline_level)
         spanned_cells = {}
-        if rows["role"] == "table_header":
+        if rows_section["role"] == "table_header":
             self.reset_columns()
 
         row_section_xml = []
 
-        if rows["role"] in ("header", "footer"):
+        if rows_section["role"] in ("header", "footer"):
             row_section_xml.append(self.open_docs_table_xml())
 
-        for row in range(len(rows["heights"])):  # вывод - по строкам
-            row_section_xml.append(self.open_table_row(row, rows))
+        for row in range(len(rows_section["heights"])):  # вывод - по строкам
+            row_section_xml.append(self.open_table_row(row, rows_section))
 
             for col in range(self._columns_count):  # цикл по клеткам строки
                 key = f"{row},{col}"
-                cell_data = rows.get("cells", {}).get(key, {})
+                cell_data = rows_section.get("cells", {}).get(key, {})
 
                 cell_text = cell_data.get("data", "")
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
-                cell_style = dict(style)
+
+                cell_style = cell_data.get("style", {})
+                if cell_style == {}:
+                    cell_style = dict(style)
 
                 if key in spanned_cells:
                     if spanned_cells[key] == "":
@@ -253,8 +256,6 @@ class Q2PrinterDocx(Q2Printer):
                         row_section_xml.append(self.add_table_cell(cell_style, "", col, spanned_cells[key]))
                     continue
 
-                if cell_data.get("style", {}):
-                    cell_style.update(cell_data.get("style", {}))
                 merge_str = ""
                 if row_span > 1 or col_span > 1:
                     if col_span > 1:
@@ -281,10 +282,10 @@ class Q2PrinterDocx(Q2Printer):
 
             row_section_xml.append(self.close_table_row())
 
-        if rows["role"] == "header":
+        if rows_section["role"] == "header":
             row_section_xml.append("</w:tbl>\n")
             self.current_page_header = docx_parts["header"] % ("".join(row_section_xml))
-        elif rows["role"] == "footer":
+        elif rows_section["role"] == "footer":
             row_section_xml.append("</w:tbl>\n")
             self.current_page_footer = docx_parts["footer"] % ("".join(row_section_xml))
         else:
@@ -323,7 +324,7 @@ class Q2PrinterDocx(Q2Printer):
         borders = self.get_cell_borders(cell_style)
         margins = self.get_cell_paddings(cell_style)
         para_params = self.get_paragraph_params(cell_style)
-        para_text = self.get_paragraph_text(cell_style, cell_text)
+        para_text = self.get_paragraph_text(cell_style, cell_text, para_params)
         valign = self.get_vertical_align(cell_style)
 
         # self.document.append(
@@ -344,7 +345,7 @@ class Q2PrinterDocx(Q2Printer):
                 </w:tc>
         """
 
-    def get_paragraph_text(self, cell_style, cell_text):
+    def get_paragraph_text(self, cell_style, cell_text, para_params):
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         para_text = []
         if "font-weight" in cell_style and cell_style["font-weight"] == "bold":
@@ -374,8 +375,9 @@ class Q2PrinterDocx(Q2Printer):
                 # elif "FONTSIZE=" in stl:
                 #     fontsizemod = grid.getFontSizeMod(fontsize / 2, stl.split("=")[1]) * 2
                 elif "BR/" == stl or "BR" == stl:
-                    para_text.append("""</w:p>""")
-                    para_text.append(self.get_paragraph_params(cell_style))
+                    pass
+                    para_text.append(f"""</w:p><w:p>{para_params}""")
+                    # para_text.append(self.get_paragraph_params(cell_style))
                 x = x.split(">")[1]
             if x:
                 para_text.append(
