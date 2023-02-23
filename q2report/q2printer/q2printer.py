@@ -47,7 +47,7 @@ class Q2Printer:
 
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])
-        spanned_key = []
+        spanned_cells = {}
         rows_section["real_heights"] = [0 for x in range(row_count)]
         rows_section["max_cell_height"] = [0 for x in range(row_count)]
         for row in range(row_count):
@@ -55,7 +55,7 @@ class Q2Printer:
                 key = f"{row},{col}"
                 cell_data = rows_section.get("cells", {}).get(key, {})
                 if cell_data.get("rowspan", 0) > 1 or cell_data.get("colspan", 0) > 1:
-                    spanned_key.append(key)
+                    spanned_cells[key] = 0
 
                 if not cell_data:
                     continue
@@ -65,8 +65,11 @@ class Q2Printer:
                     cell_data["width"] = self._cm_columns_widths[col]
                 if cell_data.get("data"):
                     cell_data["height"] = self.q2report.get_cell_height(cell_data)
-                    if rows_section["max_cell_height"][row] < cell_data["height"]:
-                        rows_section["max_cell_height"][row] = cell_data["height"]
+                    if key in spanned_cells:
+                        spanned_cells[key] = cell_data["height"]
+                    else:
+                        if rows_section["max_cell_height"][row] < cell_data["height"]:
+                            rows_section["max_cell_height"][row] = cell_data["height"]
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
@@ -75,7 +78,15 @@ class Q2Printer:
                     )
                     if rows_section["max_cell_height"][row] < rows_section["real_heights"][row]:
                         rows_section["max_cell_height"][row] = rows_section["real_heights"][row]
-        print(spanned_key)
+        # calculating height for spanned cells
+        for key in spanned_cells:
+            start_row = int(key.split(",")[0])
+            haha = 0
+            for row in range (start_row, start_row+rows_section["cells"][key]["rowspan"] -1 ):
+                haha += rows_section["max_cell_height"][row] if rows_section["max_cell_height"][row] else num(0.5)
+            rest = spanned_cells[key] - haha
+            if rest > rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] -1]:
+                rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] -1] = rest
 
     def render_rows_section(self, rows, style, outline_level):
         self.calculate_real_sizes(rows, style)

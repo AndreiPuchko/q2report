@@ -323,8 +323,8 @@ class Q2PrinterDocx(Q2Printer):
         row_xml += "\n\t\t<w:trPr>"
         if rows["role"] == "table_header":
             row_xml += "<w:tblHeader/>"
-        if rows["real_heights"][row]:
-            row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["real_heights"][row]*twip_in_cm}" w:hRule="exact"/>'
+        if rows["max_cell_height"][row]:
+            row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["max_cell_height"][row]*twip_in_cm}" w:hRule="exact"/>'
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
 
