@@ -55,10 +55,10 @@ class Q2PrinterDocx(Q2Printer):
         headers_footers_content_types = []
         for pos, x in enumerate(self.headers):
             zipf.writestr("word/header%s.xml" % pos, x)
-            document_xml_headers.append(
-                docx_parts["headers"] % (self.get_header_rid(len(self.headers)), pos)
+            document_xml_headers.append(docx_parts["headers"] % (self.get_header_rid(len(self.headers)), pos))
+            headers_footers_content_types.append(
+                docx_parts["headers_footers_content_type"] % ("header", pos, "header")
             )
-            headers_footers_content_types.append(docx_parts["headers_footers_content_type"] % ("header", pos, "header"))
 
             zipf.writestr(
                 "word/_rels/header%s.xml.rels" % pos,
@@ -70,7 +70,9 @@ class Q2PrinterDocx(Q2Printer):
         for pos, x in enumerate(self.footers):
             zipf.writestr("word/footer%s.xml" % (pos + 200), x)
             document_xml_footers.append(docx_parts["footers"] % (pos + 200, pos + 200))
-            headers_footers_content_types.append(docx_parts["headers_footers_content_type"] % ("footer", pos + 200, "footer"))
+            headers_footers_content_types.append(
+                docx_parts["headers_footers_content_type"] % ("footer", pos + 200, "footer")
+            )
 
             zipf.writestr(
                 "word/_rels/footer%s.xml.rels" % (pos + 200),
@@ -97,7 +99,7 @@ class Q2PrinterDocx(Q2Printer):
         page_margin_top=1,
         page_margin_right=1,
         page_margin_bottom=1,
-        last_page=False
+        last_page=False,
     ):
 
         self.close_docx_page(last_page)
@@ -180,7 +182,7 @@ class Q2PrinterDocx(Q2Printer):
                             <w:textDirection w:val="lrTb"/>
                         </w:sectPr>
                 """
-        page_param_xml  = pre_page_param % page_param
+        page_param_xml = pre_page_param % page_param
 
         return page_param_xml
 
@@ -225,7 +227,8 @@ class Q2PrinterDocx(Q2Printer):
 
     def render_rows_section(self, rows_section, style, outline_level):
         super().render_rows_section(rows_section, style, outline_level)
-        spanned_cells = {}
+        spanned_cells_first_column_cell = {}
+        spanned_cells_empty_column_cell = {}
         if rows_section["role"] == "table_header":
             self.reset_columns()
 
@@ -239,42 +242,50 @@ class Q2PrinterDocx(Q2Printer):
 
             for col in range(self._columns_count):  # цикл по клеткам строки
                 key = f"{row},{col}"
+                if key in spanned_cells_empty_column_cell:
+                    continue
+
                 cell_data = rows_section.get("cells", {}).get(key, {})
 
                 cell_text = cell_data.get("data", "")
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
-
                 cell_style = cell_data.get("style", {})
+                if cell_data.get("width"):
+                    cell_width = cell_data["width"]
+                else:
+                    cell_width = self._cm_columns_widths[col]
+
                 if cell_style == {}:
                     cell_style = dict(style)
-
-                if key in spanned_cells:
-                    if spanned_cells[key] == "":
-                        continue
-                    else:
-                        row_section_xml.append(self.add_table_cell(cell_style, "", col, spanned_cells[key]))
+                if key in spanned_cells_first_column_cell:
+                    row_section_xml.append(
+                        self.add_table_cell(cell_style, "", cell_width, spanned_cells_first_column_cell[key])
+                    )
                     continue
 
                 merge_str = ""
                 if row_span > 1 or col_span > 1:
                     if col_span > 1:
                         merge_str = f'<w:gridSpan w:val="{col_span}"/>'
+                    for tmp_span_row in range(int_(row_span)):
+                        for tmp_span_col in range(int_(col_span)):
+                            span_key = f"{tmp_span_row+row},{tmp_span_col+col}"
+                            if tmp_span_row + row != row and tmp_span_col + col == col:
+                                spanned_cells_first_column_cell[
+                                    span_key
+                                ] = f'{merge_str} <w:vMerge w:val="continue"/>'
+                            if tmp_span_col + col > col:
+                                spanned_cells_empty_column_cell[span_key] = ""
+
                     if row_span > 1:
                         merge_str += '<w:vMerge w:val="restart"/>'
-                    for span_row in range(int_(row_span)):
-                        for span_col in range(int_(col_span)):
-                            span_key = f"{span_row+row},{span_col+col}"
-                            if row_span > 1:
-                                spanned_cells[span_key] = "<w:vMerge/>" * row_span
-                            else:
-                                spanned_cells[span_key] = ""
 
                 row_section_xml.append(
                     self.add_table_cell(
                         cell_style,
                         cell_text,
-                        col,
+                        cell_width,
                         merge_str,
                         self.get_cell_images(cell_data),
                     )
@@ -320,7 +331,7 @@ class Q2PrinterDocx(Q2Printer):
     def close_table_row(self):
         return "\n\t</w:tr>"
 
-    def add_table_cell(self, cell_style, cell_text, col, merge_str, images=[]):
+    def add_table_cell(self, cell_style, cell_text, cell_width, merge_str, images=[]):
         borders = self.get_cell_borders(cell_style)
         margins = self.get_cell_paddings(cell_style)
         para_params = self.get_paragraph_params(cell_style)
@@ -331,7 +342,7 @@ class Q2PrinterDocx(Q2Printer):
         return f"""
                 <w:tc>
                     <w:tcPr>
-                        <w:tcW w:w="{int(self._cm_columns_widths[col] * twip_in_cm)}" w:type="dxa"/>
+                        <w:tcW w:w="{int(cell_width * twip_in_cm)}" w:type="dxa"/>
                         {valign}
                         {merge_str}
                         {borders}

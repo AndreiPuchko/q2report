@@ -45,14 +45,18 @@ class Q2Printer:
         #     os.mkdir(os.path.dirname(self.output_file))
         self._OF = open(self.output_file, "w", encoding="utf8")
 
-    def calculate_real_sizes(self, rows, style):
-        row_count = len(rows["heights"])
-        rows["real_heights"] = [0 for x in range(row_count)]
-        rows["max_cell_height"] = [0 for x in range(row_count)]
+    def calculate_real_sizes(self, rows_section, style):
+        row_count = len(rows_section["heights"])
+        spanned_key = []
+        rows_section["real_heights"] = [0 for x in range(row_count)]
+        rows_section["max_cell_height"] = [0 for x in range(row_count)]
         for row in range(row_count):
             for col in range(self._columns_count):
                 key = f"{row},{col}"
-                cell_data = rows.get("cells", {}).get(key, {})
+                cell_data = rows_section.get("cells", {}).get(key, {})
+                if cell_data.get("rowspan", 0) > 1 or cell_data.get("colspan", 0) > 1:
+                    spanned_key.append(key)
+
                 if not cell_data:
                     continue
                 if cell_data.get("colspan", 0) > 1:
@@ -61,16 +65,17 @@ class Q2Printer:
                     cell_data["width"] = self._cm_columns_widths[col]
                 if cell_data.get("data"):
                     cell_data["height"] = self.q2report.get_cell_height(cell_data)
-                    if rows["max_cell_height"][row] < cell_data["height"]:
-                        rows["max_cell_height"][row] = cell_data["height"]
+                    if rows_section["max_cell_height"][row] < cell_data["height"]:
+                        rows_section["max_cell_height"][row] = cell_data["height"]
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
-                    rows["real_heights"][row] = (
-                        rows["real_heights"][row] if rows["real_heights"][row] >= h else h
+                    rows_section["real_heights"][row] = (
+                        rows_section["real_heights"][row] if rows_section["real_heights"][row] >= h else h
                     )
-                    if rows["max_cell_height"][row] < rows["real_heights"][row]:
-                        rows["max_cell_height"][row] = rows["real_heights"][row]
+                    if rows_section["max_cell_height"][row] < rows_section["real_heights"][row]:
+                        rows_section["max_cell_height"][row] = rows_section["real_heights"][row]
+        print(spanned_key)
 
     def render_rows_section(self, rows, style, outline_level):
         self.calculate_real_sizes(rows, style)
@@ -148,7 +153,13 @@ class Q2Printer:
     def show(self):
         if os.path.isfile(self.output_file):
             if sys.platform[:3] == "win":
-                os.startfile(self.output_file.replace("/", "\\"))
+                os.startfile(os.path.abspath(self.output_file))
+                # subprocess.Popen(
+                #     ["start", os.path.abspath(self.output_file)],
+                #     close_fds=True, 
+                #     shell=True,
+                #     creationflags=subprocess.DETACHED_PROCESS,
+                # )
             # elif sys.platform == 'darwin':
             #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
             else:
