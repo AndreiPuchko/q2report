@@ -229,9 +229,11 @@ class Q2PrinterXlsx(Q2Printer):
 
         sheet_row = {}
         for row in range(row_count):  # вывод - по строкам
-            sheet_row["height"] = (
-                rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
-            ) * points_in_cm
+            # sheet_row["height"] = (
+            #     rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
+            # ) * points_in_cm
+
+            sheet_row["height"] = rows_section["max_cell_height"][row] * points_in_cm
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level
             for col in range(self._columns_count):  # цикл по клеткам строки
@@ -405,28 +407,31 @@ class Q2PrinterXlsx(Q2Printer):
         else:
             return f'\n\t<c r="{cell_address}" s="{xf_id}"/> '
 
-    def get_cell_align(self, style):
-        padding = style["padding"].replace("cm", "").split(" ")
+    def get_cell_align(self, cell_style):
 
-        if style["vertical-align"] == "middle":
+        if cell_style["vertical-align"] == "middle":
             vertical = 'vertical="center"'
-        elif style["vertical-align"] == "top":
+        elif cell_style["vertical-align"] == "top":
             vertical = 'vertical="top"'
         else:
             vertical = ""
 
-        if style["text-align"] == "center":
+        padding = cell_style["padding"].replace("cm", "").split(" ")
+        while len(padding) < 4:
+            padding += padding
+
+        if cell_style["text-align"] == "center":
             horizontal = 'horizontal="center"'
-        elif style["text-align"] == "right":
+        elif cell_style["text-align"] == "right":
             horizontal = 'horizontal="right"'
-            if style["padding"][1]:
-                horizontal += f""" indent="{int(round(num(padding[2]) / num(0.25)))}" """
-        elif style["text-align"] == "justify":
+            if padding[1]:
+                horizontal += f""" indent="{int(round(num(padding[1]) / num(0.25)))}" """
+        elif cell_style["text-align"] == "justify":
             horizontal = 'horizontal="justify"'
         else:
             horizontal = ""
-            if style["padding"][3]:
-                horizontal = f""" indent="{int(round((num(padding[3])) / num(0.25)))}" """
+            if padding[3]:
+                horizontal = f""" horizontal="left" indent="{int(round((num(padding[3])) / num(0.25)))}" """
         return f'\n\t<alignment {horizontal} {vertical} wrapText="true"/>\n'
 
     def get_cell_borders(self, style):

@@ -17,6 +17,13 @@ from PIL import Image
 import base64
 import datetime
 
+try:
+    from PyQt6.QtGui import QTextDocument
+
+    pyqt6_installed = True
+except Exception:
+    pyqt6_installed = False
+
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num, Q2Heap
@@ -100,8 +107,24 @@ class Q2Report:
         self.current_data_set_name = ""
 
     def get_cell_height(self, cell_data):
-        # print(cell_data["data"])
-        pass
+        if pyqt6_installed:
+            padding = cell_data["style"]["padding"].replace("cm", "").split(" ")
+            while len(padding) < 4:
+                padding += padding
+
+            cm = num(96 / num(2.54))
+            text_doc = QTextDocument()
+
+            text_doc.setTextWidth((num(cell_data["width"]) - num(padding[1]) - num(padding[3])) * cm)
+
+            style = cell_data["style"]
+            style = "p {%s}" % ";".join([f"{x}:{style[x]}" for x in style])
+            text_doc.setDefaultStyleSheet(style)
+            text_doc.setHtml("<p>%s</p>" % cell_data["data"])
+            height = round(num(text_doc.size().height()) / cm, 2) + num(padding[0]) + num(padding[2])
+            return height
+        else:
+            return 0
 
     def formulator(self, formula):
         formula = formula[0][1:-1]

@@ -48,6 +48,7 @@ class Q2Printer:
     def calculate_real_sizes(self, rows, style):
         row_count = len(rows["heights"])
         rows["real_heights"] = [0 for x in range(row_count)]
+        rows["max_cell_height"] = [0 for x in range(row_count)]
         for row in range(row_count):
             for col in range(self._columns_count):
                 key = f"{row},{col}"
@@ -59,16 +60,19 @@ class Q2Printer:
                 else:
                     cell_data["width"] = self._cm_columns_widths[col]
                 if cell_data.get("data"):
-                    self.q2report.get_cell_height(cell_data)
+                    cell_data["height"] = self.q2report.get_cell_height(cell_data)
+                    if rows["max_cell_height"][row] < cell_data["height"]:
+                        rows["max_cell_height"][row] = cell_data["height"]
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
                     rows["real_heights"][row] = (
                         rows["real_heights"][row] if rows["real_heights"][row] >= h else h
                     )
+                    if rows["max_cell_height"][row] < rows["real_heights"][row]:
+                        rows["max_cell_height"][row] = rows["real_heights"][row]
 
     def render_rows_section(self, rows, style, outline_level):
-        # TODO apply style to every cell - to simplify real render_rows_section
         self.calculate_real_sizes(rows, style)
 
     def reset_page(
@@ -79,7 +83,7 @@ class Q2Printer:
         page_margin_top=1.0,
         page_margin_right=1.0,
         page_margin_bottom=1.0,
-        last_page=False
+        last_page=False,
     ):
         self.page_width = num(page_width)
         self.page_height = num(page_height)
