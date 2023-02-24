@@ -48,7 +48,7 @@ class Q2Printer:
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])
         spanned_cells = {}
-        rows_section["real_heights"] = [0 for x in range(row_count)]
+        rows_section["docx_height"] = [0 for x in range(row_count)]
         rows_section["max_cell_height"] = [0 for x in range(row_count)]
         for row in range(row_count):
             for col in range(self._columns_count):
@@ -73,20 +73,21 @@ class Q2Printer:
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
-                    rows_section["real_heights"][row] = (
-                        rows_section["real_heights"][row] if rows_section["real_heights"][row] >= h else h
-                    )
-                    if rows_section["max_cell_height"][row] < rows_section["real_heights"][row]:
-                        rows_section["max_cell_height"][row] = rows_section["real_heights"][row]
+                    if rows_section["docx_height"][row] < h:
+                        rows_section["docx_height"][row] = h
+                    if rows_section["max_cell_height"][row] < h:
+                        rows_section["max_cell_height"][row] = h
         # calculating height for spanned cells
         for key in spanned_cells:
             start_row = int(key.split(",")[0])
             haha = 0
-            for row in range (start_row, start_row+rows_section["cells"][key]["rowspan"] -1 ):
-                haha += rows_section["max_cell_height"][row] if rows_section["max_cell_height"][row] else num(0.5)
+            for row in range(start_row, start_row + rows_section["cells"][key]["rowspan"] - 1):
+                haha += (
+                    rows_section["max_cell_height"][row] if rows_section["max_cell_height"][row] else num(0.5)
+                )
             rest = spanned_cells[key] - haha
-            if rest > rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] -1]:
-                rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] -1] = rest
+            if rest > rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] - 1]:
+                rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] - 1] = rest
 
     def render_rows_section(self, rows, style, outline_level):
         self.calculate_real_sizes(rows, style)
@@ -167,7 +168,7 @@ class Q2Printer:
                 os.startfile(os.path.abspath(self.output_file))
                 # subprocess.Popen(
                 #     ["start", os.path.abspath(self.output_file)],
-                #     close_fds=True, 
+                #     close_fds=True,
                 #     shell=True,
                 #     creationflags=subprocess.DETACHED_PROCESS,
                 # )

@@ -323,8 +323,8 @@ class Q2PrinterDocx(Q2Printer):
         row_xml += "\n\t\t<w:trPr>"
         if rows["role"] == "table_header":
             row_xml += "<w:tblHeader/>"
-        if rows["max_cell_height"][row]:
-            row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["max_cell_height"][row]*twip_in_cm}" w:hRule="exact"/>'
+        if rows["docx_height"][row]:
+            row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["docx_height"][row]*twip_in_cm}" w:hRule="exact"/>'
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
 
@@ -386,7 +386,6 @@ class Q2PrinterDocx(Q2Printer):
                 # elif "FONTSIZE=" in stl:
                 #     fontsizemod = grid.getFontSizeMod(fontsize / 2, stl.split("=")[1]) * 2
                 elif "BR/" == stl or "BR" == stl:
-                    pass
                     para_text.append(f"""</w:p><w:p>{para_params}""")
                     # para_text.append(self.get_paragraph_params(cell_style))
                 x = x.split(">")[1]

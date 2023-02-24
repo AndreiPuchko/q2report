@@ -40,6 +40,7 @@ def q2image(image, width=0, height=0):
     im = Image.open(BytesIO(base64.b64decode(image)))
     return f"{image}:{width}:{height}:{im.width}:{im.height}:{im.format}"
 
+image = q2image
 
 def set_engine(engine2="PyQt6"):
     global engine
@@ -49,9 +50,11 @@ def set_engine(engine2="PyQt6"):
 class mydata(dict):
     def __init__(self, q2report):
         super().__init__()
-        self.q2report = q2report
+        self.rep = self.q2report = q2report
 
     def __getitem__(self, key):
+        if key in self.__dict__:
+            return self.__dict__[key]
         if self.q2report.use_prevrowdata:
             data = self.q2report.prevrowdata
         else:
@@ -67,9 +70,8 @@ class mydata(dict):
 class Q2Report:
     def __init__(self):
         self.report_content = None
-        self.data_sources = {}
+        # self.data_sources = {}
         self.printer = None
-        self.data = {}
         self.params = {}
         self.prevrowdata = {}
         self.use_prevrowdata = False
@@ -77,12 +79,16 @@ class Q2Report:
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self.outline_level = 0
-        self.data_section = []
-        self.current_data_set = -1
+        # self.data_section = []
+        # self.current_data_set = -1
+
+        self.data = {}  # current data
+        self.data_sets = {}
         self.current_data_set_name = ""
         self.current_data_set_row_number = 0
-        self.current_data_set_lenght = 0
+        # self.current_data_set_lenght = 0
         self.heap = Q2Heap()
+        self.d = D(self)
 
     def load(self, content):
         if os.path.isfile(content):
@@ -91,11 +97,12 @@ class Q2Report:
             self.report_content = json.loads(content)
         self.params = self.report_content["params"]
         # count datasources
-        for page in self.report_content.get("pages", []):
-            for column in page.get("columns", []):
-                for rows_section in column.get("rows", []):
-                    if rows_section["role"] == "table":
-                        self.data_section.append(rows_section["data_source"])
+        # for page in self.report_content.get("pages", []):
+        #     for column in page.get("columns", []):
+        #         for rows_section in column.get("rows", []):
+        #             if rows_section["role"] == "table":
+        #                 self.data_section.append(rows_section["data_source"])
+        #                 print(rows_section["data_source"])
 
     def data_start(self):
         self.current_data_set_row_number = 0
@@ -121,7 +128,8 @@ class Q2Report:
             style = "p {%s}" % ";".join([f"{x}:{style[x]}" for x in style])
             text_doc.setDefaultStyleSheet(style)
             text_doc.setHtml("<p>%s</p>" % cell_data["data"])
-            height = round(num(text_doc.size().height()) / cm, 2) + num(padding[0]) + num(padding[2])
+            # height = round(num(text_doc.size().height()) / cm, 2) + num(padding[0]) + num(padding[2])
+            height = round(num(text_doc.size().height()) / cm, 2)
             return height
         else:
             return 0
@@ -206,6 +214,8 @@ class Q2Report:
         return cell_data, images_list
 
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
+        if data:
+            self.data_sets.update(data)
         self.printer: Q2Printer = get_printer(output_file, output_type)
         self.printer.q2report = self
         report_style = dict(self.report_content["style"])
@@ -225,20 +235,20 @@ class Q2Report:
                 self.printer.reset_columns(column["widths"])
 
                 for rows_section in column.get("rows", []):
-                    data_set = data.get(rows_section["data_source"], [])
+                    data_set = self.data_sets.get(rows_section["data_source"], [])
                     if rows_section["role"] == "table":
                         if not data_set:
                             continue
                         # table rows
                         self.current_data_set_name = rows_section["data_source"]
                         self.aggregators_reset(rows_section)
-                        self.current_data_set_lenght = 0
+                        # self.current_data_set_lenght = 0
                         if hasattr(data_set, "len"):
                             self.data["_row_count"] = len(data_set)
-                            self.current_data_set_lenght = len(data_set)
+                            # self.current_data_set_lenght = len(data_set)
                         self.render_table_header(rows_section, column_style)
 
-                        self.current_data_set += 1
+                        # self.current_data_set += 1
                         self.data_start()
                         for data_row in data_set:
                             self.data["_row_number"] = self.current_data_set_row_number + 1
@@ -357,3 +367,33 @@ class Q2Report:
             for cell in x["aggr"]:
                 x["aggr"][cell]["v"] += num(self.evaluator(x["aggr"][cell]["f"]))
             x["aggr"]["_row_number"]["v"] += 1
+
+
+class D:
+    class R:
+        def __init__(self, data_set, row_number=0):
+            self.data_set = data_set
+            self.row_number = row_number
+
+        def __getattr__(self, atr):
+            if atr in self.__dict__:
+                return self.__dict__[atr]
+            elif atr == "r":
+                return self.getrow
+            elif atr in self.data_set[self.row_number]:
+                return self.data_set[self.row_number][atr]
+
+        def getrow(self, row_number):
+            if row_number >= 0 and row_number < len(self.data_set):
+                self.row_number = row_number
+            else:
+                self.row_number = 0
+            return self
+
+    def __init__(self, q2report):
+        self.q2report: Q2Report = q2report
+
+    def __getattr__(self, atr):
+        if atr in self.q2report.data_sets:
+            return self.R(self.q2report.data_sets[atr])
+        return None
