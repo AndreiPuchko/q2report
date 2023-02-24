@@ -357,6 +357,8 @@ class Q2PrinterDocx(Q2Printer):
         """
 
     def get_paragraph_text(self, cell_style, cell_text, para_params):
+        cell_text = cell_text.replace("\n", "")
+        cell_text = cell_text.replace("\r", "")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         para_text = []
         if "font-weight" in cell_style and cell_style["font-weight"] == "bold":

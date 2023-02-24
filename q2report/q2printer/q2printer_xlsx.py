@@ -345,6 +345,8 @@ class Q2PrinterXlsx(Q2Printer):
         fontfamily = cell_style["font-family"]
 
         cell_content = []
+        cell_text = cell_text.replace("\n", "")
+        cell_text = cell_text.replace("\r", "")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         cell_text = reHtmlTagBr.sub("\n", cell_text)
         if re.findall(r"\<(\/*b)|(br/)|(font)|(u)|(i)\>", cell_text, re.IGNORECASE):
