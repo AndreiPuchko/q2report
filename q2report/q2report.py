@@ -33,6 +33,7 @@ re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
 
 engine_name = None
 
+# TODO: before_print, after_print
 
 def q2image(image, width=0, height=0):
     if os.path.isfile(image):
@@ -40,7 +41,9 @@ def q2image(image, width=0, height=0):
     im = Image.open(BytesIO(base64.b64decode(image)))
     return f"{image}:{width}:{height}:{im.width}:{im.height}:{im.format}"
 
+
 image = q2image
+
 
 def set_engine(engine2="PyQt6"):
     global engine
@@ -156,7 +159,10 @@ class Q2Report:
     def format(self, cell):
         format = cell.get("format", "")
         if format == "D":
-            cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
+            try:
+                cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
+            except Exception:
+                pass
         elif format.upper() == "F":
             cell["xlsx_data"] = num(cell["data"])
             cell["numFmtId"] = "165"
@@ -380,8 +386,9 @@ class D:
                 return self.__dict__[atr]
             elif atr == "r":
                 return self.getrow
-            elif atr in self.data_set[self.row_number]:
+            elif self.row_number < len(self.data_set) and atr in self.data_set[self.row_number]:
                 return self.data_set[self.row_number][atr]
+            return ""
 
         def getrow(self, row_number):
             if row_number >= 0 and row_number < len(self.data_set):
