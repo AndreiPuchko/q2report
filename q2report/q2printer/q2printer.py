@@ -164,7 +164,7 @@ class Q2Printer:
 
     def show(self):
         if os.path.isfile(self.output_file):
-            if sys.platform[:3] == "win":
+            if sys.platform == "win32":
                 os.startfile(os.path.abspath(self.output_file))
                 # subprocess.Popen(
                 #     ["start", os.path.abspath(self.output_file)],
@@ -175,4 +175,5 @@ class Q2Printer:
             # elif sys.platform == 'darwin':
             #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
             else:
-                subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
+                subprocess.Popen([opener, self.output_file], close_fds=True, shell=False)
