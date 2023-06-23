@@ -16,7 +16,7 @@ if __name__ == "__main__":  # pragma: no cover
     import sys
 
     sys.path.insert(0, ".")
-    from demo.demo_00 import demo
+    from demo.demo import demo
 
     demo()
 
@@ -186,9 +186,6 @@ class Q2Printer:
                     shell=True,
                     creationflags=subprocess.DETACHED_PROCESS,
                 )
-                import time
-                time.sleep(5)
-                
             # elif sys.platform == 'darwin':
             #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
             else:

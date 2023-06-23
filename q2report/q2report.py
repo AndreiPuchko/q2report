@@ -16,7 +16,7 @@ if __name__ == "__main__":  # pragma: no cover
     import sys
 
     sys.path.insert(0, ".")
-    from demo.demo_00 import demo
+    from demo.demo import demo
 
     demo()
 
@@ -33,13 +33,14 @@ import datetime
 
 try:
     from PyQt6.QtGui import QTextDocument
+
     pyqt6_installed = True
 except Exception:
     pyqt6_installed = False
 
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
-from q2report.q2utils import num, Q2Heap
+from q2report.q2utils import num, Q2Heap, int_
 
 re_calc = re.compile(r"\{.*?\}")
 re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
@@ -47,6 +48,7 @@ re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
 engine_name = None
 
 # TODO: before_print, after_print
+
 
 def q2image(image, width=0, height=0):
     if os.path.isfile(image):
@@ -59,8 +61,69 @@ image = q2image
 
 
 def set_engine(engine2="PyQt6"):
+    """_summary_
+
+    Args:
+        engine2 (str, optional): _description_. Defaults to "PyQt6".
+    """
     global engine
     engine = engine2
+
+
+roles = ["free", "table"]
+
+
+class report_rows:
+    def __init__(
+        self,
+        rows=None,
+        heights=[0],
+        style={},
+        role="free",
+        data_source=[],
+        groupby="",
+        group=[],
+        print_when=None,
+        print_after=None,
+        new_page_before=False,
+        new_page_after=False,
+    ):
+        if isinstance(rows, dict):
+            self.rows = rows
+        else:
+            self.rows = deepcopy(Q2Report.default_rows)
+            self.rows["height"] = heights
+            self.rows["style"] = Q2Report.check_style(style)
+            self.rows["role"] = role
+            self.rows["datasource"] = data_source
+            self.rows["groupby"] = groupby
+            self.rows["group"] = group
+            self.rows["print_when"] = print_when
+            self.rows["print_after"] = print_after
+            self.rows["new_page_before"] = new_page_before
+            self.rows["new_page_after"] = new_page_after
+
+    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None):
+        self.extend_rows(row)
+        cell = deepcopy(Q2Report.default_cell)
+        cell["data"] = data
+        cell["style"] = self.check_style(style)
+        rowspan = int_(rowspan)
+        colspan = int_(colspan)
+        if rowspan != 0 or colspan != 0:
+            cell["rowspan"] = 1 if rowspan == 0 else rowspan
+            cell["colspan"] = 1 if colspan == 0 else colspan
+        self.rows["cells"][f"{row},{col}"] = cell
+
+    def check_style(self, style):
+        if isinstance(style, dict):
+            return {x: style[x] for x in style if x in Q2Report.default_style}
+        else:
+            return {}
+
+    def extend_rows(self, row):
+        while row + 1 > len(self.rows["heights"]):
+            self.rows["heights"].append("0")
 
 
 class mydata(dict):
@@ -84,9 +147,51 @@ class mydata(dict):
 
 
 class Q2Report:
+    default_style = {
+        "font-family": "Arial",
+        "font-size": "10pt",
+        "font-weight": "normal",
+        "border-width": "1 1 1 1",
+        "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+        "text-align": "left",
+        "vertical-align": "top",
+    }
+
+    default_page = {
+        "tag": "",
+        "page_width": 18,
+        "page_height": 29.7,
+        "page_margin_left": 2,
+        "page_margin_right": 1,
+        "page_margin_top": 1,
+        "page_margin_bottom": 1,
+        "columns": [],
+    }
+
+    default_columns = {"widths": [], "rows": [], "style": {}}
+
+    default_rows = {
+        "heights": [],
+        "style": {},
+        "role": "free",
+        "data_source": "",
+        "groupby": "",
+        "table_groups": [],
+        "print_when": "",
+        "print_after": "",
+        "new_page_before": "",
+        "new_page_after": "",
+        "cells": {},
+    }
+    default_cell = {
+        "data": "",
+        "style": {},
+        "rowspan": 0,
+        "colspan": 0,
+    }
+
     def __init__(self):
-        self.report_content = None
-        # self.data_sources = {}
+        self.report_content = {}
         self.printer = None
         self.params = {}
         self.prevrowdata = {}
@@ -95,16 +200,180 @@ class Q2Report:
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self.outline_level = 0
-        # self.data_section = []
-        # self.current_data_set = -1
 
         self.data = {}  # current data
         self.data_sets = {}
         self.current_data_set_name = ""
         self.current_data_set_row_number = 0
-        # self.current_data_set_lenght = 0
         self.heap = Q2Heap()
         self.d = D(self)
+    @staticmethod
+    def check_style(style):
+        if isinstance(style, dict):
+            return {x: style[x] for x in style if x in Q2Report.default_style}
+        else:
+            return {}
+
+    def make_style(
+        self,
+        font_family=None,
+        font_size=None,
+        font_weight=None,
+        border_width=None,
+        padding=None,
+        text_align=None,
+        vertical_align=None,
+    ):
+        """_summary_
+
+        Args:
+            font_family (str, optional): e.g. "Arial". Defaults to None.
+            font_size (str, int, float, optional): font size in pt, e.g. 12, 12.5, "12.5" . Defaults to None.
+            font_weight str, optional): "bold" or "". Defaults to None.
+            border_width (_type_, optional): _description_. Defaults to None.
+            padding (_type_, optional): _description_. Defaults to None.
+            text_align (_type_, optional): _description_. Defaults to None.
+            vertical_align (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            dict: _description_
+        """
+        style = {}
+        if font_family:
+            style["font-family"] = font_family
+        if font_size:
+            style["font-size"] = f"{font_size}"
+        if font_weight:
+            style["font-weight"] = font_weight
+        if border_width:
+            style["border-width"] = border_width
+        if padding:
+            style["padding"] = padding
+        if text_align:
+            style["text-align"] = text_align
+        if vertical_align:
+            style["vertical-align"] = vertical_align
+        return style
+
+    def add_page(
+        self,
+        page_width=None,
+        page_height=None,
+        page_margin_left=None,
+        page_margin_right=None,
+        page_margin_top=None,
+        page_margin_bottom=None,
+        style={},
+    ):
+        if "pages" not in self.report_content:
+            self.report_content["pages"] = []
+
+        page = deepcopy(self.default_page)
+        if page_width:
+            page["page_width"] = page_width
+        if page_height:
+            page["page_height"] = page_height
+        if page_margin_left:
+            page["page_margin_left"] = page_margin_left
+        if page_margin_right:
+            page["page_margin_right"] = page_margin_right
+        if page_margin_top:
+            page["page_margin_top"] = page_margin_top
+        if page_margin_bottom:
+            page["page_margin_bottom"] = page_margin_bottom
+        if style != {}:
+            page["style"] = deepcopy(style)
+        self.report_content["pages"].append(page)
+
+    def check_page_index(self, page_index):
+        if page_index is None:
+            page_index = len(self.report_content["pages"]) - 1
+        while page_index > len(self.report_content["pages"]) - 1:
+            self.add_page()
+        return page_index
+
+    def add_columns(self, page_index=None, widths=[], style={}):
+        page_index = self.check_page_index(page_index)
+        columns = deepcopy(self.default_columns)
+
+        if widths != []:
+            columns["widths"] = [f"{x}" for x in widths]
+        if style != {}:
+            columns["style"] = deepcopy(style)
+
+        self.report_content["pages"][page_index]["columns"].append(columns)
+
+    def check_columns_index(self, page_index, columns_index):
+        if columns_index is None:
+            columns_index = len(self.report_content["pages"][page_index]["columns"]) - 1
+        if columns_index < 0:
+            columns_index = 0
+        page_index = self.check_page_index(page_index)
+        while columns_index > len(self.report_content["pages"][page_index]["columns"]) - 1:
+            self.add_columns(page_index)
+        return columns_index
+
+    def check_rows_index(self, page_index, columns_index, rows_index):
+        if rows_index is None:
+            rows_index = len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
+        if rows_index < 0:
+            rows_index = 0
+        while (
+            rows_index > len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
+        ):
+            self.add_rows(page_index, columns_index)
+        return rows_index
+
+    def add_column(self, page_index=None, columns_index=None, width=0):
+        page_index = self.check_page_index(page_index)
+        columns_index = self.check_columns_index(page_index, columns_index)
+        self.report_content["pages"][page_index]["columns"][columns_index]["widths"].append(f"{width}")
+
+    def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
+        page_index = self.check_page_index(page_index)
+        columns_index = self.check_columns_index(page_index, columns_index)
+        if isinstance(rows, report_rows) :
+            rows = rows.rows
+        else:
+            rows = deepcopy(self.default_rows)
+            if heights and isinstance(heights, list):
+                rows["heights"] = list(heights)
+            rows["style"].update(self.check_style(style))
+        self.report_content["pages"][page_index]["columns"][columns_index]["rows"].append(rows)
+        return report_rows(rows)
+
+    def add_row(self, page_index=None, columns_index=None, rows_index=None, height=0):
+        page_index = self.check_page_index(page_index)
+        columns_index = self.check_columns_index(page_index, columns_index)
+        rows_index = self.check_rows_index(page_index, columns_index, rows_index)
+
+        if height is not None:
+            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index][
+                "heights"
+            ].append(f"{height}")
+
+    def get_rows(self, page_index=None, columns_index=None, rows_index=None):
+        page_index = self.check_page_index(page_index)
+        columns_index = self.check_columns_index(page_index, columns_index)
+        rows_index = self.check_rows_index(page_index, columns_index, rows_index)
+        return report_rows(
+            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index]
+        )
+
+    def set_cell(
+        self,
+        row,
+        col,
+        data,
+        page_index=None,
+        columns_index=None,
+        rows_index=None,
+        style=None,
+        rowspan=None,
+        colspan=None,
+    ):
+        rows = self.get_rows(page_index, columns_index, rows_index)
+        rows.set_cell(row, col, data, style, rowspan, colspan)
 
     def load(self, content):
         if os.path.isfile(content):
@@ -112,13 +381,6 @@ class Q2Report:
         else:
             self.report_content = json.loads(content)
         self.params = self.report_content["params"]
-        # count datasources
-        # for page in self.report_content.get("pages", []):
-        #     for column in page.get("columns", []):
-        #         for rows_section in column.get("rows", []):
-        #             if rows_section["role"] == "table":
-        #                 self.data_section.append(rows_section["data_source"])
-        #                 print(rows_section["data_source"])
 
     def data_start(self):
         self.current_data_set_row_number = 0
@@ -144,7 +406,6 @@ class Q2Report:
             style = "p {%s}" % ";".join([f"{x}:{style[x]}" for x in style])
             text_doc.setDefaultStyleSheet(style)
             text_doc.setHtml("<p>%s</p>" % cell_data["data"])
-            # height = round(num(text_doc.size().height()) / cm, 2) + num(padding[0]) + num(padding[2])
             height = round(num(text_doc.size().height()) / cm, 2)
             return height
         else:
@@ -197,7 +458,7 @@ class Q2Report:
         rows_section_style = dict(column_style)
         rows_section_style.update(rows_section.get("style", {}))
         rows_section = deepcopy(rows_section)
-        rows_section["style"] = rows_section_style
+        # rows_section["style"] = rows_section_style
         for cell in rows_section["cells"]:
             cell_text = rows_section["cells"][cell].get("data")
             cell_style = dict(rows_section_style)
@@ -207,7 +468,7 @@ class Q2Report:
                 #  images
                 cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text)
                 #  text data
-                rows_section["cells"][cell]["data"] = re_calc.sub(self.formulator, cell_text)
+                rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
                 self.format(rows_section["cells"][cell])
 
         self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
@@ -237,7 +498,7 @@ class Q2Report:
             self.data_sets.update(data)
         self.printer: Q2Printer = get_printer(output_file, output_type)
         self.printer.q2report = self
-        report_style = dict(self.report_content["style"])
+        report_style = dict(self.report_content.get("style", self.default_style))
 
         pages = self.report_content.get("pages", [])
         for index, page in enumerate(pages):
@@ -249,6 +510,8 @@ class Q2Report:
             page_style.update(page.get("style", {}))
 
             for column in page.get("columns", []):
+                if len(column["widths"]) == 0:
+                    continue
                 column_style = dict(page_style)
                 column_style.update(column.get("style", {}))
                 self.printer.reset_columns(column["widths"])
@@ -291,6 +554,7 @@ class Q2Report:
         self.printer.save()
         if open_output_file:
             self.printer.show()
+        return self.printer.output_file
 
     def render_table_header(self, rows_section, column_style):
         if rows_section.get("table_header"):

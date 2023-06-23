@@ -2,6 +2,7 @@ from q2report.q2report import Q2Report
 
 import random
 import string
+import os
 
 
 def demo():
@@ -33,16 +34,13 @@ def demo():
     }
 
     report = Q2Report()
-    # app.load("test_data/report_01.json")
     report.load("test_data/report_02.json")
     report.params["p1"] = " <b>123</b> "
-    # app.load("test_data/report_03.json")
-    # app.run(data=demo_data)
 
     # report.run("temp/repo.html", data=demo_data)
     # report.run("temp/repo.xlsx", data=demo_data)
-    report.run("temp/repo.docx", data=demo_data)
-
+    res_file = report.run("temp/repo.docx", data=demo_data, open_output_file=False)
+    os.system(os.path.abspath(res_file))
 
 if __name__ == "__main__":
     demo()
