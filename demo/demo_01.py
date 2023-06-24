@@ -10,34 +10,28 @@ import codecs
 def demo():
     demo_data = {"cursor": []}
 
-    for x in range(100):
-        demo_data["cursor"].append(
-            {
-                "data1": "".join([random.choice(string.ascii_letters) for x in range(9)]),
-                "num1": f"{random.randint(3,10)}",
-                "grp": int(x / random.randint(6, 10)),
-                "tom": int(random.randint(1, 2)),
-            }
-        )
+    # for x in range(100):
+    #     demo_data["cursor"].append(
+    #         {
+    #             "data1": "".join([random.choice(string.ascii_letters) for x in range(9)]),
+    #             "num1": f"{random.randint(3,10)}",
+    #             "grp": int(x / random.randint(6, 10)),
+    #             "tom": int(random.randint(1, 2)),
+    #         }
+    #     )
 
-    image_data = """89504E470D0A1A0A0000000D4948445200000018000000180806000000E
-                    0773DF80000000467414D410000B18F0BFC6105000000206348524D0000
-                    7A26000080840000FA00000080E8000075300000EA6000003A980000177
-                    09CBA513C00000006624B4744000000000000F943BB7F00000009704859
-                    73000000600000006000F06B42CF000000784944415448C763601805040
-                    023116AFE53620613AD7DC042816F09F98C3E3E18B560705950CE004919
-                    E89810C0A6A71E97625C96FC27D260BC8663B3A483081F34906238A9969
-                    06538B196506438214BA8623836C31AB0F0A902B0A52E8A5D8ECF12A20D
-                    6726C182A30C9022FB2003034323B55D3F82010046E641BF6CBB302E000
-                    0002574455874646174653A63726561746500323032322D30372D313754
-                    30383A34313A30382B30303A3030245A92B900000025744558746461746
-                    53A6D6F6469667900323032322D30372D31375430383A34313A30382B30
-                    303A303055072A050000000049454E44AE426082"""
-    image_data = image_data.replace("\n", "").replace(" ", "")
-    image_data = codecs.encode(codecs.decode(image_data, "hex"), "base64").decode().replace("\n", "")
-    print(image_data)
-
-    # image_data = "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAABgAAAAYADwa0LPAAAAeElEQVRIx2NgGAUEACMRav5TYgYTrX3AQoFvCfmMPj4YtWBwWVDOAEkZ6JgQwKanHpdiXJb8J9JgvIZjs6SDCB80kGI4qZaQZTixllBkOCFLqGI4NsMasPCpArClLopdjs8Sog1nJsGCowyQIvsgAwNDI7VdP4IBAEbmQb9suzAuAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTA3LTE3VDA4OjQxOjA4KzAwOjAwJFqSuQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNy0xN1QwODo0MTowOCswMDowMFUHKgUAAAAASUVORK5CYII="
+    image_data = (
+        "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBT"
+        "UEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAO"
+        "pgAAA6mAAAF3CculE8AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXM"
+        "AAABgAAAAYADwa0LPAAAAeElEQVRIx2NgGAUEACMRav5TYgYTrX3A"
+        "QoFvCfmMPj4YtWBwWVDOAEkZ6JgQwKanHpdiXJb8J9JgvIZjs6SDC"
+        "B80kGI4qZaQZTixllBkOCFLqGI4NsMasPCpArClLopdjs8Sog1nJs"
+        "GCowyQIvsgAwNDI7VdP4IBAEbmQb9suzAuAAAAJXRFWHRkYXRlOmN"
+        "yZWF0ZQAyMDIyLTA3LTE3VDA4OjQxOjA4KzAwOjAwJFqSuQAAACV0"
+        "RVh0ZGF0ZTptb2RpZnkAMjAyMi0wNy0xN1QwODo0MTowOCswMDowM"
+        "FUHKgUAAAAASUVORK5CYII="
+    )
 
     demo_data = {
         "cursor": [
@@ -55,6 +49,8 @@ def demo():
     }
 
     report = Q2Report()
+    report.mydata.mydata = "123"
+    # report.data["mydata"] = "123"
     # Firt page
     report.add_page(page_margin_left=3)
 
@@ -62,16 +58,20 @@ def demo():
     report.add_column()
     report.add_column(width="70%")
 
-    report.add_rows(heights=[0, 0], style=report.make_style(font_size=20))
+    report.add_rows(heights=[0, 0], style=report.make_style(font_size=16))
     report.add_row(height=0)
 
     report.set_cell(0, 0, "First <b>ce</b>ll", colspan=2, rowspan=2)
+    report.set_cell(2, 0, "**{mydata}")
     report.set_cell(
         0,
         2,
         "{p1}",
         style=report.make_style(font_family="Courier", font_size=8, text_align="center", font_weight="bold"),
     )
+    report.set_cell(1, 2, "{today()}", format="D")
+    report.set_cell(2, 2, "**{float_(29/8)}**")
+    report.set_cell(5, 2, "123456.78", format="F")
     report.set_cell(
         5,
         0,
@@ -79,10 +79,25 @@ def demo():
         style=report.make_style(font_size=10, text_align="right", border_width="3 3 3 3", padding="0.5"),
     )
 
-    report.set_cell(4, 2, "{q2image('%s',3,4)}" % image_data)
+    report.set_cell(3, 2, "{q2image('%s',2)}" % image_data)
+    report.set_cell(
+        3,
+        0,
+        "{q2image('%(image_data)s')}{q2image('%(image_data)s',0,1)}{q2image('%(image_data)s')}" % locals(),
+    )
 
     # Second page
-    report.add_page(page_margin_left=2)
+    report.add_page()
+    report.add_page(
+        page_margin_left=2,
+        page_margin_right=1,
+        page_width=20,
+        page_height=22,
+        page_margin_bottom=2,
+        page_margin_top=1,
+        style=report.make_style(font_size=10),
+    )
+    
 
     report.add_columns(widths=[2, 2, 3, 0])
 
@@ -126,6 +141,19 @@ def demo():
         data_source="cursor",
     )
     table_row.set_cell(0, 0, "{data1}", style=report.make_style(text_align="center"))
+    table_row.set_cell(
+        0,
+        1,
+        "{rep.d.cursor.data1}{rep.d.cursor1.data1}{rep.d.cursor.data33}",
+        style=report.make_style(text_align="center"),
+    )
+    table_row.set_cell(
+        0,
+        2,
+        "{rep.d.cursor.r(2).data1} {rep.d.cursor.r(233).data1} {rep.d.cursor.getrow(5).data1}",
+        style=report.make_style(text_align="center"),
+    )
+
     table_row.set_cell(0, 3, "{num1}", style=report.make_style(text_align="right"))
     table_row.set_table_header(table_header)
     table_row.set_table_footer(table_footer)
@@ -143,5 +171,5 @@ def demo():
     os.system(os.path.abspath(res_file))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     demo()

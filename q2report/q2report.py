@@ -40,7 +40,7 @@ except Exception:
 
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
-from q2report.q2utils import num, Q2Heap, int_
+from q2report.q2utils import num, Q2Heap, int_, today, float_
 
 re_calc = re.compile(r"\{.*?\}")
 re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
@@ -104,9 +104,10 @@ class report_rows:
             self.rows["print_after"] = print_after
             self.rows["new_page_before"] = new_page_before
             self.rows["new_page_after"] = new_page_after
-
-            self.rows["table_header"] = self.set_table_header(table_header)
-            self.rows["table_footer"] = self.set_table_footer(table_footer)
+            if table_header is not None:
+                self.rows["table_header"] = self.set_table_header(table_header)
+            if table_footer is not None:
+                self.rows["table_footer"] = self.set_table_footer(table_footer)
 
         if self.rows["role"] not in roles:
             raise Exception(f'Bad role {self.rows["role"]}')
@@ -120,7 +121,7 @@ class report_rows:
             _rows = None
         return _rows
 
-    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None):
+    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None, format=None):
         self.extend_rows(row)
         cell = deepcopy(Q2Report.default_cell)
         cell["data"] = data
@@ -130,12 +131,16 @@ class report_rows:
         if rowspan != 0 or colspan != 0:
             cell["rowspan"] = 1 if rowspan == 0 else rowspan
             cell["colspan"] = 1 if colspan == 0 else colspan
+        if format is not None:
+            cell["format"] = format
         self.rows["cells"][f"{row},{col}"] = cell
 
     def set_table_header(self, rows):
+        rows.rows["role"] = "table_header"
         self.rows["table_header"] = self._get_rows(rows)
 
     def set_table_footer(self, rows):
+        # rows.rows["role"] = "table_footer"
         self.rows["table_footer"] = self._get_rows(rows)
 
     def add_table_group(self, groupby, header, footer):
@@ -403,16 +408,17 @@ class Q2Report:
         style=None,
         rowspan=None,
         colspan=None,
+        format=None
     ):
         rows = self.get_rows(page_index, columns_index, rows_index)
-        rows.set_cell(row, col, data, style, rowspan, colspan)
+        rows.set_cell(row, col, data, style, rowspan, colspan, format)
 
     def load(self, content):
         if os.path.isfile(content):
             self.report_content = json.load(open(content))
         else:
             self.report_content = json.loads(content)
-        self.params = self.report_content["params"]
+        self.params = self.report_content.get("params", {})
 
     def data_start(self):
         self.current_data_set_row_number = 0
@@ -556,10 +562,8 @@ class Q2Report:
                         # table rows
                         self.current_data_set_name = rows_section["data_source"]
                         self.aggregators_reset(rows_section)
-                        # self.current_data_set_lenght = 0
-                        if hasattr(data_set, "len"):
-                            self.data["_row_count"] = len(data_set)
-                            # self.current_data_set_lenght = len(data_set)
+                        # if hasattr(data_set, "len"):
+                        self.data["_row_count"] = len(data_set)
                         self.render_table_header(rows_section, column_style)
 
                         # self.current_data_set += 1
