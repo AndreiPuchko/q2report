@@ -70,7 +70,7 @@ def set_engine(engine2="PyQt6"):
     engine = engine2
 
 
-roles = ["free", "table"]
+roles = ["free", "table", "table_header", "table_footer", "group_header", "group_footer", "header", "footer"]
 
 
 class report_rows:
@@ -82,26 +82,43 @@ class report_rows:
         role="free",
         data_source=[],
         groupby="",
-        group=[],
+        table_groups=[],
         print_when=None,
         print_after=None,
         new_page_before=False,
         new_page_after=False,
+        table_header=None,
+        table_footer=None,
     ):
-        if isinstance(rows, dict):
-            self.rows = rows
+        if rows is not None:
+            self.rows = self._get_rows(rows)
         else:
             self.rows = deepcopy(Q2Report.default_rows)
             self.rows["height"] = heights
             self.rows["style"] = Q2Report.check_style(style)
             self.rows["role"] = role
-            self.rows["datasource"] = data_source
+            self.rows["data_source"] = data_source
             self.rows["groupby"] = groupby
-            self.rows["group"] = group
+            self.rows["table_groups"] = table_groups
             self.rows["print_when"] = print_when
             self.rows["print_after"] = print_after
             self.rows["new_page_before"] = new_page_before
             self.rows["new_page_after"] = new_page_after
+
+            self.rows["table_header"] = self.set_table_header(table_header)
+            self.rows["table_footer"] = self.set_table_footer(table_footer)
+
+        if self.rows["role"] not in roles:
+            raise Exception(f'Bad role {self.rows["role"]}')
+
+    def _get_rows(self, rows):
+        if isinstance(rows, report_rows):
+            _rows = rows.rows
+        elif isinstance(rows, dict):
+            _rows = rows
+        else:
+            _rows = None
+        return _rows
 
     def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None):
         self.extend_rows(row)
@@ -114,6 +131,19 @@ class report_rows:
             cell["rowspan"] = 1 if rowspan == 0 else rowspan
             cell["colspan"] = 1 if colspan == 0 else colspan
         self.rows["cells"][f"{row},{col}"] = cell
+
+    def set_table_header(self, rows):
+        self.rows["table_header"] = self._get_rows(rows)
+
+    def set_table_footer(self, rows):
+        self.rows["table_footer"] = self._get_rows(rows)
+
+    def add_table_group(self, groupby, header, footer):
+        header = self._get_rows(header)
+        header["groupby"] = groupby
+        footer = self._get_rows(footer)
+        footer["groupby"] = groupby
+        self.rows["table_groups"].append({"group_header": header, "group_footer": footer})
 
     def check_style(self, style):
         if isinstance(style, dict):
@@ -183,6 +213,7 @@ class Q2Report:
         "new_page_after": "",
         "cells": {},
     }
+
     default_cell = {
         "data": "",
         "style": {},
@@ -207,6 +238,7 @@ class Q2Report:
         self.current_data_set_row_number = 0
         self.heap = Q2Heap()
         self.d = D(self)
+
     @staticmethod
     def check_style(style):
         if isinstance(style, dict):
@@ -214,8 +246,8 @@ class Q2Report:
         else:
             return {}
 
+    @staticmethod
     def make_style(
-        self,
         font_family=None,
         font_size=None,
         font_weight=None,
@@ -332,7 +364,7 @@ class Q2Report:
     def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
         page_index = self.check_page_index(page_index)
         columns_index = self.check_columns_index(page_index, columns_index)
-        if isinstance(rows, report_rows) :
+        if isinstance(rows, report_rows):
             rows = rows.rows
         else:
             rows = deepcopy(self.default_rows)
