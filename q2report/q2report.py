@@ -194,7 +194,7 @@ class Q2Report:
 
     default_page = {
         "tag": "",
-        "page_width": 18,
+        "page_width": 21,
         "page_height": 29.7,
         "page_margin_left": 2,
         "page_margin_right": 1,
@@ -408,7 +408,7 @@ class Q2Report:
         style=None,
         rowspan=None,
         colspan=None,
-        format=None
+        format=None,
     ):
         rows = self.get_rows(page_index, columns_index, rows_index)
         rows.set_cell(row, col, data, style, rowspan, colspan, format)
@@ -540,9 +540,7 @@ class Q2Report:
 
         pages = self.report_content.get("pages", [])
         for index, page in enumerate(pages):
-            self.printer.reset_page(
-                **{x: page[x] for x in page if x.startswith("page_")}, last_page=(index == (len(pages) - 1))
-            )
+            self.printer.reset_page(**{x: page[x] for x in page if x.startswith("page_")})
 
             page_style = dict(report_style)
             page_style.update(page.get("style", {}))

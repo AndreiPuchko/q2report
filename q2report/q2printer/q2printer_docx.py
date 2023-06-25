@@ -113,10 +113,9 @@ class Q2PrinterDocx(Q2Printer):
         page_margin_top=1,
         page_margin_right=1,
         page_margin_bottom=1,
-        last_page=False,
     ):
 
-        self.close_docx_page(last_page)
+        self.close_docx_page()
 
         super().reset_page(
             page_width,
@@ -129,7 +128,7 @@ class Q2PrinterDocx(Q2Printer):
 
         self.page_params = True
 
-    def close_docx_page(self, last_page):
+    def close_docx_page(self, last_page=False):
         self.close_docx_table()
         if self.page_params:
             header_ref_xml = ""

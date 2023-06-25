@@ -87,7 +87,6 @@ def demo():
     )
 
     # Second page
-    report.add_page()
     report.add_page(
         page_margin_left=2,
         page_margin_right=1,
@@ -97,7 +96,6 @@ def demo():
         page_margin_top=1,
         style=report.make_style(font_size=10),
     )
-    
 
     report.add_columns(widths=[2, 2, 3, 0])
 

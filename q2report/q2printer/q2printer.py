@@ -114,7 +114,6 @@ class Q2Printer:
         page_margin_top=1.0,
         page_margin_right=1.0,
         page_margin_bottom=1.0,
-        last_page=False,
     ):
         self.page_width = num(page_width)
         self.page_height = num(page_height)
