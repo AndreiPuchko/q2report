@@ -73,7 +73,7 @@ def set_engine(engine2="PyQt6"):
 roles = ["free", "table", "table_header", "table_footer", "group_header", "group_footer", "header", "footer"]
 
 
-class report_rows:
+class Q2Report_rows:
     def __init__(
         self,
         rows=None,
@@ -90,7 +90,9 @@ class report_rows:
         table_header=None,
         table_footer=None,
     ):
-        if rows is not None:
+        if isinstance(rows, Q2Report_rows):
+            self.rows = rows.rows
+        elif rows is not None:
             self.rows = self._get_rows(rows)
         else:
             self.rows = deepcopy(Q2Report.default_rows)
@@ -113,7 +115,7 @@ class report_rows:
             raise Exception(f'Bad role {self.rows["role"]}')
 
     def _get_rows(self, rows):
-        if isinstance(rows, report_rows):
+        if isinstance(rows, Q2Report_rows):
             _rows = rows.rows
         elif isinstance(rows, dict):
             _rows = rows
@@ -121,7 +123,10 @@ class report_rows:
             _rows = None
         return _rows
 
-    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None, format=None):
+    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None, format=None, name=None):
+        if row == -1:
+            row = len(self.rows.get("heights", [])) - 1
+            row = 0 if row < 0 else row
         self.extend_rows(row)
         cell = deepcopy(Q2Report.default_cell)
         cell["data"] = data
@@ -133,7 +138,13 @@ class report_rows:
             cell["colspan"] = 1 if colspan == 0 else colspan
         if format is not None:
             cell["format"] = format
+        if isinstance(name, str):
+            cell["name"] = name
         self.rows["cells"][f"{row},{col}"] = cell
+
+    def set_row_height(self, row=0, height=0):
+        self.extend_rows(row)
+        self.rows["height"] = height
 
     def set_table_header(self, rows):
         rows.rows["role"] = "table_header"
@@ -177,6 +188,8 @@ class mydata(dict):
             return data[key]
         elif key in globals():
             return globals()[key]
+        elif key in __builtins__:
+            return __builtins__[key]
         else:
             return ""
 
@@ -292,6 +305,13 @@ class Q2Report:
             style["vertical-align"] = vertical_align
         return style
 
+    def set_style(self, style=None):
+        if style is None or not isinstance(style, dict):
+            return
+        if "style" not in self.report_content:
+            self.report_content["style"] = deepcopy(self.default_style)
+        self.report_content["style"].update(self.check_style(style))
+
     def add_page(
         self,
         page_width=None,
@@ -324,8 +344,11 @@ class Q2Report:
 
     def check_page_index(self, page_index):
         if page_index is None:
-            page_index = len(self.report_content["pages"]) - 1
-        while page_index > len(self.report_content["pages"]) - 1:
+            page_index = len(self.report_content.get("pages", [])) - 1
+        if page_index < 0:
+            # self.report_content["pages"] = []
+            page_index = 0
+        while page_index > len(self.report_content.get("pages", [])) - 1:
             self.add_page()
         return page_index
 
@@ -369,7 +392,7 @@ class Q2Report:
     def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
         page_index = self.check_page_index(page_index)
         columns_index = self.check_columns_index(page_index, columns_index)
-        if isinstance(rows, report_rows):
+        if isinstance(rows, Q2Report_rows):
             rows = rows.rows
         else:
             rows = deepcopy(self.default_rows)
@@ -377,7 +400,7 @@ class Q2Report:
                 rows["heights"] = list(heights)
             rows["style"].update(self.check_style(style))
         self.report_content["pages"][page_index]["columns"][columns_index]["rows"].append(rows)
-        return report_rows(rows)
+        return Q2Report_rows(rows)
 
     def add_row(self, page_index=None, columns_index=None, rows_index=None, height=0):
         page_index = self.check_page_index(page_index)
@@ -393,9 +416,18 @@ class Q2Report:
         page_index = self.check_page_index(page_index)
         columns_index = self.check_columns_index(page_index, columns_index)
         rows_index = self.check_rows_index(page_index, columns_index, rows_index)
-        return report_rows(
+        return Q2Report_rows(
             self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index]
         )
+
+    def set_col_width(self, page_index=None, columns_index=None, column=0, width=0):
+        page_index = self.check_page_index(page_index)
+        columns_index = self.check_columns_index(page_index, columns_index)
+        columns = self.report_content["pages"][page_index]["columns"][columns_index]
+        while column > len(columns["widths"]) - 1:
+            self.add_column(page_index, columns_index)
+        self.report_content["pages"][page_index]["columns"][columns_index]["widths"][column] = width
+        1 + 1
 
     def set_cell(
         self,
@@ -409,9 +441,11 @@ class Q2Report:
         rowspan=None,
         colspan=None,
         format=None,
+        name=None,
     ):
         rows = self.get_rows(page_index, columns_index, rows_index)
-        rows.set_cell(row, col, data, style, rowspan, colspan, format)
+        rows.set_cell(row, col, data, style, rowspan, colspan, format, name)
+        return rows
 
     def load(self, content):
         if os.path.isfile(content):
@@ -507,6 +541,8 @@ class Q2Report:
                 cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text)
                 #  text data
                 rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
+                if rows_section["cells"][cell].get("name"):
+                    self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
                 self.format(rows_section["cells"][cell])
 
         self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
@@ -531,9 +567,21 @@ class Q2Report:
         cell_data = re_q2image.sub(extract_image, cell_data)
         return cell_data, images_list
 
+    def before_run_check(self):
+        for page_index, page in enumerate(self.report_content.get("pages", [])):
+            for columns_index, columns in enumerate(page.get("columns", [])):
+                for rows_section in columns.get("rows", []):
+                    if len(rows_section["cells"]) == 0:
+                        continue
+                    max_col = max([int_(x.split(",")[1]) for x in rows_section["cells"]])
+                    # extend cols
+                    while max_col > len(columns["widths"]) - 1:
+                        self.add_column(page_index, columns_index)
+
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         if data:
             self.data_sets.update(data)
+        self.before_run_check()
         self.printer: Q2Printer = get_printer(output_file, output_type)
         self.printer.q2report = self
         report_style = dict(self.report_content.get("style", self.default_style))

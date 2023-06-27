@@ -1,4 +1,4 @@
-from q2report.q2report import Q2Report, report_rows, re_q2image
+from q2report.q2report import Q2Report, Q2Report_rows, re_q2image
 
 import random
 import string
@@ -111,28 +111,28 @@ def demo():
 
     report.set_cell(2, 0, "Second page 2 -rows 2")
     # table header and footer
-    table_header = report_rows(style=report.make_style(text_align="center"))
+    table_header = Q2Report_rows(style=report.make_style(text_align="center"))
     table_header.set_cell(0, 0, "Table", colspan=4, style=report.make_style(border_width="0", font_size=20))
     table_header.set_cell(1, 0, "Col 1")
 
-    table_footer = report_rows()
+    table_footer = Q2Report_rows()
     table_footer.set_cell(
         0, 0, "total", colspan=2, style=report.make_style(text_align="right", border_width="0")
     )
     table_footer.set_cell(0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right"))
 
     # Group header and footer
-    group_header = report_rows(style=report.make_style(text_align="center"))
+    group_header = Q2Report_rows(style=report.make_style(text_align="center"))
     group_header.set_cell(0, 0, "Group headerr", colspan=4, style=report.make_style(border_width="2 0"))
 
-    group_footer = report_rows()
+    group_footer = Q2Report_rows()
     group_footer.set_cell(
         0, 0, "Group total", colspan=2, style=report.make_style(text_align="right", border_width="0")
     )
     group_footer.set_cell(0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right", font_size=6))
 
     # Table
-    table_row = report_rows(
+    table_row = Q2Report_rows(
         heights=[0, 0, 0],
         style=report.make_style(border_width="0", font_size=6),
         role="table",
@@ -158,6 +158,13 @@ def demo():
     table_row.add_table_group("grp", group_header, group_footer)
 
     report.add_rows(rows=table_row)
+
+    report.add_page(page_height=10, page_width=10)
+    report.set_cell(0, 0, "small page0")
+    this_rows = report.set_cell(2, 2, "small page2")
+    this_rows.set_row_height(2, "4-0")
+    report.set_col_width(column=1, width="1")
+    report.set_col_width(column=2, width="50%")
 
     report.params["p1"] = " <b>bold text</b> just text"
     # print(json.dumps(report.report_content, indent=2))

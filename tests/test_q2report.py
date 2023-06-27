@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, mock_open
 from q2report import __version__
-from q2report.q2report import Q2Report, report_rows
+from q2report.q2report import Q2Report, Q2Report_rows
 from q2report.q2utils import is_sub_list, float_, set_dict_default
 
 image_data = (
@@ -54,7 +54,7 @@ def test_utils():
 def test_wrongs():
     report = Q2Report()
     with pytest.raises(Exception) as e:
-        wrong_role = report_rows(role="123")
+        wrong_role = Q2Report_rows(role="123")
 
 
 def test_load():
@@ -134,28 +134,28 @@ def test_report():
     report.set_cell(3, 0, "{mydata}{no_data}")
 
     # table header and footer
-    table_header = report_rows(style=report.make_style(text_align="center"))
+    table_header = Q2Report_rows(style=report.make_style(text_align="center"))
     table_header.set_cell(0, 0, "Table", colspan=4, style=report.make_style(border_width="0", font_size=20))
     table_header.set_cell(1, 0, "Col 1")
 
-    table_footer = report_rows()
+    table_footer = Q2Report_rows()
     table_footer.set_cell(
         0, 0, "total", colspan=2, style=report.make_style(text_align="right", border_width="0")
     )
     table_footer.set_cell(0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right"))
 
     # Group header and footer
-    group_header = report_rows(style=report.make_style(text_align="center"))
+    group_header = Q2Report_rows(style=report.make_style(text_align="center"))
     group_header.set_cell(0, 0, "Group headerr", colspan=4, style=report.make_style(border_width="2 0"))
 
-    group_footer = report_rows()
+    group_footer = Q2Report_rows()
     group_footer.set_cell(
         0, 0, "Group total", colspan=2, style=report.make_style(text_align="right", border_width="0")
     )
     group_footer.set_cell(0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right", font_size=6))
 
     # Table
-    table_row = report_rows(
+    table_row = Q2Report_rows(
         heights=[0, 0, 0],
         style=report.make_style(border_width="0", font_size=6),
         role="table",
@@ -183,14 +183,18 @@ def test_report():
 
     report.add_columns(widths=[])
     report.add_columns(widths=[1])
-    row1 = report_rows(role="table", data_source="wrong_ds")
+
+    row1 = Q2Report_rows(role="table", data_source="wrong_ds")
     row1.set_cell(0, 1, "123")
     report.add_rows(rows=row1)
+
+    report.add_page(page_height=10)
+    report.set_cell(0, 0, "small page")
 
     report.params["p1"] = " <b>bold text</b> just text"
 
     with patch("builtins.open", mock_open()) as filemock:
-        report.run("repo.docx", data=demo_data)
+        report.run("repo.docx", data=demo_data, open_output_file=False)
         report.run("repo.xlsx", data=demo_data, open_output_file=False)
         report.run("repo.html", data=demo_data, open_output_file=False)
 
