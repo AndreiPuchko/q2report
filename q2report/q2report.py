@@ -44,6 +44,7 @@ from q2report.q2utils import num, Q2Heap, int_, today, float_
 
 re_calc = re.compile(r"\{.*?\}")
 re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
+re_dec = re.compile(r"[^\d]")
 
 engine_name = None
 
@@ -180,10 +181,12 @@ class mydata(dict):
     def __getitem__(self, key):
         if key in self.__dict__:
             return self.__dict__[key]
+
         if self.q2report.use_prevrowdata:
             data = self.q2report.prevrowdata
         else:
             data = self.q2report.data
+
         if key in data:
             return data[key]
         elif key in globals():
@@ -249,6 +252,7 @@ class Q2Report:
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self.outline_level = 0
+        self.currency = "€"
 
         self.data = {}  # current data
         self.data_sets = {}
@@ -256,6 +260,12 @@ class Q2Report:
         self.current_data_set_row_number = 0
         self.heap = Q2Heap()
         self.d = D(self)
+
+    def set_data(self, data, name=None):
+        if hasattr(data, "__name__") and name is None:
+            self.data[data.__name__] = data
+        elif isinstance(name, str):
+            self.data[name] = data
 
     @staticmethod
     def check_style(style):
@@ -504,24 +514,39 @@ class Q2Report:
 
     def format(self, cell):
         format = cell.get("format", "")
+        dec = re_dec.sub("", format)
         if format == "D":
             try:
                 cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
-        elif format.upper() == "F":
+        elif "F" in format.upper():
             cell["xlsx_data"] = num(cell["data"])
             cell["numFmtId"] = "165"
-            cell["data"] = ("{:,.2f}".format(num(cell["data"]))).replace(",", " ")
-        elif format.upper() == "N":
+            if dec and dec != "":
+                fmt = "{:,.%sf}" % int(dec)
+            else:
+                fmt = "{:,.2f}"
+            cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
+        elif "N" in format.upper():
+            if dec and dec != "":
+                fmt = "{:.%sf}" % int(dec)
+                cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
             cell["xlsx_data"] = num(cell["data"])
             cell["numFmtId"] = "164"
+
+        if format.startswith("$"):
+            cell["data"] = self.currency + cell["data"]
+        elif format.endswith("$"):
+            cell["data"] += self.currency
 
     def render_rows_section(self, rows_section, column_style, aggregator=None):
         if aggregator is None:
             self.use_prevrowdata = False
             self.data.update({x: self.table_aggregators[x]["v"] for x in self.table_aggregators})
             self.data.update(self.params)
+            if self.table_group_aggregators:
+                self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"]["_grow_number"]["v"]
         else:
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
             self.prevrowdata.update(self.params)
@@ -655,6 +680,7 @@ class Q2Report:
         if reset_index is not None:
             for index in range(len(rows_section["table_groups"]) - 1, index - 1, -1):
                 agg = self.table_group_aggregators[index]
+                agg["aggr"]["_group_number"] = {"v": agg["_group_number"], "f": ""}
                 self.render_rows_section(
                     rows_section["table_groups"][index]["group_footer"],
                     column_style,
@@ -663,9 +689,10 @@ class Q2Report:
                 self.outline_level -= 1
                 # clear group aggregator
                 agg["groupby_values"] = []
+                agg["_group_number"] += 1
                 for cell in agg["aggr"]:
                     agg["aggr"][cell]["v"] = num(0)
-                agg["aggr"]["_row_number"]["v"] = num(0)
+                agg["aggr"]["_grow_number"]["v"] = num(0)
         if end_of_table:
             return
         for index, group_set in enumerate(rows_section["table_groups"]):
@@ -675,6 +702,7 @@ class Q2Report:
                 group_value.append(self.evaluator(group))
             if agg["groupby_values"] != group_value:
                 self.outline_level += 1
+                self.data["_group_number"] = agg["_group_number"]
                 self.render_rows_section(group_set["group_header"], column_style)
 
     def render_table_footer(self, rows_section, column_style):
@@ -700,7 +728,7 @@ class Q2Report:
                         "v": num(0),  # initial value
                     }
 
-        aggregator["_row_number"] = {
+        aggregator["_grow_number"] = {
             "a": "sum",  # aggregate function - sum, avg and etc
             "f": "",  # cell formula
             "v": num(0),  # initial value
@@ -716,6 +744,7 @@ class Q2Report:
             aggr = {
                 "groupby_list": grouper[:],
                 "groupby_values": [],
+                "_group_number": 1,
                 "aggr": {},
             }
             self.aggregators_detect(group.get("group_footer", {}), aggr["aggr"])
@@ -731,7 +760,7 @@ class Q2Report:
                 x["groupby_values"].append(self.evaluator(y))
             for cell in x["aggr"]:
                 x["aggr"][cell]["v"] += num(self.evaluator(x["aggr"][cell]["f"]))
-            x["aggr"]["_row_number"]["v"] += 1
+            x["aggr"]["_grow_number"]["v"] += 1
 
 
 class D:

@@ -1,10 +1,5 @@
-from q2report.q2report import Q2Report, Q2Report_rows, re_q2image
-
-import random
-import string
+from q2report.q2report import Q2Report, Q2Report_rows
 import os
-import json
-import codecs
 
 
 def demo():
@@ -50,23 +45,27 @@ def demo():
     report.add_column()
     report.add_column()
     report.add_column()
-    # set cells to default (last) rows section
+
     report.set_cell(0, 0, "{q2image('%s')}" % image_data)
     report.set_cell(
         0,
         2,
         colspan=6,
         data="Invoice <b>{rep.d.invoice.number}<b>",
-        style=report.make_style(font_size=20),
+        style=report.make_style(font_size=20, padding="0.05 0.05 1 0.05"),
     )
+
     label_style = report.make_style(text_align="right", font_size=8, padding="0.05 0.5 0.05 0.05")
+
     report.set_cell(1, 0, colspan=2, data="Date of origin:", style=label_style)
+
     report.set_cell(1, 2, data="{rep.d.invoice.date}", format="D")
     report.set_cell(1, 4, data="Expiry date:", style=label_style)
     report.set_cell(1, 5, data="{rep.d.invoice.expire_date}", format="D")
 
-    report.set_cell(2, 0, colspan=2, data="Supplier", style=label_style)
     report.set_cell(2, 2, colspan=3, data="<b>{rep.d.supplier.name}</b>, ({rep.d.supplier.id})")
+    report.set_cell(2, 0, colspan=2, data="Supplier", style=label_style)
+
     report.set_cell(3, 2, colspan=3, data="{rep.d.supplier.address}")
 
     report.set_cell(4, 0, colspan=2, data="Customer", style=label_style)
@@ -76,19 +75,41 @@ def demo():
     report.set_cell(6, 0, colspan=2, data="Comments", style=label_style)
     report.set_cell(6, 2, colspan=3, data="<i>{rep.d.invoice.comments}</i>")
 
-    # report.add_rows(heights=[0, 0], style=report.make_style(font_size=16))
-    # table header and footer
+    # Table
+    table_row = Q2Report_rows(
+        role="table", data_source="items", style=report.make_style(border_width="0 0 1 0")
+    )
     table_header = Q2Report_rows(style=report.make_style(text_align="center", border_width="1"))
+    table_footer = Q2Report_rows()
+
     table_header.set_cell(
         0, 0, "Invoice items", colspan=7, style=report.make_style(border_width="0", font_size=12)
     )
-    table_header.set_cell(1, 0, "Goods and Services", colspan=3)
-    table_header.set_cell(1, 3, "Quantity")
-    table_header.set_cell(1, 4, "Price")
-    table_header.set_cell(1, 5, "Total")
+    table_row.set_cell(0, 0, "{_row_number}.", style=report.make_style(text_align="center"))
 
-    table_footer = Q2Report_rows()
-    table_footer.set_cell(0, 4, "Subtotal", style=label_style)
+    table_header.set_cell(1, 0, "Goods and Services", colspan=3)
+
+    table_row.set_cell(0, 1, "<b>{name}</b>, ({id})", colspan=2)
+
+    table_header.set_cell(1, 3, "Quantity")
+    table_row.set_cell(0, 3, "{qt}", format="N", style=report.make_style(text_align="right"))
+    table_footer.set_cell(0, 3, "Subtotal", colspan=2, style=label_style)
+    table_footer.set_cell(1, 3, "Discount", colspan=2, style=label_style)
+    table_footer.set_cell(2, 3, "Discount amount", colspan=2, style=label_style)
+    table_footer.set_cell(3, 3, "Grand total", colspan=2, style=label_style)
+
+    table_header.set_cell(1, 4, "Price")
+    table_row.set_cell(0, 4, "{price}", format="$N2", style=report.make_style(text_align="right"))
+
+    table_header.set_cell(1, 5, "Total")
+    table_row.set_cell(
+        0,
+        5,
+        "{num(price)*num(qt)}",
+        format="F2$",
+        style=report.make_style(text_align="right"),
+        name="line_total",
+    )
     table_footer.set_cell(
         0,
         5,
@@ -97,7 +118,6 @@ def demo():
         style=report.make_style(text_align="right", font_weight="bold"),
         name="sub_total",
     )
-    table_footer.set_cell(1, 4, "Discount", style=label_style)
     table_footer.set_cell(
         1,
         5,
@@ -105,39 +125,21 @@ def demo():
         style=report.make_style(text_align="right", font_weight="bold"),
         name="discount",
     )
-    table_footer.set_cell(2, 3, "Discount amount", colspan=2, style=label_style)
     table_footer.set_cell(
         2,
         5,
         "{-round(num(sub_total)*num(discount)/100,2)}",
         style=report.make_style(text_align="right", font_weight="bold"),
         format="F",
-        name="discount_amount"
+        name="discount_amount",
     )
-    table_footer.set_cell(3, 3, "Grand total", colspan=2, style=label_style)
     table_footer.set_cell(
         3,
         5,
         "{num(sub_total)+num(discount_amount)}",
         style=report.make_style(text_align="right", font_weight="bold"),
         format="F",
-        name="grand_total"
-    )
-
-    # Table
-    table_row = Q2Report_rows(
-        role="table", data_source="items", style=report.make_style(border_width="0 0 1 0")
-    )
-    table_row.set_cell(0, 0, "<b>{name}</b>, ({id})", colspan=3)
-    table_row.set_cell(0, 3, "{qt}", format="N", style=report.make_style(text_align="right"))
-    table_row.set_cell(0, 4, "{price}", format="N", style=report.make_style(text_align="right"))
-    table_row.set_cell(
-        0,
-        5,
-        "{num(price)*num(qt)}",
-        format="F",
-        style=report.make_style(text_align="right"),
-        name="line_total",
+        name="grand_total",
     )
 
     table_row.set_table_header(table_header)

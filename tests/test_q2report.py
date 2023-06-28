@@ -194,9 +194,9 @@ def test_report():
     report.params["p1"] = " <b>bold text</b> just text"
 
     with patch("builtins.open", mock_open()) as filemock:
-        report.run("repo.docx", data=demo_data, open_output_file=False)
-        report.run("repo.xlsx", data=demo_data, open_output_file=False)
-        report.run("repo.html", data=demo_data, open_output_file=False)
+        report.run("temp/repo.docx", data=demo_data, open_output_file=False)
+        report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
+        report.run("temp/repo.html", data=demo_data, open_output_file=False)
 
     with pytest.raises(BaseException) as e:
         report.run("temp/repo.rtf", data=demo_data, open_output_file=False)
