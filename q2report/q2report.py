@@ -461,7 +461,8 @@ class Q2Report:
         if os.path.isfile(content):
             self.report_content = json.load(open(content))
         else:
-            self.report_content = json.loads(content)
+            if content != "":
+                self.report_content = json.loads(content)
         self.params = self.report_content.get("params", {})
 
     def data_start(self):

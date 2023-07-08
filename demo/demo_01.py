@@ -60,7 +60,7 @@ def demo():
 
     # report.data["mydata"] = "123"
     # Firt page
-    if 0:
+    if 1:
         report.add_page(page_margin_left=3)
 
         report.add_column(width=2)
@@ -111,7 +111,7 @@ def demo():
         page_margin_top=1,
         style=report.make_style(font_size=10),
     )
-    if 0:
+    if 1:
         report.add_columns(widths=[2, 2, 3, 0])
 
         report.set_cell(0, 0, "Second page 1", style=report.make_style(font_size=10), colspan=3)
