@@ -180,8 +180,8 @@ class Q2PrinterDocx(Q2Printer):
                             {header_ref_xml}
                             {footer_ref_xml}
                             <w:type w:val="nextPage"/>
-                            <w:pgSz 
-                                w:w="{self.page_width * twip_in_cm}" 
+                            <w:pgSz
+                                w:w="{self.page_width * twip_in_cm}"
                                 w:h="{self.page_height * twip_in_cm}"/>
                             <w:pgMar w:gutter="0" w:header="708" w:footer="708"
                                     w:top="{self.page_margin_top * twip_in_cm}"

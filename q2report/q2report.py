@@ -165,6 +165,10 @@ class Q2Report_rows:
     def check_style(self, style):
         if isinstance(style, dict):
             return {x: style[x] for x in style if x in Q2Report.default_style}
+        elif isinstance(style, str):
+            if style.endswith("}") and style.startswith("{"):
+                style = style[1:-1]
+            return {x.split(":")[0]: x.split(":")[1].strip() for x in style.split(";") if ":" in x}
         else:
             return {}
 

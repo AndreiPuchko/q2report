@@ -34,7 +34,7 @@ docx_parts[
 ] = """
     <w:r>
     <w:drawing>
-        <wp:anchor distT="0"
+        <wp:inline distT="0"
             distB="0"
             distL="0"
             distR="0"
@@ -44,7 +44,6 @@ docx_parts[
             locked="0"
             layoutInCell="1"
             allowOverlap="1"
-            
             >
             <wp:simplePos   x="0"
                             y="0"/>
@@ -54,7 +53,7 @@ docx_parts[
             <wp:positionV relativeFrom="paragraph">
                 <wp:posOffset>0</wp:posOffset>
             </wp:positionV>
-		    <wp:extent 
+            <wp:extent
                     cx="%(width)s"
                     cy="%(height)s"/>
             <wp:effectExtent
@@ -64,7 +63,7 @@ docx_parts[
                     b="0"/>
             <wp:wrapNone/>
             <wp:docPr id="%(imageIndex)s"
-		          name="image%(imageIndex)s"/>
+               name="image%(imageIndex)s"/>
             <wp:cNvGraphicFramePr>
                 <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
                     noChangeAspect="1"/>
@@ -72,11 +71,11 @@ docx_parts[
             <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
                 <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
                     <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-					<pic:nvPicPr>
-						<pic:cNvPr id="%(imageIndex)s"
-						           name="image%(imageIndex)s.png"/>
-						<pic:cNvPicPr/>
-					</pic:nvPicPr>                    
+                    <pic:nvPicPr>
+                        <pic:cNvPr id="%(imageIndex)s"
+                                name="image%(imageIndex)s.png"/>
+                        <pic:cNvPicPr/>
+                    </pic:nvPicPr>
                         <pic:blipFill>
                             <a:blip r:embed="rId%(imageIndex)s">
                                 </a:blip>
@@ -100,7 +99,7 @@ docx_parts[
                     </pic:pic>
                 </a:graphicData>
             </a:graphic>
-        </wp:anchor>
+        </wp:inline>
     </w:drawing>
     </w:r>
     """

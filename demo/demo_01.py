@@ -1,10 +1,6 @@
-from q2report.q2report import Q2Report, Q2Report_rows, re_q2image
+from q2report.q2report import Q2Report, Q2Report_rows
 
-import random
-import string
 import os
-import json
-import codecs
 
 
 def demo_udf():
@@ -90,14 +86,15 @@ def demo():
             5,
             0,
             "Row six Col one",
-            style=report.make_style(font_size=10, text_align="right", border_width="3 3 3 3", padding="0.5"),
+            # style=report.make_style(font_size=10, text_align="right", border_width="3 3 3 3", padding="0.5"),
+            style="{border-width: 3 3 3 3; padding:1}",
         )
 
-        report.set_cell(3, 2, "{q2image('%s',2)}" % image_data)
+        report.set_cell(3, 2, "{q2image('%s',4)}" % image_data, style=report.make_style(padding="0"))
         report.set_cell(
             3,
             0,
-            "{q2image('%(image_data)s')}{q2image('%(image_data)s',0,1)}{q2image('%(image_data)s')}"
+            "{q2image('%(image_data)s')}{q2image('%(image_data)s',0,1)}{q2image('%(image_data)s',3,3)}"
             % locals(),
         )
 
