@@ -108,7 +108,7 @@ class Q2PrinterXlsx(Q2Printer):
         wb_content_types = []
 
         for img in range(0, len(self.xmlImageList)):
-            zipf.writestr(r"xl\media\image%s.png" % (img + 1), base64.b64decode(self.xmlImageList[img]))
+            zipf.writestr("xl/media/image%s.png" % (img + 1), base64.b64decode(self.xmlImageList[img]))
             wb_images.append(xlsx_parts["images"] % ((img + 1), (img + 1)))
 
         for x in range(0, len(self.xlsx_sheets)):
