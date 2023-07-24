@@ -246,8 +246,10 @@ class Q2Report:
         "colspan": 0,
     }
 
-    def __init__(self):
+    def __init__(self, style={}):
         self.report_content = {}
+        if style:
+            self.set_style(style)
         self.printer = None
         self.params = {}
         self.prevrowdata = {}
@@ -287,6 +289,7 @@ class Q2Report:
         padding=None,
         text_align=None,
         vertical_align=None,
+        alignment=None,
     ):
         """_summary_
 
@@ -317,6 +320,22 @@ class Q2Report:
             style["text-align"] = text_align
         if vertical_align:
             style["vertical-align"] = vertical_align
+        if alignment is not None:
+            alignment = num(alignment)
+            if alignment in (7, 4, 1, 0, -1):
+                style["text-align"] = "left"
+            elif alignment in (9, 6, 3):
+                style["text-align"] = "right"
+            else:
+                style["text-align"] = "center"
+
+            if alignment in (7, 8, 9, 0, -1):
+                style["vertical-align"] = "top"
+            elif alignment in (1, 2, 3):
+                style["vertical-align"] = "bottom"
+            else:
+                style["vertical-align"] = "middle"
+
         return style
 
     def set_style(self, style=None):
@@ -655,7 +674,8 @@ class Q2Report:
                             self.outline_level -= 1
                             self.prevrowdata.update(data_row)
 
-                            self.data_step()
+                            if self.data_step():
+                                break
                         self.data_stop()
 
                         self.render_table_groups(rows_section, column_style, True)
