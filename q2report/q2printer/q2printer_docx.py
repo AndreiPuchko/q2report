@@ -342,7 +342,6 @@ class Q2PrinterDocx(Q2Printer):
         para_params = self.get_paragraph_params(cell_style)
         para_text = self.get_paragraph_text(cell_style, cell_text, para_params)
         valign = self.get_vertical_align(cell_style)
-
         # self.document.append(
         return f"""
                 <w:tc>
