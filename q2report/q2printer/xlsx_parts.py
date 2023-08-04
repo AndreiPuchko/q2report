@@ -28,11 +28,11 @@ xlsx_parts[
             cx="%(_width)s"
             cy="%(_height)s"/>
         <xdr:pic>
-			<xdr:nvPicPr>
+            <xdr:nvPicPr>
                 <xdr:cNvPr id="%(_id)s"
                         name="image%(_id)s"/>
                 <xdr:cNvPicPr>
-                    <a:picLocks noChangeAspect="1"/>
+                    <a:picLocks/>
                 </xdr:cNvPicPr>
             </xdr:nvPicPr>
             <xdr:blipFill>
@@ -54,13 +54,13 @@ xlsx_parts[
             </xdr:spPr>
         </xdr:pic>
         <xdr:clientData/>
- </xdr:oneCellAnchor>"""
+</xdr:oneCellAnchor>"""
 
 
 xlsx_parts[
     "xl/drawings/drawing.xml"
 ] = """<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-          xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+        xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
             %s
     </xdr:wsDr>"""
 xlsx_parts[
