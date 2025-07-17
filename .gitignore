@@ -2,3 +2,4 @@
 temp/*
 dist/*
 *.sh
+.vscode
