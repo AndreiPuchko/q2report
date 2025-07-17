@@ -41,7 +41,11 @@ class Q2PrinterHtml(Q2Printer):
 
         html += "\n".join(self.html)
         html += "\n\n\t</body>" "\n</html>"
-        self._OF.write(html)
+        if isinstance(self.output_file, str):
+            with open(self.output_file, "w", encoding="utf8") as f:
+                f.write(html)
+        else:
+            self.output_file.write(html.encode())
         return super().save()
 
     def reset_page(self, **args):
@@ -135,5 +139,5 @@ class Q2PrinterHtml(Q2Printer):
         return cell_text
 
     def show(self):
-        # print(f"file://{os.path.abspath(self.output_file)}")
-        webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")
+        if isinstance(self.output_file, (str, bytes, os.PathLike, int)):
+            webbrowser.open_new_tab(f"file://{os.path.abspath(self.output_file)}")

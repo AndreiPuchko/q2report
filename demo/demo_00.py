@@ -3,6 +3,8 @@ from q2report.q2report import Q2Report
 import random
 import string
 import os
+from io import BytesIO
+
 
 
 def demo():
@@ -39,8 +41,10 @@ def demo():
 
     # report.run("temp/repo.html", data=demo_data)
     # report.run("temp/repo.xlsx", data=demo_data)
-    res_file = report.run("docx", data=demo_data, open_output_file=False)
-    os.system(os.path.abspath(res_file))
+    result_file = BytesIO()
+    res_file = report.run(result_file, output_type="docx", data=demo_data)
+    print(res_file.getvalue())
+    # os.system(os.path.abspath(res_file))
 
 if __name__ == "__main__":
     demo()

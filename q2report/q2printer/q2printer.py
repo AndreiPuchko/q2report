@@ -41,16 +41,17 @@ class Q2Printer:
             output_type = os.path.splitext(output_file)[1]
         self.output_type = output_type.lower().replace(".", "")
         self.xmlImageList = []
-        self._OF = None
+        # self._OF = None
         self._columns_count = None
         self._cm_columns_widths = []
         self.q2report = None
-        self.open_output_file()
+        # self.open_output_file()
 
     def open_output_file(self):
         # if not os.path.isdir(os.path.dirname(self.output_file)):
         #     os.mkdir(os.path.dirname(self.output_file))
-        self._OF = open(self.output_file, "w", encoding="utf8")
+        # self._OF = open(self.output_file, "w", encoding="utf8")
+        pass
 
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])
@@ -166,20 +167,22 @@ class Q2Printer:
         return width, height, imageIndex
 
     def save(self):
-        self._OF.close()
+        # self._OF.close()
+        pass
 
     def show(self):
-        if os.path.isfile(self.output_file):
-            if sys.platform == "win32":
-                # os.startfile(os.path.abspath(self.output_file))
-                subprocess.Popen(
-                    ["start", os.path.abspath(self.output_file)],
-                    close_fds=True,
-                    shell=True,
-                    creationflags=subprocess.DETACHED_PROCESS,
-                )
-            # elif sys.platform == 'darwin':
-            #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
-            else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"
-                subprocess.Popen([opener, self.output_file], close_fds=True, shell=False)
+        if isinstance(self.output_file, (str, bytes, os.PathLike, int)):
+            if os.path.isfile(self.output_file):
+                if sys.platform == "win32":
+                    # os.startfile(os.path.abspath(self.output_file))
+                    subprocess.Popen(
+                        ["start", os.path.abspath(self.output_file)],
+                        close_fds=True,
+                        shell=True,
+                        creationflags=subprocess.DETACHED_PROCESS,
+                    )
+                # elif sys.platform == 'darwin':
+                #     subprocess.Popen(["open", self.output_file], close_fds=True, shell=False)
+                else:
+                    opener = "open" if sys.platform == "darwin" else "xdg-open"
+                    subprocess.Popen([opener, self.output_file], close_fds=True, shell=False)
