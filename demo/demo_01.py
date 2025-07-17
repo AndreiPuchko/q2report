@@ -201,8 +201,8 @@ def demo():
     # print(json.dumps(report.report_content, indent=2))
 
     # res_file = report.run("temp/repo.html", data=demo_data, open_output_file=False)
-    # res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
-    res_file = report.run("temp/repo.docx", data=demo_data, open_output_file=False)
+    res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
+    # res_file = report.run("temp/repo.docx", data=demo_data, open_output_file=False)
 
     os.system(os.path.abspath(res_file))
 
