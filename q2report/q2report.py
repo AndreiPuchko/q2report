@@ -22,6 +22,9 @@ from io import BytesIO
 from PIL import Image
 import base64
 import datetime
+import re
+from decimal import Decimal
+
 
 try:
     from PyQt6.QtGui import QTextDocument
@@ -61,6 +64,64 @@ def set_engine(engine2="PyQt6"):
     """
     global engine
     engine = engine2
+
+
+def estimate_cell_height_cm(cell_info: dict) -> float:
+    # Conversion: 1 inch = 2.54 cm, 1 inch = 96 px
+    cm_to_px = lambda cm: float(cm) * 96 / 2.54
+    px_to_cm = lambda px: px * 2.54 / 96
+
+    # Extract fields
+    html_data = cell_info.get("data", "")
+    style = cell_info.get("style", {})
+    cell_width_cm = float(cell_info.get("width", Decimal("10.0")))
+
+    # Parse font-size
+    font_size_pt = 12.0
+    font_size_raw = style.get("font-size", "")
+    match = re.match(r"([\d.]+)pt", font_size_raw)
+    if match:
+        font_size_pt = float(match.group(1))
+
+    # Estimate parameters
+    line_height_pt = 1.2 * font_size_pt
+    char_width_pt = 0.45 * font_size_pt
+
+    # Convert width to point
+    cell_width_px = cm_to_px(cell_width_cm)
+    cell_width_pt = cell_width_px / 1.33  # 1pt ≈ 1.33px at 96dpi
+
+    # Replace <br> with newline and remove other inline tags
+    text = html_data
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?(b|i|u|font)[^>]*>", "", text, flags=re.IGNORECASE)
+
+    # Split by lines
+    lines = text.split("\n")
+    total_lines = 0
+
+    for line in lines:
+        words = line.split()
+        if not words:
+            total_lines += 1
+            continue
+        line_len = 0
+        lines_needed = 1
+        for word in words:
+            word_len_pt = len(word) * char_width_pt
+            if line_len + word_len_pt > cell_width_pt:
+                lines_needed += 1
+                line_len = word_len_pt + char_width_pt
+            else:
+                line_len += word_len_pt + char_width_pt
+        total_lines += lines_needed
+
+    # Total height in points → pixels → cm
+    total_height_pt = total_lines * line_height_pt
+    total_height_px = total_height_pt * 1.33
+    total_height_cm = px_to_cm(total_height_px)
+
+    return Decimal(round(total_height_cm, 3))
 
 
 roles = ["free", "table", "table_header", "table_footer", "group_header", "group_footer", "header", "footer"]
@@ -490,6 +551,7 @@ class Q2Report:
         self.current_data_set_name = ""
 
     def get_cell_height(self, cell_data):
+        print(cell_data)
         if pyqt6_installed:
             padding = cell_data["style"]["padding"].replace("cm", "").split(" ")
             while len(padding) < 4:
@@ -507,7 +569,7 @@ class Q2Report:
             height = round(num(text_doc.size().height()) / cm, 2)
             return height
         else:
-            return 0
+            return estimate_cell_height_cm(cell_data)
 
     def formulator(self, formula):
         formula = formula[0][1:-1]
