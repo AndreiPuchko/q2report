@@ -16,36 +16,13 @@
 from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.xlsx_parts import xlsx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
+from .rich_text_parser import RichTextParser
 
 import zipfile
 import re
 import base64
 
-reSpaces = re.compile(r"\s*", re.IGNORECASE)
-reFormula = re.compile(r"\[[^]^[]+\]")
-reFloat = re.compile(r"[-+]?\d*\.\d+|\d+")
 reHtmlTagBr = re.compile(r"<\s*/*BR\s*/*\s*>", re.IGNORECASE)
-reHtmlTagFontSize = re.compile(r"\s*font\s*size\s*\=", re.IGNORECASE)
-reHtmlTagFontEnd = re.compile(r"\<\s*/\s*font\s*>", re.IGNORECASE)
-reFontSize = re.compile(r"\<\s*font\s+size\\s*=\s*[+-]*\s*[0-9]*\s*\>", re.IGNORECASE)
-reSignAndSize = re.compile(r"[+-]*\s*[0-9]+")
-rePixMap = re.compile(r"zzPixmap\s*\(\s*.*\s*\)")
-reIsoDate = re.compile(r"^(?P<date>(\d\d\d\d\-((0[1-9])|(1(0|1|2))))\-((0[1-9])|(1\d)|(2\d)|(3(0|1))))$")
-reFontModifiers = re.compile(r"\<(\/*b)|(br/)|(font)|(\/*u)|(\/*i)\>", re.IGNORECASE)
-
-
-reSubFontSize = re.compile(r"(<(\s*font\s+size\s*=\s*[+-]*\s*\d+\s*)>)", re.IGNORECASE)
-reSubFontEnd = re.compile(r"(<(\s*\/\s*font\s*)>)", re.IGNORECASE)
-reSubBold = re.compile(r"(<(\s*b\s*)>)", re.IGNORECASE)
-reSubBoldEnd = re.compile(r"(<(\s*\/\s*b\s*)>)", re.IGNORECASE)
-reSubItalic = re.compile(r"(<(\s*i\s*)>)", re.IGNORECASE)
-reSubItalicEnd = re.compile(r"(<(\s*\/\s*i\s*)>)", re.IGNORECASE)
-reSubUnderline = re.compile(r"(<(\s*u\s*)>)", re.IGNORECASE)
-reSubUnderlineEnd = re.compile(r"(<(\s*\/\s*u\s*)>)", re.IGNORECASE)
-
-
-reUnderLineBegin = re.compile(r"<\s*u\s*>", re.IGNORECASE)
-reUnderLineEnd = re.compile(r"<\s*/\s*U\s*>", re.IGNORECASE)
 
 cm_2_inch = num(2.5396)
 points_in_mm = num(2.834645669)
@@ -340,79 +317,34 @@ class Q2PrinterXlsx(Q2Printer):
     def make_xlsx_cell(self, cell_address, cell_style, cell_text, cell_data={}):
         if cell_data.get("numFmtId"):
             xf_id = self.get_cell_xf_id(cell_style, cell_data.get("numFmtId"))
-            return f"""\n\t<c r="{cell_address}"
-                            s="{xf_id}"
-                            t="n">
-                    <v>{cell_data.get("xlsx_data")}</v>
-                    \n\t</c>"""
+            return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="n"><v>{cell_data.get("xlsx_data")}</v></c>"""
 
-        fontsizemod = fontsize = cell_style["font-size"].replace("pt", "")
-        fontfamily = cell_style["font-family"]
+        # Prepare font settings
+        fontsize = cell_style.get("font-size", "11pt").replace("pt", "")
+        fontfamily = cell_style.get("font-family", "Calibri")
 
-        cell_content = []
-        cell_text = cell_text.replace("\n", "")
-        cell_text = cell_text.replace("\r", "")
+        # Normalize cell text
+        cell_text = (cell_text or "").replace("\r", "").replace("\n", "")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         cell_text = reHtmlTagBr.sub("\n", cell_text)
-        if re.findall(r"\<(\/*b)|(br/)|(font)|(u)|(i)\>", cell_text, re.IGNORECASE):
-            bold = ""
-            ital = ""
-            undl = ""
-            for x in cell_text.split("<"):
-                if ">" in x:
-                    stl = x.split(">")[0].upper().strip().replace(" ", "")
-                    if "B" == stl:
-                        bold = "<b/>"
-                    elif "/B" == stl:
-                        bold = ""
-                    elif "I" == stl:
-                        ital = "<i/>"
-                    elif "/I" == stl:
-                        ital = ""
-                    elif "U" == stl:
-                        undl = """<u/>"""
-                    elif "/U" == stl:
-                        undl = ""
-                    elif "/FONT" in stl:
-                        fontsizemod = fontsize
-                    # elif "FONTSIZE=" in stl:
-                    #     fontsizemod = grid.getFontSizeMod(fontsize / 2, stl.split("=")[1])
-                    x = x.split(">")[1]
-                if x.strip():
-                    cell_content.append(
-                        f"""<r>
-                                <rPr>
-                                    <rFont val="{fontfamily}"/>
-                                    <sz val="{fontsizemod}"/>{bold}{ital}{undl}
-                                </rPr><t xml:space="preserve">{x}</t>
-                            </r>"""
-                    )
-        elif cell_text != "":
-            cell_content.append(f'<t xml:space="preserve">{cell_text}</t>')
+
+        # Parse inline formatting
+        parser = RichTextParser(fontfamily, fontsize)
+        parser.feed(cell_text)
+        runs = parser.get_runs()
 
         xf_id = self.get_cell_xf_id(cell_style)
 
-        if cell_content:
-            cell_content = "".join(cell_content)
+        if runs:
+            cell_content = "".join(runs)
             if cell_content not in self.sharedStrings:
                 self.sharedStrings.append(cell_content)
                 shared_strings_id = len(self.sharedStrings) - 1
             else:
                 shared_strings_id = self.sharedStrings.index(cell_content)
-            return f"""\n\t<c r="{cell_address}"
-                            s="{xf_id}"
-                            t="s">
-                    \n\t\t<v>{shared_strings_id}</v>
-                    \n\t</c>"""
-            # return (
-            #     f'''\n\t<c r="{cell_address}"
-            #                 s="2"
-            #                 t="n">
-            #         <v>123</v>
-            #         \n\t</c>'''
-            # )
+            return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="s"><v>{shared_strings_id}</v></c>"""
         else:
-            return f'\n\t<c r="{cell_address}" s="{xf_id}"/> '
+            return f'\n\t<c r="{cell_address}" s="{xf_id}"/>'
 
     def get_cell_align(self, cell_style):
 

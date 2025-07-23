@@ -28,7 +28,7 @@ def demo():
         1,
         data="1 <i>Lorem</i> ipsum dolor sit <u>amet</u>, consectetur adipiscing elit, sed "
         " do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-        " Ut enim ad <font size=+1 color=red>minim</font> veniam, quis nostrud exercitation ullamco laboris "
+        " Ut<br> enim ad <font size=+1 color=red>minim</font> veniam, quis nostrud exercitation ullamco laboris "
         "nisi ut aliquip ex ea <b>commodo consequat</b>. Duis aute irure dolor in "
         "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
         "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
