@@ -18,8 +18,6 @@ from copy import deepcopy
 import re
 import os
 import html
-from io import BytesIO
-from PIL import Image
 import base64
 import datetime
 from q2report.q2utils import num
@@ -38,10 +36,52 @@ engine_name = None
 
 
 def q2image(image, width=0, height=0):
-    if os.path.isfile(image):
-        image = base64.b64encode(open(image, "rb").read()).decode()
-    im = Image.open(BytesIO(base64.b64decode(image)))
-    return f"{image}:{width}:{height}:{im.width}:{im.height}:{im.format}"
+    def load_image_data(image):
+        if isinstance(image, str) and os.path.isfile(image):
+            with open(image, "rb") as f:
+                raw = f.read()
+            return raw, base64.b64encode(raw).decode()
+        else:
+            b64 = image
+            raw = base64.b64decode(b64)
+            return raw, b64
+
+    def get_png_size(data):
+        if data[:8] != b"\x89PNG\r\n\x1a\n":
+            raise ValueError("Not a PNG image")
+        return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+
+    def get_jpg_size(data):
+        i = 2  # Skip initial 0xFFD8
+        while i < len(data):
+            if data[i] != 0xFF:
+                raise ValueError("Invalid JPEG marker")
+            while data[i] == 0xFF:
+                i += 1
+            marker = data[i]
+            i += 1
+            if marker in (0xC0, 0xC2):  # SOF0 / SOF2
+                i += 3  # skip length and precision
+                height = int.from_bytes(data[i : i + 2], "big")
+                width = int.from_bytes(data[i + 2 : i + 4], "big")
+                return width, height
+            else:
+                length = int.from_bytes(data[i : i + 2], "big")
+                i += length
+        raise ValueError("JPEG size not found")
+
+    raw, image_b64 = load_image_data(image)
+
+    if raw[:8] == b"\x89PNG\r\n\x1a\n":
+        fmt = "PNG"
+        w, h = get_png_size(raw)
+    elif raw[:2] == b"\xff\xd8":
+        fmt = "JPEG"
+        w, h = get_jpg_size(raw)
+    else:
+        raise ValueError("Unsupported image format")
+
+    return f"{image_b64}:{width}:{height}:{w}:{h}:{fmt}"
 
 
 image = q2image
