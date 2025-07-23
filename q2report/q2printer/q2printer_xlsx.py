@@ -309,7 +309,7 @@ class Q2PrinterXlsx(Q2Printer):
             '<fill><patternFill patternType="solid">'
             f'<fgColor rgb="{css_color_to_rgb(color)}"/>'
             f'<bgColor rgb="{css_color_to_rgb(color)}"/>'
-            '</patternFill></fill>'
+            "</patternFill></fill>"
         )
 
         if fill not in self.fills:
@@ -397,15 +397,20 @@ class Q2PrinterXlsx(Q2Printer):
                 horizontal = f""" horizontal="left" indent="{int(round((num(padding[3])) / num(0.25)))}" """
         return f'\n\t<alignment {horizontal} {vertical} wrapText="true"/>\n'
 
-    def get_cell_borders(self, style):
-        border_width = style["border-width"].split(" ")
+    def get_cell_borders(self, cell_style):
+        border_width = cell_style["border-width"].split(" ")
         while len(border_width) < 4:
             border_width += border_width
         border = []
+
+        border_color = 'auto="1"'
+        if (color := cell_style.get("border-color")):
+            border_color = f' rgb="{css_color_to_rgb(color)}"'
+
         for index, side in enumerate(("left", "right", "top", "bottom")):
             if int_(border_width[index]):
                 bw = self.get_border_width(border_width[index])
-                border.append(f'<{side} style="{bw}"><color auto="1"/></{side}>')
+                border.append(f'<{side} style="{bw}"><color {border_color}/></{side}>')
         border.append("<diagonal/>")
 
         borders = "\n".join(border)

@@ -490,11 +490,16 @@ class Q2PrinterDocx(Q2Printer):
         border_width = cell_style["border-width"].split(" ")
         while len(border_width) < 4:
             border_width += border_width
+
+        border_color = "auto"
+        if color := cell_style.get("border-color"):
+            border_color = css_color_to_rgb(color)[2:]
+
         borders = []
         borders.append("<w:tcBorders>\n")
         for index, side in enumerate(("top", "right", "bottom", "left")):
             if int_(border_width[index]):
-                borders.append(f'\t\t\t<w:{side} w:val="single" w:color="auto" w:space="0"')
+                borders.append(f'\t\t\t<w:{side} w:val="single" w:color="{border_color}" w:space="0"')
                 borders.append(f'\t\t\t\tw:sz="{int_(border_width[index])*10}"/>')
         borders.append("</w:tcBorders>\n")
         return "\n".join(borders)
