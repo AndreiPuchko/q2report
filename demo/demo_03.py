@@ -20,15 +20,21 @@ def demo():
         " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris "
         "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in ",
         rowspan=1,
+        style={
+            "background": "red",
+            "color": "#00FFFF",
+            "font-style": "italic",
+            "text-decoration": "underline",
+        },
     )
-    report.set_cell(0, 1, data="123")
+    report.set_cell(0, 1, data="123", style={"font-weight": "bold", "font-size": 50})
     report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=6)
     report.set_cell(
         1,
         1,
         data="1 <i>Lorem</i> ipsum dolor sit <u>amet</u>, consectetur adipiscing elit, sed "
         " do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-        " Ut<br> enim ad <font size=+1 color=red>minim</font> veniam, quis nostrud exercitation ullamco laboris "
+        " Ut<br> enim ad <font size=+1 color=#0000FF>minim</font> veniam, quis nostrud exercitation ullamco laboris "
         "nisi ut aliquip ex ea <b>commodo consequat</b>. Duis aute irure dolor in "
         "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
         "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
@@ -46,9 +52,9 @@ def demo():
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    res_file = report.run("temp/repo.html", open_output_file=False)
+    # res_file = report.run("temp/repo.html", open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", open_output_file=False)
-    # res_file = report.run("temp/repo.docx", open_output_file=False)
+    res_file = report.run("temp/repo.docx", open_output_file=False)
 
     os.system(os.path.abspath(res_file))
 

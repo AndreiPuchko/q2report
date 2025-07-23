@@ -16,7 +16,7 @@
 from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.xlsx_parts import xlsx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
-from .rich_text_parser import RichTextParser
+from .rich_text_parser import RichTextParser, css_color_to_rgb
 
 import zipfile
 import re
@@ -37,8 +37,8 @@ class Q2PrinterXlsx(Q2Printer):
         self.current_sheet = {}
         self.sheet_current_row = 1
 
-        self.fonts = ["""<sz val="11"/><name val="Calibri"/>"""]
-        self.fills = ["""<patternFill patternType="none"/>"""]
+        self.fonts = ["""<sz val="10"/><name val="Calibri"/>"""]
+        self.fills = ["""<fill><patternFill patternType="none"/></fill>"""]
         self.borders = ["""<left/><right/><top/><bottom/><diagonal/>"""]
         self.cell_xfs = ["""<xf borderId="0" fillId="0" fontId="0" numFmtId="0" xfId="0"/>"""]
         self.xmlImageList = []
@@ -270,12 +270,16 @@ class Q2PrinterXlsx(Q2Printer):
             len(self.cell_xfs),
             "".join("\n%s" % style for style in self.cell_xfs),
         )
+        fills = """\n<fills count="%s">%s</fills>""" % (
+            len(self.fills),
+            "\n".join(self.fills),
+        )
 
         zipf.writestr("xl/styles.xml", (xlsx_parts["xl/styles.xml"] % locals()).encode("utf8"))
 
     def get_cell_xf_id(self, style, numFmtId=0):
         border = f'borderId="{self.get_cell_borders(style)}"'
-        fill = f'fillId="{0}"'
+        fill = f'fillId="{self.get_fills_id(style)}"'
         font = f'fontId="{self.get_font_id(style)}"'
         num_fmt = f'numFmtId="{numFmtId}"'
         align = self.get_cell_align(style)
@@ -288,16 +292,29 @@ class Q2PrinterXlsx(Q2Printer):
         return xf_id
 
     def get_font_id(self, style):
-        font_size = num(style["font-size"].replace("pt", ""))
+        font_size = num(str(style["font-size"]).replace("pt", ""))
         font_family = style["font-family"]
         font_weight = "<b/>" if style.get("font-weight", "") == "bold" else ""
         font_style = """<name val="%s"/> <sz val="%s"/>%s""" % (font_family, font_size, font_weight)
         if font_style not in self.fonts:
             self.fonts.append(font_style)
-        #     font_id = len(self.fonts) - 1
-        # else:
         font_id = self.fonts.index(font_style)
         return font_id
+
+    def get_fills_id(self, style):
+        color = style.get("background")
+        if color is None:
+            return 0
+        fill = (
+            '<fill><patternFill patternType="solid">'
+            f'<fgColor rgb="{css_color_to_rgb(color)}"/>'
+            f'<bgColor rgb="{css_color_to_rgb(color)}"/>'
+            '</patternFill></fill>'
+        )
+
+        if fill not in self.fills:
+            self.fills.append(fill)
+        return self.fills.index(fill)
 
     def make_image(self, cell_data, row, col):
         for x in cell_data.get("images", []):
@@ -320,7 +337,7 @@ class Q2PrinterXlsx(Q2Printer):
             return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="n"><v>{cell_data.get("xlsx_data")}</v></c>"""
 
         # Prepare font settings
-        fontsize = cell_style.get("font-size", "11pt").replace("pt", "")
+        fontsize = str(cell_style.get("font-size", "10pt")).replace("pt", "")
         fontfamily = cell_style.get("font-family", "Calibri")
 
         # Normalize cell text
@@ -328,9 +345,16 @@ class Q2PrinterXlsx(Q2Printer):
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         cell_text = reHtmlTagBr.sub("\n", cell_text)
 
+        # if cell_style.get("font-weight", "") == "bold":
+        #     cell_text = f"<b>{cell_text}</b>"
+        # if cell_style.get("font-style", "") == "italic":
+        #     cell_text = f"<i>{cell_text}</i>"
+        # if cell_style.get("text-decoration", "") == "underline":
+        #     cell_text = f"<u>{cell_text}</u>"
+
         # Parse inline formatting
         parser = RichTextParser(fontfamily, fontsize)
-        parser.feed(cell_text)
+        parser.feed(cell_text, cell_style)
         runs = parser.get_runs()
 
         xf_id = self.get_cell_xf_id(cell_style)

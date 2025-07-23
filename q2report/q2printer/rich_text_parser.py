@@ -41,6 +41,18 @@ class RichTextParser(HTMLParser):
         self.fontfamily = fontfamily
         self.base_fontsize = float(base_fontsize)
 
+    def feed(self, cell_text, cell_style):
+        cell_text = cell_text.strip()
+        if cell_style.get("font-weight", "") == "bold":
+            cell_text = f"<b>{cell_text}</b>"
+        if cell_style.get("font-style", "") == "italic":
+            cell_text = f"<i>{cell_text}</i>"
+        if cell_style.get("text-decoration", "") == "underline":
+            cell_text = f"<u>{cell_text}</u>"
+        if (color := cell_style.get("color", "")):
+            cell_text = f"<font color=#{css_color_to_rgb(color)[2:]}>{cell_text}</font>"
+        return super().feed(cell_text)
+
     def _get_current_style(self):
         return self.style_stack[-1] if self.style_stack else {}
 

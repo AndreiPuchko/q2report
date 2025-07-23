@@ -18,7 +18,7 @@ from q2report.q2printer.docx_parts import docx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 import zipfile
 import base64
-from .rich_text_parser import RichTextParser
+from .rich_text_parser import RichTextParser, css_color_to_rgb
 import re
 
 points_in_mm = 2.834645669
@@ -339,7 +339,7 @@ class Q2PrinterDocx(Q2Printer):
                 f'\n\t\t\t<w:trHeight w:val="{rows["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
             )
         elif rows["row_height"][row] == 0 and row in rows["hidden_rows"]:
-            row_xml += f'\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+            row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
 
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
@@ -353,6 +353,8 @@ class Q2PrinterDocx(Q2Printer):
         para_params = self.get_paragraph_params(cell_style)
         para_text = self.get_paragraph_text(cell_style, cell_text, para_params)
         valign = self.get_vertical_align(cell_style)
+
+        shd = self.get_cell_background(cell_style)
         # self.document.append(
         return f"""
                 <w:tc>
@@ -362,6 +364,7 @@ class Q2PrinterDocx(Q2Printer):
                         {merge_str}
                         {borders}
                         {margins}
+                        {shd}
                     </w:tcPr>
                     <w:p>
                         {para_params}
@@ -371,25 +374,34 @@ class Q2PrinterDocx(Q2Printer):
                 </w:tc>
         """
 
+    def get_cell_background(self, cell_style):
+        if style := cell_style.get("background"):
+            return f'<w:shd w:fill="{css_color_to_rgb(style)[2:]}" />'
+        else:
+            return ""
+
     def get_paragraph_text(self, cell_style, cell_text, para_params):
         # Normalize whitespace
         cell_text = cell_text.replace("\r\n", "\n").replace("\r", "\n")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         cell_text = re.sub(r"(?i)<br\s*/?>\s*", "<br/>", cell_text.strip())
-        
 
-        if "font-weight" in cell_style and cell_style["font-weight"] == "bold":
-            cell_text = f"<b>{cell_text}</b>"
+        # if cell_style.get("font-weight", "") == "bold":
+        #     cell_text = f"<b>{cell_text}</b>"
+        # if cell_style.get("font-style", "") == "italic":
+        #     cell_text = f"<i>{cell_text}</i>"
+        # if cell_style.get("text-decoration", "") == "underline":
+        #     cell_text = f"<u>{cell_text}</u>"
 
         # Get base font size from cell style and convert to twips (×2)
-        base_fontsize = float(cell_style.get("font-size", "11pt").replace("pt", ""))
+        base_fontsize = float(str(cell_style.get("font-size", "10pt")).replace("pt", ""))
         base_fontsize_twips = int(base_fontsize * 2)
 
         fontfamily = cell_style.get("font-family", "Calibri")
 
         # Use RichTextParser
         parser = RichTextParser(fontfamily, base_fontsize)
-        parser.feed(cell_text)
+        parser.feed(cell_text, cell_style)
         runs = parser.get_runs()
 
         para_text = []
@@ -438,15 +450,20 @@ class Q2PrinterDocx(Q2Printer):
         return "".join(para_text)
 
     def get_paragraph_params(self, cell_style):
+        # if style := cell_style.get("color"):
+        #     color = f'<w:color w:val="{css_color_to_rgb(style)[2:]}"/>'
+        # else:
+        #     color = ""
         paragraph = f"""
-<w:pPr>
-\t{self.get_horizontal_align(cell_style)}
-\t<w:widowControl w:val="0"/>
-\t<w:adjustRightInd w:val="0"/>
-\t<w:autoSpaceDE w:val="0"/>
-\t<w:autoSpaceDN w:val="0"/>
-\t<w:spacing w:before="0" w:after="0" w:lineRule="atLeast" w:line="0"/>
-</w:pPr>"""
+                    <w:pPr>
+                    \t{self.get_horizontal_align(cell_style)}
+                    \t<w:widowControl w:val="0"/>
+                    \t<w:adjustRightInd w:val="0"/>
+                    \t<w:autoSpaceDE w:val="0"/>
+                    \t<w:autoSpaceDN w:val="0"/>
+                    \t<w:spacing w:before="0" w:after="0" w:lineRule="atLeast" w:line="0"/>
+                    </w:pPr>
+                    """
         return paragraph
 
     def get_vertical_align(self, cell_style):

@@ -120,11 +120,7 @@ xlsx_parts[
                     <numFmt numFmtId="166" formatCode="#"/>
                 </numFmts>
                 %(fonts)s
-                <fills count="1">
-                    <fill>
-                        <patternFill patternType="none"/>
-                    </fill>
-                </fills>
+                %(fills)s
                 %(borders)s
                 <cellStyleXfs count="1">
                     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>

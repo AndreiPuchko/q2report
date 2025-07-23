@@ -76,7 +76,7 @@ def estimate_cell_height_cm(cell_data):
     style = cell_data["style"]
     width_cm = float(cell_data["width"])
     padding_cm = parse_padding(style.get("padding", "0cm 0cm 0cm 0.0cm"))
-    font_size_pt = int(re.search(r"\d+", style.get("font-size", "10pt")).group())
+    font_size_pt = int(re.search(r"\d+", str(style.get("font-size", "10pt"))).group())
 
     # Available text width in cm
     available_width_cm = width_cm - padding_cm[1] - padding_cm[3]
