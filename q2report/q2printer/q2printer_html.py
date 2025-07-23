@@ -98,14 +98,16 @@ class Q2PrinterHtml(Q2Printer):
                 height = rows["min_row_height"][row]
             elif rows["min_row_height"][row] == 0 and rows["max_row_height"][row] != 0:
                 height = rows["max_row_height"][row]
-            else:
-                height = rows["row_height"][row]
+            # else:
+            #     height = rows["row_height"][row]
+            
             if height != 0:
                 self.html.append(f'\t<tr style="height: {height}cm;">')
-            elif rows["row_height"][row] == 0:
+            elif rows["row_height"][row] == 0 and  row in rows["hidden_rows"]:
                 self.html.append('\t<tr  style="visibility:collapse">')
             else:
                 self.html.append("\t<tr>")
+            
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 if key in spanned_cells:

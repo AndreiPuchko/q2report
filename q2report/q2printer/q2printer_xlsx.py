@@ -223,10 +223,13 @@ class Q2PrinterXlsx(Q2Printer):
             #     rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
             # ) * points_in_cm
 
+            height = 0
             if rows_section["row_height"][row] == 0:
-                sheet_row["height"] = 0
+                if row in rows_section["hidden_rows"]:
+                    height = 0
+                else:
+                    height = num(0.5) * points_in_cm
             else:
-                height = 0
                 if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
                     height = rows_section["min_row_height"][row] * points_in_cm
                 elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
@@ -234,7 +237,7 @@ class Q2PrinterXlsx(Q2Printer):
                 else:
                     height = rows_section["row_height"][row] * points_in_cm
 
-                sheet_row["height"] = height
+            sheet_row["height"] = height
 
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level

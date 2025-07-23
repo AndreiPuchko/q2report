@@ -7,7 +7,6 @@ def demo():
     report.set_style(report.make_style(border_width="1"))
     report.add_page(page_margin_left=2, page_height=21, page_width=21)
     # report.add_rows(heights=["1-0", "0-2"])
-    report.add_rows(heights=["1-0", "0-2"])
 
     report.add_column(width="20%")
     report.add_column(width=0)
@@ -20,14 +19,14 @@ def demo():
         " do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris "
         "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in ",
-        rowspan=2,
+        rowspan=1,
     )
     report.set_cell(0, 1, data="123")
     report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=6)
     report.set_cell(
         1,
         1,
-        data="1 `<i>Lorem</i> ipsum dolor sit <u>amet</u>, consectetur adipiscing elit, sed "
+        data="1 <i>Lorem</i> ipsum dolor sit <u>amet</u>, consectetur adipiscing elit, sed "
         " do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         " Ut enim ad <font size=+1 color=red>minim</font> veniam, quis nostrud exercitation ullamco laboris "
         "nisi ut aliquip ex ea <b>commodo consequat</b>. Duis aute irure dolor in "
@@ -47,8 +46,8 @@ def demo():
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    res_file = report.run("temp/repo.html", open_output_file=False)
-    # res_file = report.run("temp/repo.xlsx", open_output_file=False)
+    # res_file = report.run("temp/repo.html", open_output_file=False)
+    res_file = report.run("temp/repo.xlsx", open_output_file=False)
     # res_file = report.run("temp/repo.docx", open_output_file=False)
 
     os.system(os.path.abspath(res_file))

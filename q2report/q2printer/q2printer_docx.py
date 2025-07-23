@@ -336,7 +336,7 @@ class Q2PrinterDocx(Q2Printer):
             row_xml += (
                 f'\n\t\t\t<w:trHeight w:val="{rows["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
             )
-        elif rows["row_height"][row] == 0:
+        elif rows["row_height"][row] == 0 and row in rows["hidden_rows"]:
             row_xml += (
                 f'\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
             )

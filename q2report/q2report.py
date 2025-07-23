@@ -593,7 +593,7 @@ class Q2Report:
                             int_(x.split(",")[0])
                             + (
                                 int_(rows_section["cells"][x]["rowspan"]) - 1
-                                if int_(rows_section["cells"][x]["rowspan"])
+                                if int_(rows_section["cells"][x].get("rowspan", 0))
                                 else 0
                             )
                             for x in rows_section["cells"]
@@ -604,7 +604,7 @@ class Q2Report:
                             int_(x.split(",")[1])
                             + (
                                 int_(rows_section["cells"][x]["colspan"]) - 1
-                                if int_(rows_section["cells"][x]["colspan"])
+                                if int_(rows_section["cells"][x].get("colspan", 0))
                                 else 0
                             )
                             for x in rows_section["cells"]
