@@ -27,10 +27,10 @@ def demo():
     report.set_cell(
         1,
         1,
-        data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed "
+        data="1 `<i>Lorem</i> ipsum dolor sit <u>amet</u>, consectetur adipiscing elit, sed "
         " do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-        " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris "
-        "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in "
+        " Ut enim ad <font size=+1 color=red>minim</font> veniam, quis nostrud exercitation ullamco laboris "
+        "nisi ut aliquip ex ea <b>commodo consequat</b>. Duis aute irure dolor in "
         "reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
         "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
         "culpa qui officia deserunt mollit anim id est laborum. "
@@ -41,16 +41,15 @@ def demo():
     report.set_cell(
         7,
         0,
-        data=" Lorem ipsum",
+        data=" Lorem ipsum <font size=+2>sdg <b>sd</b>iog</font> isdg sdg ;sdf gskfdn gklsjdn",
     )
-
 
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    # res_file = report.run("temp/repo.html", open_output_file=False)
+    res_file = report.run("temp/repo.html", open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", open_output_file=False)
-    res_file = report.run("temp/repo.docx", open_output_file=False)
+    # res_file = report.run("temp/repo.docx", open_output_file=False)
 
     os.system(os.path.abspath(res_file))
 

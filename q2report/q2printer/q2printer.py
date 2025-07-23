@@ -17,6 +17,14 @@ import os
 from q2report.q2utils import num
 import sys
 import subprocess
+import re
+
+try:
+    from PyQt6.QtGui import QTextDocument
+
+    pyqt6_installed = True
+except Exception:
+    pyqt6_installed = False
 
 
 def get_printer(output_file, output_type=None):
@@ -32,6 +40,64 @@ def get_printer(output_file, output_type=None):
     else:
         raise BaseException(f"format {output_type} is not supported")
     return _printer(output_file, output_type)
+
+
+def estimate_cell_height_cm(cell_info: dict) -> float:
+    # Conversion: 1 inch = 2.54 cm, 1 inch = 96 px
+    cm_to_px = lambda cm: float(cm) * 96 / 2.54
+    px_to_cm = lambda px: px * 2.54 / 96
+
+    # Extract fields
+    html_data = cell_info.get("data", "")
+    style = cell_info.get("style", {})
+    cell_width_cm = float(cell_info.get("width", num("10.0")))
+
+    # Parse font-size
+    font_size_pt = 12.0
+    font_size_raw = style.get("font-size", "")
+    match = re.match(r"([\d.]+)pt", font_size_raw)
+    if match:
+        font_size_pt = float(match.group(1))
+
+    # Estimate parameters
+    line_height_pt = 1.3 * font_size_pt
+    char_width_pt = 0.46 * font_size_pt
+
+    # Convert width to point
+    cell_width_px = cm_to_px(cell_width_cm)
+    cell_width_pt = cell_width_px / 1.33  # 1pt ≈ 1.33px at 96dpi
+
+    # Replace <br> with newline and remove other inline tags
+    text = html_data
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?(b|i|u|font)[^>]*>", "", text, flags=re.IGNORECASE)
+
+    # Split by lines
+    lines = text.split("\n")
+    total_lines = 0
+
+    for line in lines:
+        words = line.split()
+        if not words:
+            total_lines += 1
+            continue
+        line_len = 0
+        lines_needed = 1
+        for word in words:
+            word_len_pt = len(word) * char_width_pt
+            if line_len + word_len_pt > cell_width_pt:
+                lines_needed += 1
+                line_len = word_len_pt + char_width_pt
+            else:
+                line_len += word_len_pt + char_width_pt
+        total_lines += lines_needed
+
+    # Total height in points → pixels → cm
+    total_height_pt = total_lines * line_height_pt
+    total_height_px = total_height_pt * 1.33
+    total_height_cm = px_to_cm(total_height_px)
+
+    return num(round(total_height_cm * 1.05, 3))
 
 
 class Q2Printer:
@@ -53,6 +119,26 @@ class Q2Printer:
         # self._OF = open(self.output_file, "w", encoding="utf8")
         pass
 
+    def get_cell_height(self, cell_data):
+        if pyqt6_installed:
+            padding = cell_data["style"]["padding"].replace("cm", "").split(" ")
+            while len(padding) < 4:
+                padding += padding
+
+            cm = num(96 / num(2.54))
+            text_doc = QTextDocument()
+
+            text_doc.setTextWidth((num(cell_data["width"]) - num(padding[1]) - num(padding[3])) * cm)
+
+            style = cell_data["style"]
+            style = "p {%s}" % ";".join([f"{x}:{style[x]}" for x in style])
+            text_doc.setDefaultStyleSheet(style)
+            text_doc.setHtml("<p>%s</p>" % cell_data["data"])
+            height = round(num(text_doc.size().height()) / cm, 2)
+            return height
+        else:
+            return estimate_cell_height_cm(cell_data)
+
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])
         spanned_cells = {}
@@ -61,7 +147,7 @@ class Q2Printer:
         rows_section["min_row_height"] = []
         rows_section["max_row_height"] = []
         for row in range(row_count):
-            spltd_heights = rows_section["heights"][row].split("-")
+            spltd_heights = str(rows_section["heights"][row]).split("-")
             rows_section["min_row_height"].append(num(spltd_heights[0]))
             rows_section["max_row_height"].append(num(spltd_heights[1]) if len(spltd_heights) == 2 else 0)
             rows_section["row_height"].append(
@@ -81,7 +167,7 @@ class Q2Printer:
                 else:
                     cell_data["width"] = self._cm_columns_widths[col]
                 if cell_data.get("data"):
-                    cell_data["height"] = self.q2report.get_cell_height(cell_data)
+                    cell_data["height"] = self.get_cell_height(cell_data)
                     if key in spanned_cells:
                         spanned_cells[key] = cell_data["height"]
                     else:
@@ -116,7 +202,7 @@ class Q2Printer:
             for row in range(start_row, start_row + rows_section["cells"][key]["rowspan"]):
                 haha += rows_section["row_height"][row] if rows_section["row_height"][row] else num(0.5)
             rest = spanned_cells[key] - haha
-            for uprow in range(start_row , start_row + rows_section["cells"][key]["rowspan"]):
+            for uprow in range(start_row, start_row + rows_section["cells"][key]["rowspan"]):
                 if rest > rows_section["row_height"][uprow]:
                     if rows_section["max_row_height"][uprow] == 0:
                         rows_section["row_height"][uprow] += rest
