@@ -138,31 +138,15 @@ class Q2PrinterXlsx(Q2Printer):
             )
             wb_workbook_rels.append(xlsx_parts["xl/_rels/workbook.xml.rels-line"] % (x + 9, x + 1))
 
-            #             sheet_data = "".join(
-            #                 """
-            # <row r="%s" customHeight="1" ht="%s" outlineLevel="%s" collapsed="false"> %s \n
-            # </row>"""
-            #                 % (
-            #                     z + 1,
-            #                     self.xlsx_sheets[x]["sheetData"][z]["height"],
-            #                     self.xlsx_sheets[x]["sheetData"][z]["outline_level"],
-            #                     "".join(self.xlsx_sheets[x]["sheetData"][z]["cells"]),
-            #                 )
-            #                 for z in range(len(self.xlsx_sheets[x]["sheetData"]))
-            #             )
-
-            sheet_data = "".join(
-                f"""
-                    <row
-                    \tr="{z+1}"
-                    \tcustomHeight="1" ht="{self.xlsx_sheets[x]["sheetData"][z]["height"]}"
-                    \toutlineLevel="{self.xlsx_sheets[x]["sheetData"][z]["outline_level"]}"
-                    collapsed="false"
-                    >
-                    {"".join(self.xlsx_sheets[x]["sheetData"][z]["cells"])}
-                    </row>"""
-                for z in range(len(self.xlsx_sheets[x]["sheetData"]))
-            )
+            sheet_data = ""
+            for z in range(len(self.xlsx_sheets[x]["sheetData"])):
+                sheet_data += f'\t<row r="{z+1}" '
+                sheet_data += f'\t customHeight="1" ht="{self.xlsx_sheets[x]["sheetData"][z]["height"]}" '
+                sheet_data += f"""\n\t{"hidden='true'" if self.xlsx_sheets[x]["sheetData"][z]["height"] == 0 else "hidden='false'"} """
+                sheet_data += f'\n\toutlineLevel="{self.xlsx_sheets[x]["sheetData"][z]["outline_level"]}" '
+                sheet_data += ' collapsed="false" >'
+                sheet_data += f'{"".join(self.xlsx_sheets[x]["sheetData"][z]["cells"])}'
+                sheet_data += "</row>"
 
             merges = "".join(self.xlsx_sheets[x]["spans"])
             if merges:
@@ -239,7 +223,19 @@ class Q2PrinterXlsx(Q2Printer):
             #     rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
             # ) * points_in_cm
 
-            sheet_row["height"] = rows_section["max_cell_height"][row] * points_in_cm
+            if rows_section["row_height"][row] == 0:
+                sheet_row["height"] = 0
+            else:
+                height = 0
+                if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
+                    height = rows_section["min_row_height"][row] * points_in_cm
+                elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
+                    height = rows_section["max_row_height"][row] * points_in_cm
+                else:
+                    height = rows_section["row_height"][row] * points_in_cm
+
+                sheet_row["height"] = height
+
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level
             for col in range(self._columns_count):  # цикл по клеткам строки

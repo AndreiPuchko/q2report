@@ -23,7 +23,7 @@ from PIL import Image
 import base64
 import datetime
 import re
-from decimal import Decimal
+from q2report.q2utils import num
 
 
 try:
@@ -74,7 +74,7 @@ def estimate_cell_height_cm(cell_info: dict) -> float:
     # Extract fields
     html_data = cell_info.get("data", "")
     style = cell_info.get("style", {})
-    cell_width_cm = float(cell_info.get("width", Decimal("10.0")))
+    cell_width_cm = float(cell_info.get("width", num("10.0")))
 
     # Parse font-size
     font_size_pt = 12.0
@@ -84,8 +84,8 @@ def estimate_cell_height_cm(cell_info: dict) -> float:
         font_size_pt = float(match.group(1))
 
     # Estimate parameters
-    line_height_pt = 1.2 * font_size_pt
-    char_width_pt = 0.45 * font_size_pt
+    line_height_pt = 1.3 * font_size_pt
+    char_width_pt = 0.46 * font_size_pt
 
     # Convert width to point
     cell_width_px = cm_to_px(cell_width_cm)
@@ -121,7 +121,7 @@ def estimate_cell_height_cm(cell_info: dict) -> float:
     total_height_px = total_height_pt * 1.33
     total_height_cm = px_to_cm(total_height_px)
 
-    return Decimal(round(total_height_cm, 3))
+    return num(round(total_height_cm * 1.05, 3))
 
 
 roles = ["free", "table", "table_header", "table_footer", "group_header", "group_footer", "header", "footer"]
@@ -551,7 +551,6 @@ class Q2Report:
         self.current_data_set_name = ""
 
     def get_cell_height(self, cell_data):
-        print(cell_data)
         if pyqt6_installed:
             padding = cell_data["style"]["padding"].replace("cm", "").split(" ")
             while len(padding) < 4:
@@ -673,13 +672,37 @@ class Q2Report:
     def before_run_check(self):
         for page_index, page in enumerate(self.report_content.get("pages", [])):
             for columns_index, columns in enumerate(page.get("columns", [])):
-                for rows_section in columns.get("rows", []):
+                for row_index, rows_section in enumerate(columns.get("rows", [])):
                     if len(rows_section["cells"]) == 0:
                         continue
-                    max_col = max([int_(x.split(",")[1]) for x in rows_section["cells"]])
+                    max_row = max(
+                        [
+                            int_(x.split(",")[0])
+                            + (
+                                int_(rows_section["cells"][x]["rowspan"]) - 1
+                                if int_(rows_section["cells"][x]["rowspan"])
+                                else 0
+                            )
+                            for x in rows_section["cells"]
+                        ]
+                    )
+                    max_col = max(
+                        [
+                            int_(x.split(",")[1])
+                            + (
+                                int_(rows_section["cells"][x]["colspan"]) - 1
+                                if int_(rows_section["cells"][x]["colspan"])
+                                else 0
+                            )
+                            for x in rows_section["cells"]
+                        ]
+                    )
                     # extend cols
                     while max_col > len(columns["widths"]) - 1:
                         self.add_column(page_index, columns_index)
+                    # extend rows
+                    while max_row > len(rows_section["heights"]) - 1:
+                        self.add_row(page_index, columns_index, rows_index=row_index)
 
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         if data:
@@ -736,7 +759,7 @@ class Q2Report:
                         self.render_table_footer(rows_section, column_style)
                     else:  # Free rows
                         self.render_rows_section(rows_section, column_style)
-
+        # print(json.dumps(self.report_content, indent=2))
         self.printer.save()
         if open_output_file:
             self.printer.show()

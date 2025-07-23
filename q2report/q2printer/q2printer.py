@@ -57,8 +57,17 @@ class Q2Printer:
         row_count = len(rows_section["heights"])
         spanned_cells = {}
         rows_section["docx_height"] = [0 for x in range(row_count)]
-        rows_section["max_cell_height"] = [0 for x in range(row_count)]
+        rows_section["row_height"] = []
+        rows_section["min_row_height"] = []
+        rows_section["max_row_height"] = []
         for row in range(row_count):
+            spltd_heights = rows_section["heights"][row].split("-")
+            rows_section["min_row_height"].append(num(spltd_heights[0]))
+            rows_section["max_row_height"].append(num(spltd_heights[1]) if len(spltd_heights) == 2 else 0)
+            rows_section["row_height"].append(
+                max(rows_section["max_row_height"][-1], rows_section["min_row_height"][-1])
+            )
+
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 cell_data = rows_section.get("cells", {}).get(key, {})
@@ -76,26 +85,44 @@ class Q2Printer:
                     if key in spanned_cells:
                         spanned_cells[key] = cell_data["height"]
                     else:
-                        if rows_section["max_cell_height"][row] < cell_data["height"]:
-                            rows_section["max_cell_height"][row] = cell_data["height"]
+                        if (
+                            rows_section["min_row_height"][row] == 0
+                            and rows_section["max_row_height"][row] == 0
+                        ):
+                            if rows_section["row_height"][row] < cell_data["height"]:
+                                rows_section["row_height"][row] = cell_data["height"]
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
                     if rows_section["docx_height"][row] < h:
                         rows_section["docx_height"][row] = h
-                    if rows_section["max_cell_height"][row] < h:
-                        rows_section["max_cell_height"][row] = h
+                    if rows_section["row_height"][row] < h:
+                        rows_section["row_height"][row] = h
+            if (
+                rows_section["min_row_height"][row] != 0
+                and rows_section["row_height"][row] < rows_section["min_row_height"][row]
+            ):
+                rows_section["row_height"] = rows_section["min_row_height"][row]
+            if (
+                rows_section["max_row_height"][row] != 0
+                and rows_section["row_height"][row] > rows_section["max_row_height"][row]
+            ):
+                rows_section["row_height"] = rows_section["max_row_height"][row]
         # calculating height for spanned cells
+        # print(rows_section["row_height"])
         for key in spanned_cells:
             start_row = int(key.split(",")[0])
             haha = 0
-            for row in range(start_row, start_row + rows_section["cells"][key]["rowspan"] - 1):
-                haha += (
-                    rows_section["max_cell_height"][row] if rows_section["max_cell_height"][row] else num(0.5)
-                )
+            for row in range(start_row, start_row + rows_section["cells"][key]["rowspan"]):
+                haha += rows_section["row_height"][row] if rows_section["row_height"][row] else num(0.5)
             rest = spanned_cells[key] - haha
-            if rest > rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] - 1]:
-                rows_section["max_cell_height"][start_row + rows_section["cells"][key]["rowspan"] - 1] = rest
+            for uprow in range(start_row , start_row + rows_section["cells"][key]["rowspan"]):
+                if rest > rows_section["row_height"][uprow]:
+                    if rows_section["max_row_height"][uprow] == 0:
+                        rows_section["row_height"][uprow] += rest
+                        # print(uprow)
+                        break
+        # print(rows_section["row_height"])
 
     def render_rows_section(self, rows, style, outline_level):
         self.calculate_real_sizes(rows, style)

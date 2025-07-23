@@ -277,9 +277,9 @@ class Q2PrinterDocx(Q2Printer):
                         for tmp_span_col in range(int_(col_span)):
                             span_key = f"{tmp_span_row+row},{tmp_span_col+col}"
                             if tmp_span_row + row != row and tmp_span_col + col == col:
-                                spanned_cells_first_column_cell[
-                                    span_key
-                                ] = f'{merge_str} <w:vMerge w:val="continue"/>'
+                                spanned_cells_first_column_cell[span_key] = (
+                                    f'{merge_str} <w:vMerge w:val="continue"/>'
+                                )
                             if tmp_span_col + col > col:
                                 spanned_cells_empty_column_cell[span_key] = ""
 
@@ -328,8 +328,19 @@ class Q2PrinterDocx(Q2Printer):
         row_xml += "\n\t\t<w:trPr>"
         if rows["role"] == "table_header":
             row_xml += "<w:tblHeader/>"
-        # if rows["docx_height"][row]:
-        #     row_xml += f'\n\t\t\t<w:trHeight w:val="{rows["docx_height"][row]*twip_in_cm}" w:hRule="exact"/>'
+        if rows["min_row_height"][row] != 0 and rows["max_row_height"][row] == 0:
+            row_xml += (
+                f'\n\t\t\t<w:trHeight w:val="{rows["min_row_height"][row]*twip_in_cm}" w:hRule="atLeast"/>'
+            )
+        elif rows["min_row_height"][row] == 0 and rows["max_row_height"][row] != 0:
+            row_xml += (
+                f'\n\t\t\t<w:trHeight w:val="{rows["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
+            )
+        elif rows["row_height"][row] == 0:
+            row_xml += (
+                f'\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+            )
+
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
 
