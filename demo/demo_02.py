@@ -45,12 +45,13 @@ def demo():
     report.add_column()
     report.add_column()
     report.add_column()
+    report.add_row(height="2-0")
 
-    report.set_cell(0, 0, "{q2image('%s')}" % image_data, colspan=2)
+    # report.set_cell(0, 0, "{q2image('%s')}" % image_data, colspan=2)
     report.set_cell(
         0,
         2,
-        colspan=6,
+        colspan=4,
         data="Invoice <b>{rep.d.invoice.number}<b>",
         style=report.make_style(font_size=20),
     )

@@ -39,8 +39,8 @@ def demo():
     report.load("test_data/report_02.json")
     report.params["p1"] = " <b>123</b> "
 
-    # res_file =  report.run("temp/repo.html", data=demo_data)
-    res_file = report.run("temp/repo.xlsx", data=demo_data)
+    res_file =  report.run("temp/repo.html", data=demo_data)
+    # res_file = report.run("temp/repo.xlsx", data=demo_data)
     # res_file = report.run("temp/repo.docx", output_type="docx", data=demo_data)
     os.system(os.path.abspath(res_file))
 

@@ -1,4 +1,4 @@
-from q2report.q2report import Q2Report, Q2Report_rows
+from q2report.q2report import Q2Report
 import os
 
 
@@ -6,6 +6,8 @@ def demo():
     report = Q2Report()
     report.set_style(report.make_style(border_width="1"))
     report.add_page(page_margin_left=2, page_height=21, page_width=21)
+    # report.add_rows(heights=["1-0", "0-2"])
+    report.add_rows(heights=["1-0", "0-2"])
 
     report.add_column(width="20%")
     report.add_column(width=0)
@@ -21,7 +23,7 @@ def demo():
         rowspan=2,
     )
     report.set_cell(0, 1, data="123")
-    report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=2)
+    report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=6)
     report.set_cell(
         1,
         1,
@@ -33,15 +35,22 @@ def demo():
         "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
         "culpa qui officia deserunt mollit anim id est laborum. "
         "",
-        # rowspan=2,
+        rowspan=2,
     )
+
+    report.set_cell(
+        7,
+        0,
+        data=" Lorem ipsum",
+    )
+
 
     # print(report.report_content)
     # report.set_data(b, "a")
 
     # res_file = report.run("temp/repo.html", open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", open_output_file=False)
-    # res_file = report.run("temp/repo.docx", open_output_file=False)
+    res_file = report.run("temp/repo.docx", open_output_file=False)
 
     os.system(os.path.abspath(res_file))
 
