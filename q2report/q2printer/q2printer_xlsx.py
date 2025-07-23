@@ -22,7 +22,7 @@ import zipfile
 import re
 import base64
 
-reHtmlTagBr = re.compile(r"<\s*/*BR\s*/*\s*>", re.IGNORECASE)
+reHtmlTagBr = re.compile(r"<\s*/*BR\s*/*\s*>\s*", re.IGNORECASE)
 
 cm_2_inch = num(2.5396)
 points_in_mm = num(2.834645669)

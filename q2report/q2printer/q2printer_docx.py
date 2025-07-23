@@ -18,6 +18,8 @@ from q2report.q2printer.docx_parts import docx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 import zipfile
 import base64
+from .rich_text_parser import RichTextParser
+import re
 
 points_in_mm = 2.834645669
 points_in_cm = num(points_in_mm) * num(10)
@@ -337,9 +339,7 @@ class Q2PrinterDocx(Q2Printer):
                 f'\n\t\t\t<w:trHeight w:val="{rows["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
             )
         elif rows["row_height"][row] == 0 and row in rows["hidden_rows"]:
-            row_xml += (
-                f'\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
-            )
+            row_xml += f'\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
 
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
@@ -372,53 +372,69 @@ class Q2PrinterDocx(Q2Printer):
         """
 
     def get_paragraph_text(self, cell_style, cell_text, para_params):
-        cell_text = cell_text.replace("\n", "")
-        cell_text = cell_text.replace("\r", "")
+        # Normalize whitespace
+        cell_text = cell_text.replace("\r\n", "\n").replace("\r", "\n")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
-        para_text = []
+        cell_text = re.sub(r"(?i)<br\s*/?>\s*", "<br/>", cell_text.strip())
+        
+
         if "font-weight" in cell_style and cell_style["font-weight"] == "bold":
             cell_text = f"<b>{cell_text}</b>"
-        bold = ""
-        ital = ""
-        undl = ""
-        fontsizemod = fontsize = num(cell_style["font-size"].replace("pt", "")) * 2
-        fontfamily = cell_style["font-family"]
-        for x in cell_text.split("<"):
-            if ">" in x:
-                stl = x.split(">")[0].upper().strip().replace(" ", "")
-                if "B" == stl:
-                    bold = "<w:b/>"
-                elif "/B" == stl:
-                    bold = ""
-                elif "I" == stl:
-                    ital = "<w:i/>"
-                elif "/I" == stl:
-                    ital = ""
-                elif "U" == stl:
-                    undl = """<w:u w:val="single"/>"""
-                elif "/U" == stl:
-                    undl = ""
-                elif "/FONT" in stl:
-                    fontsizemod = fontsize
-                # elif "FONTSIZE=" in stl:
-                #     fontsizemod = grid.getFontSizeMod(fontsize / 2, stl.split("=")[1]) * 2
-                elif "BR/" == stl or "BR" == stl:
-                    para_text.append(f"""</w:p><w:p>{para_params}""")
-                    # para_text.append(self.get_paragraph_params(cell_style))
-                x = x.split(">")[1]
-            if x:
+
+        # Get base font size from cell style and convert to twips (×2)
+        base_fontsize = float(cell_style.get("font-size", "11pt").replace("pt", ""))
+        base_fontsize_twips = int(base_fontsize * 2)
+
+        fontfamily = cell_style.get("font-family", "Calibri")
+
+        # Use RichTextParser
+        parser = RichTextParser(fontfamily, base_fontsize)
+        parser.feed(cell_text)
+        runs = parser.get_runs()
+
+        para_text = []
+        for run in runs:
+            if run == "<br/>":
+                para_text.append(f"</w:p><w:p>{para_params}")
+                continue
+
+            # Extract run content and style
+            text_match = re.search(r"<t.*?>(.*?)</t>", run, re.DOTALL)
+            style_match = re.search(r"<rPr>(.*?)</rPr>", run, re.DOTALL)
+            if text_match:
+                text_content = text_match.group(1)
+                style_content = style_match.group(1) if style_match else ""
+
+                # Build DOCX run properties
+                docx_rPr = [f'<w:rFonts w:ascii="{fontfamily}" w:hAnsi="{fontfamily}" w:cs="{fontfamily}"/>']
+
+                # Font size: use override from style, fallback to base
+                sz_match = re.search(r'<sz val="([\d\.]+)"', style_content)
+                if sz_match:
+                    sz_twips = int(float(sz_match.group(1)) * 2)
+                else:
+                    sz_twips = base_fontsize_twips
+                docx_rPr.append(f'<w:sz w:val="{sz_twips}"/>')
+
+                # Styles
+                if "<b/>" in style_content:
+                    docx_rPr.append("<w:b/>")
+                if "<i/>" in style_content:
+                    docx_rPr.append("<w:i/>")
+                if "<u/>" in style_content:
+                    docx_rPr.append('<w:u w:val="single"/>')
+
+                color_match = re.search(r'<color rgb="([A-F0-9]+)"/>', style_content)
+                if color_match:
+                    docx_rPr.append(f'<w:color w:val="{color_match.group(1)[2:]}" />')  # strip "FF" prefix
+
                 para_text.append(
-                    f"""
-                    <w:r>
-                        <w:rPr>
-                            <w:rFonts w:ascii="{fontfamily}" w:hAnsi="{fontfamily}" w:cs="{fontfamily}"/>
-                            <w:sz w:val="{fontsizemod}"/>
-                            {bold}{ital}{undl}
-                        </w:rPr>
-                        <w:t xml:space="preserve">{x}</w:t>
-                    </w:r>
-                    """
+                    f"""<w:r>
+                            <w:rPr>{''.join(docx_rPr)}</w:rPr>
+                            <w:t xml:space="preserve">{text_content}</w:t>
+                        </w:r>"""
                 )
+
         return "".join(para_text)
 
     def get_paragraph_params(self, cell_style):

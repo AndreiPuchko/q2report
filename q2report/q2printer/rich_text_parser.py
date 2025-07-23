@@ -78,6 +78,9 @@ class RichTextParser(HTMLParser):
             style["italic"] = True
         elif tag == "u":
             style["underline"] = True
+        elif tag == "br":
+            self._flush_current_text()
+            self.runs.append("<br/>")
         elif tag == "font":
             for name, value in attrs:
                 if name == "size":

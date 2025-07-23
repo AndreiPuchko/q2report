@@ -46,8 +46,8 @@ def demo():
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    # res_file = report.run("temp/repo.html", open_output_file=False)
-    res_file = report.run("temp/repo.xlsx", open_output_file=False)
+    res_file = report.run("temp/repo.html", open_output_file=False)
+    # res_file = report.run("temp/repo.xlsx", open_output_file=False)
     # res_file = report.run("temp/repo.docx", open_output_file=False)
 
     os.system(os.path.abspath(res_file))
