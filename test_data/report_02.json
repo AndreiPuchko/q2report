@@ -74,7 +74,7 @@
                   "group_footer": {
                     "cells": {
                       "0,0": {
-                        "data": "footer GRP",
+                        "data": "footer GRP format F4",
                         "style": {
                           "text-align": "left",
                           "font-weight": "bold"
@@ -82,6 +82,7 @@
                       },
                       "0,3": {
                         "data": "{sum:num1}",
+                        "format": "F4",
                         "style": {
                           "text-align": "right"
                         }
@@ -132,12 +133,13 @@
                     "cells": {
                       "0,3": {
                         "data": "{sum:num1}",
+                        "format": "N2",
                         "style": {
                           "text-align": "right"
                         }
                       },
                       "0,2": {
-                        "data": "Total tom {tom}",
+                        "data": "Total tom {tom} format N2",
                         "style": {
                           "text-align": "right"
                         }

@@ -232,7 +232,12 @@ class Q2Report:
     default_style = {
         "font-family": "Arial",
         "font-size": "10pt",
-        "font-weight": "normal",
+        "font-weight": "normal",  # bold
+        "text-decoration": "",  # underline
+        "font-style": "",  # italic
+        "color": "black",  # font color
+        "background": "white",  # background color
+        "border-color": "black",  # border color
         "border-width": "1 1 1 1",
         "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
         "text-align": "left",

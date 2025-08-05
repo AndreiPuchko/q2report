@@ -6,7 +6,6 @@ import os
 from io import BytesIO
 
 
-
 def demo():
     demo_data = {"cursor": []}
 
@@ -22,7 +21,7 @@ def demo():
 
     demo_data = {
         "cursor": [
-            {"data1": "XyDlguzuz", "num1": "5", "grp": 0, "tom": 1},
+            {"data1": "XyDlguzuz", "num1": "12345", "grp": 0, "tom": 1},
             {"data1": "XInjlysVB", "num1": "4", "grp": 0, "tom": 1},
             {"data1": "rUKcWIPkl", "num1": "6", "grp": 0, "tom": 2},
             {"data1": "fOBgKlaHr", "num1": "4", "grp": 0, "tom": 2},
@@ -39,10 +38,11 @@ def demo():
     report.load("test_data/report_02.json")
     report.params["p1"] = " <b>123</b> "
 
-    res_file =  report.run("temp/repo.html", data=demo_data)
-    # res_file = report.run("temp/repo.xlsx", data=demo_data)
+    # res_file = report.run("temp/repo.html", data=demo_data)
+    res_file = report.run("temp/repo.xlsx", data=demo_data)
     # res_file = report.run("temp/repo.docx", output_type="docx", data=demo_data)
     os.system(os.path.abspath(res_file))
+
 
 if __name__ == "__main__":
     demo()
