@@ -332,9 +332,9 @@ class Q2PrinterXlsx(Q2Printer):
             self.current_sheet["drawing"].append(tmp_drawing)
 
     def make_xlsx_cell(self, cell_address, cell_style, cell_text, cell_data={}):
-        if cell_data.get("numFmtId"):
-            xf_id = self.get_cell_xf_id(cell_style, cell_data.get("numFmtId"))
-            return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="n"><v>{cell_data.get("xlsx_data")}</v></c>"""
+        # if cell_data.get("numFmtId"):
+        #     xf_id = self.get_cell_xf_id(cell_style, cell_data.get("numFmtId"))
+        #     return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="n"><v>{cell_data.get("xlsx_data")}</v></c>"""
 
         # Prepare font settings
         fontsize = str(cell_style.get("font-size", "10pt")).replace("pt", "")
