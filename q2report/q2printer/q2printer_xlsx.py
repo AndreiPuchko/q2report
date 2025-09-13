@@ -404,12 +404,16 @@ class Q2PrinterXlsx(Q2Printer):
         border = []
 
         border_color = 'auto="1"'
-        if (color := cell_style.get("border-color")):
+        if color := cell_style.get("border-color"):
             border_color = f' rgb="{css_color_to_rgb(color)}"'
 
-        for index, side in enumerate(("left", "right", "top", "bottom")):
-            if int_(border_width[index]):
-                bw = self.get_border_width(border_width[index])
+        border_width_dict = {
+            side: int_(border_width[index]) for index, side in enumerate(("top", "right", "bottom", "left"))
+        }
+
+        for side in ("left", "right", "top", "bottom"):
+            if int_(border_width_dict[side]):
+                bw = self.get_border_width(border_width_dict[side])
                 border.append(f'<{side} style="{bw}"><color {border_color}/></{side}>')
         border.append("<diagonal/>")
 
