@@ -1,0 +1,195 @@
+{
+  "queries": {
+    "test": "select pid, product, qt\r\nfrom invoice_lines\r\norder by pid"
+  },
+  "params": {},
+  "pages": [
+    {
+      "columns": [
+        {
+          "rows": [
+            {
+              "role": "table",
+              "data_source": "test",
+              "groupby": "",
+              "table_groups": [
+                {
+                  "group_header": {
+                    "cells": {
+                      "0,0": {
+                        "data": "{(pid+\" \")*5}",
+                        "style": {
+                          "border-color": "black",
+                          "border-width": "0 0 0 1"
+                        },
+                        "name": "pid_name"
+                      }
+                    },
+                    "role": "group_header",
+                    "data_source": "",
+                    "groupby": "pid",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0"
+                    ]
+                  },
+                  "group_footer": {
+                    "cells": {
+                      "0,0": {
+                        "style": {
+                          "border-color": "black",
+                          "text-align": "right",
+                          "border-width": "0 1 0 0"
+                        },
+                        "data": "{pid_name}"
+                      },
+                      "0,1": {
+                        "data": "{sum:qt}",
+                        "style": {
+                          "border-color": "black",
+                          "text-align": "right",
+                          "font-weight": "bold",
+                          "border-width": "0 1 1 0"
+                        },
+                        "name": "jjj",
+                        "format": "N"
+                      },
+                      "1,1": {
+                        "data": "! {jjj} !",
+                        "style": {
+                          "border-color": "red",
+                          "background": "#AABBCC",
+                          "text-align": "right"
+                        }
+                      },
+                      "1,0": {
+                        "data": "{pid_name*2} <font size=+2 color='#0000AA'>{'**' if jjj>300 else '++' }</font>",
+                        "style": {
+                          "border-color": "black",
+                          "text-align": "right",
+                          "font-weight": "bold"
+                        }
+                      }
+                    },
+                    "role": "group_footer",
+                    "data_source": "",
+                    "groupby": "pid",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0",
+                      "0-0"
+                    ]
+                  }
+                }
+              ],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "{product}",
+                  "style": {
+                    "border-color": "black",
+                    "text-align": "left",
+                    "border-width": "1 1 1 1"
+                  }
+                },
+                "0,1": {
+                  "data": "{qt}",
+                  "style": {
+                    "border-color": "black",
+                    "color": "red",
+                    "text-align": "right"
+                  },
+                  "format": "F2"
+                }
+              },
+              "table_header": {
+                "role": "table_header",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,0": {
+                    "style": {
+                      "border-width": "0 0 0 1",
+                      "border-color": "black"
+                    }
+                  }
+                }
+              },
+              "table_footer": {
+                "role": "table_footer",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,0": {
+                    "style": {
+                      "border-color": "black",
+                      "text-align": "right"
+                    },
+                    "data": "Total:"
+                  },
+                  "0,1": {
+                    "data": "{sum:qt}",
+                    "style": {
+                      "border-color": "black",
+                      "text-align": "right"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "widths": [
+            "70.00%",
+            "0.00"
+          ]
+        }
+      ],
+      "page_width": 21.0,
+      "page_height": 29.0,
+      "page_margin_left": 2.0,
+      "page_margin_top": 2.0,
+      "page_margin_right": 1.0,
+      "page_margin_bottom": 2.0
+    }
+  ],
+  "style": {
+    "font-family": "Arial",
+    "font-size": "12pt",
+    "font-weight": "normal",
+    "border-width": "0 0 0 0",
+    "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+    "text-align": "left",
+    "vertical-align": "top"
+  },
+  "module": "#"
+}

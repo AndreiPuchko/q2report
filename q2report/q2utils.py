@@ -69,6 +69,8 @@ pt = num(1.0)
 twip = num(20.0)
 
 reMultiSpaceDelete = re.compile(r"[\s]+")
+reDecimal = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
+reNumber = re.compile(r"\d+")
 
 
 class Q2Heap:

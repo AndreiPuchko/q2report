@@ -24,7 +24,7 @@ from q2report.q2utils import num
 
 
 from q2report.q2printer.q2printer import Q2Printer, get_printer
-from q2report.q2utils import num, Q2Heap, int_, today, float_
+from q2report.q2utils import num, Q2Heap, int_, today, float_, reDecimal, reNumber
 
 re_calc = re.compile(r"\{.*?\}")
 re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
@@ -191,7 +191,7 @@ class Q2Report_rows:
     def check_style(self, style):
         if isinstance(style, dict):
             # return {x: style[x] for x in style if x in Q2Report.default_style}
-            return {x: style[x] for x in style }
+            return {x: style[x] for x in style}
         elif isinstance(style, str):
             if style.endswith("}") and style.startswith("{"):
                 style = style[1:-1]
@@ -549,31 +549,32 @@ class Q2Report:
         return rez
 
     def format(self, cell):
-        format = cell.get("format", "")
-        dec = re_dec.sub("", format)
-        if format == "D":
+        cell["xlsx_data"] = cell["data"]
+        isNumber = reDecimal.match(cell["data"])
+        fmt = cell.get("format", "")
+        dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
+        if fmt == "D":
             try:
                 cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
-        elif "F" in format.upper():
-            cell["xlsx_data"] = num(cell["data"])
-            cell["numFmtId"] = "165"
-            if dec and dec != "":
-                fmt = "{:,.%sf}" % int(dec)
-            else:
-                fmt = "{:,.2f}"
-            cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
-        elif "N" in format.upper():
-            if dec and dec != "":
-                fmt = "{:.%sf}" % int(dec)
+        elif isNumber and fmt and dec is not None:
+            if "F" in fmt.upper():
+                if dec and dec != "":
+                    fmt = "{:,.%sf}" % int(dec)
+                else:
+                    fmt = "{:,.2f}"
                 cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
-            cell["xlsx_data"] = num(cell["data"])
-            cell["numFmtId"] = "164"
+            elif "N" in fmt.upper():
+                if dec and dec != "":
+                    fmt = "{:.%sf}" % int(dec)
+                    cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
+            if "Z" not in fmt and num(cell["xlsx_data"]) == 0:
+                cell["data"] = ""
 
-        if format.startswith("$"):
+        if fmt.startswith("$"):
             cell["data"] = self.currency + cell["data"]
-        elif format.endswith("$"):
+        elif fmt.endswith("$"):
             cell["data"] += self.currency
 
     def render_rows_section(self, rows_section, column_style, aggregator=None):
@@ -584,7 +585,11 @@ class Q2Report:
             if self.table_group_aggregators:
                 self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"]["_grow_number"]["v"]
         else:
+            self.prevrowdata.update(self.data)
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
+            self.prevrowdata.update(
+                {aggregator[x]["n"]: aggregator[x]["v"] for x in aggregator if aggregator[x]["n"]}
+            )
             self.prevrowdata.update(self.params)
             self.use_prevrowdata = True
 
@@ -741,7 +746,7 @@ class Q2Report:
         if reset_index is not None:
             for index in range(len(rows_section["table_groups"]) - 1, index - 1, -1):
                 agg = self.table_group_aggregators[index]
-                agg["aggr"]["_group_number"] = {"v": agg["_group_number"], "f": ""}
+                agg["aggr"]["_group_number"] = {"v": agg["_group_number"], "f": "", "n": ""}
                 self.render_rows_section(
                     rows_section["table_groups"][index]["group_footer"],
                     column_style,
@@ -774,25 +779,28 @@ class Q2Report:
         if not rows_section:
             return
         formulas = []
-        for cell_data in rows_section.get("cells").items():
-            cell_data = cell_data[1].get("data", "")
+        for _, cell_item in rows_section.get("cells").items():
+            cell_name = cell_item.get("name", "")
+            cell_data = cell_item.get("data", "")
             for x in re_calc.findall(cell_data):
-                f = x[1:-1]
-                if f not in formulas:
-                    formulas.append(f)
-        for cell_data in formulas:
+                formula = x[1:-1]
+                if formula not in formulas:
+                    formulas.append((formula, cell_name))
+        for formula, cell_name in formulas:
             for mode in ["sum"]:
-                if cell_data.lower().startswith(f"{mode}:"):
-                    aggregator[cell_data] = {
+                if formula.lower().startswith(f"{mode}:"):
+                    aggregator[formula] = {
                         "a": mode,  # aggregate function - sum, avg and etc
-                        "f": cell_data[1 + len(mode) :],  # cell formula  # noqa: E203
+                        "f": formula[1 + len(mode) :],  # cell formula  # noqa: E203
                         "v": num(0),  # initial value
+                        "n": cell_name,  # cell name
                     }
 
         aggregator["_grow_number"] = {
             "a": "sum",  # aggregate function - sum, avg and etc
             "f": "",  # cell formula
             "v": num(0),  # initial value
+            "n": "",  # cell name
         }
 
     def aggregators_reset(self, rows_section):
@@ -821,6 +829,8 @@ class Q2Report:
                 x["groupby_values"].append(self.evaluator(y))
             for cell in x["aggr"]:
                 x["aggr"][cell]["v"] += num(self.evaluator(x["aggr"][cell]["f"]))
+                if x["aggr"][cell]["n"]:
+                    self.data[x["aggr"][cell]["n"]] = x["aggr"][cell]["v"]
             x["aggr"]["_grow_number"]["v"] += 1
 
 

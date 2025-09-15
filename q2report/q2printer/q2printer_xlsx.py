@@ -15,7 +15,7 @@
 
 from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.xlsx_parts import xlsx_parts
-from q2report.q2utils import num, int_, reMultiSpaceDelete
+from q2report.q2utils import num, int_, reMultiSpaceDelete, reDecimal, reNumber
 from .rich_text_parser import RichTextParser, css_color_to_rgb
 
 import zipfile
@@ -41,6 +41,7 @@ class Q2PrinterXlsx(Q2Printer):
         self.fills = ["""<fill><patternFill patternType="none"/></fill>"""]
         self.borders = ["""<left/><right/><top/><bottom/><diagonal/>"""]
         self.cell_xfs = ["""<xf borderId="0" fillId="0" fontId="0" numFmtId="0" xfId="0"/>"""]
+        self.num_fmts = []
         self.xmlImageList = []
         self.images_size_list = []
 
@@ -225,7 +226,6 @@ class Q2PrinterXlsx(Q2Printer):
                     continue
                 cell_address = self.get_cell_address(self.sheet_current_row, col)
                 cell_data = rows_section.get("cells", {}).get(key, {})
-                cell_text = cell_data.get("data", "")
 
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
@@ -236,7 +236,7 @@ class Q2PrinterXlsx(Q2Printer):
                     # cell_data["style"] = cell_style
 
                 self.make_image(cell_data, row, col)
-                cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_text, cell_data)
+                cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_data)
                 sheet_row["cells"].append(cell_xml)
                 if row_span > 1 or col_span > 1:
                     merge_str = ":".join(
@@ -252,7 +252,7 @@ class Q2PrinterXlsx(Q2Printer):
                                 self.sheet_current_row + span_row, span_col + col
                             )
                             spanned_cells[f"{span_row+row},{span_col+col}"] = self.make_xlsx_cell(
-                                cell_address, cell_style, ""
+                                cell_address, cell_style
                             )
             self.current_sheet["sheetData"].append(dict(sheet_row))
             self.sheet_current_row += 1
@@ -275,7 +275,41 @@ class Q2PrinterXlsx(Q2Printer):
             "\n".join(self.fills),
         )
 
+        self.convert_num_fmt()
+        num_fmts = f"""<numFmts count="{len(self.num_fmts)}">
+                        {''.join(['<numFmt numFmtId="%s" formatCode="%s"/>' % (index+164, fmt)
+                        for index, fmt in enumerate(self.num_fmts)])}
+                    </numFmts>
+        """
+
         zipf.writestr("xl/styles.xml", (xlsx_parts["xl/styles.xml"] % locals()).encode("utf8"))
+
+    def convert_num_fmt(self):
+        for idx, fmt in enumerate(self.num_fmts):
+            if fmt.startswith("N"):
+                dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
+                if dec is not None:
+                    efmt = "0."
+                    efmt += "0" * dec
+                    zero = efmt if "Z" in fmt else ""
+                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                else:
+                    if "Z" in fmt:
+                        self.num_fmts[idx] = "General"
+                    else:
+                        self.num_fmts[idx] = "[=0]" ";General"
+            elif fmt.startswith("F"):
+                dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
+                if dec is not None:
+                    efmt = "#,###0."
+                    efmt += "0" * dec
+                    zero = efmt if "Z" in fmt else ""
+                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                else:
+                    if "Z" in fmt:
+                        self.num_fmts[idx] = "General"
+                    else:
+                        self.num_fmts[idx] = "[=0]" ";General"
 
     def get_cell_xf_id(self, style, numFmtId=0):
         border = f'borderId="{self.get_cell_borders(style)}"'
@@ -295,7 +329,8 @@ class Q2PrinterXlsx(Q2Printer):
         font_size = num(str(style["font-size"]).replace("pt", ""))
         font_family = style["font-family"]
         font_weight = "<b/>" if style.get("font-weight", "") == "bold" else ""
-        font_style = """<name val="%s"/> <sz val="%s"/>%s""" % (font_family, font_size, font_weight)
+        font_color = f'<color rgb="{css_color_to_rgb(color)}"/>' if (color := style.get("color", "")) else ""
+        font_style = f'<name val="{font_family}"/> <sz val="{font_size}"/> {font_color} {font_weight}'
         if font_style not in self.fonts:
             self.fonts.append(font_style)
         font_id = self.fonts.index(font_style)
@@ -316,6 +351,11 @@ class Q2PrinterXlsx(Q2Printer):
             self.fills.append(fill)
         return self.fills.index(fill)
 
+    def get_num_fmt_id(self, numFormat):
+        if numFormat not in self.num_fmts:
+            self.num_fmts.append(numFormat)
+        return self.num_fmts.index(numFormat) + 164
+
     def make_image(self, cell_data, row, col):
         for x in cell_data.get("images", []):
             width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
@@ -331,44 +371,49 @@ class Q2PrinterXlsx(Q2Printer):
             tmp_drawing["_width"] = int(width)
             self.current_sheet["drawing"].append(tmp_drawing)
 
-    def make_xlsx_cell(self, cell_address, cell_style, cell_text, cell_data={}):
-        # if cell_data.get("numFmtId"):
-        #     xf_id = self.get_cell_xf_id(cell_style, cell_data.get("numFmtId"))
-        #     return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="n"><v>{cell_data.get("xlsx_data")}</v></c>"""
+    def make_xlsx_cell(self, cell_address, cell_style, cell_data: dict = {}):
+        raw_text = cell_data.get("xlsx_data", "")
+        cell_format = cell_data.get("format", "")
 
-        # Prepare font settings
-        fontsize = str(cell_style.get("font-size", "10pt")).replace("pt", "")
-        fontfamily = cell_style.get("font-family", "Calibri")
+        isNumber = reDecimal.match(raw_text)
+        if isNumber and (cell_format or cell_style.get("text-align") == "right"):
+            numFmtId = self.get_num_fmt_id(cell_format) if cell_format else 0
 
-        # Normalize cell text
-        cell_text = (cell_text or "").replace("\r", "").replace("\n", "")
-        cell_text = reMultiSpaceDelete.sub(" ", cell_text)
-        cell_text = reHtmlTagBr.sub("\n", cell_text)
-
-        # if cell_style.get("font-weight", "") == "bold":
-        #     cell_text = f"<b>{cell_text}</b>"
-        # if cell_style.get("font-style", "") == "italic":
-        #     cell_text = f"<i>{cell_text}</i>"
-        # if cell_style.get("text-decoration", "") == "underline":
-        #     cell_text = f"<u>{cell_text}</u>"
-
-        # Parse inline formatting
-        parser = RichTextParser(fontfamily, fontsize)
-        parser.feed(cell_text, cell_style)
-        runs = parser.get_runs()
-
-        xf_id = self.get_cell_xf_id(cell_style)
-
-        if runs:
-            cell_content = "".join(runs)
-            if cell_content not in self.sharedStrings:
-                self.sharedStrings.append(cell_content)
-                shared_strings_id = len(self.sharedStrings) - 1
-            else:
-                shared_strings_id = self.sharedStrings.index(cell_content)
-            return f"""\n\t<c r="{cell_address}" s="{xf_id}" t="s"><v>{shared_strings_id}</v></c>"""
+            xf_id = self.get_cell_xf_id(cell_style, numFmtId)
+            return f"""\n\t <c r="{cell_address}" s="{xf_id}" t="n">
+                                    <v>{raw_text}</v>
+                                </c>"""
         else:
-            return f'\n\t<c r="{cell_address}" s="{xf_id}"/>'
+            xf_id = self.get_cell_xf_id(cell_style)
+            cell_text = cell_data.get("data", "")
+            # Normalize cell text
+            cell_text = (cell_text or "").replace("\r", "").replace("\n", "")
+            cell_text = reMultiSpaceDelete.sub(" ", cell_text)
+            cell_text = reHtmlTagBr.sub("\n", cell_text)
+
+            # Parse inline formatting
+            fontsize = str(cell_style.get("font-size", "10pt")).replace("pt", "")
+            fontfamily = cell_style.get("font-family", "Calibri")
+            parser = RichTextParser(fontfamily, fontsize)
+            parser.feed(cell_text, cell_style)
+            runs = parser.get_runs()
+
+            if len(runs) == 1:
+                cell_content = f"<t>{cell_text}</t>"
+            else:
+                cell_content = "".join(runs)
+
+            if cell_content:
+                if cell_content not in self.sharedStrings:
+                    self.sharedStrings.append(cell_content)
+                    shared_strings_id = len(self.sharedStrings) - 1
+                else:
+                    shared_strings_id = self.sharedStrings.index(cell_content)
+                return f"""\n\t <c r="{cell_address}" s="{xf_id}" t="s">
+                                    <v>{shared_strings_id}</v>
+                                </c>"""
+            else:
+                return f'\n\t<c r="{cell_address}" s="{xf_id}"/>'
 
     def get_cell_align(self, cell_style):
 

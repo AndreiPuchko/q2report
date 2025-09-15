@@ -3,3 +3,6 @@ temp/*
 dist/*
 *.sh
 .vscode
+*.docx
+*.xlsx
+*.html
