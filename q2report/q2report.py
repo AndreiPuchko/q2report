@@ -551,7 +551,7 @@ class Q2Report:
     def format(self, cell):
         cell["xlsx_data"] = cell["data"]
         isNumber = reDecimal.match(cell["data"])
-        fmt = cell.get("format", "")
+        _fmt = fmt = cell.get("format", "")
         dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
         if fmt == "D":
             try:
@@ -569,7 +569,7 @@ class Q2Report:
                 if dec and dec != "":
                     fmt = "{:.%sf}" % int(dec)
                     cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
-            if "Z" not in fmt and num(cell["xlsx_data"]) == 0:
+            if "Z" not in _fmt and num(cell["xlsx_data"]) == 0:
                 cell["data"] = ""
 
         if fmt.startswith("$"):
