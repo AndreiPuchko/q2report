@@ -208,7 +208,7 @@
                   "colspan": 3
                 },
                 "1,2": {
-                  "data": "{num(num1)+num(100)} <b>{data1}</b>",
+                  "data": "[<b>{num(num1)+num(100):F2}</b>] <i>{data1}</i>",
                   "style": {}
                 },
                 "1,3": {
@@ -283,7 +283,7 @@
                     "style": {}
                   },
                   "0,3": {
-                    "data": "Text {sum:num1} total",
+                    "data": "Text <font color=red size=+3>{sum:num1:F2}</font> total",
                     "style": {
                       "font-weight": "bold"
                     }

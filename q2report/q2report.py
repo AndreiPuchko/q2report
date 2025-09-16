@@ -530,15 +530,29 @@ class Q2Report:
         self.current_data_set_name = ""
 
     def formulator(self, formula):
-        formula = formula[0][1:-1]
+        _formula = formula[0][1:-1]
         if self.use_prevrowdata:
             data = self.prevrowdata
         else:
             data = self.data
-        if formula in data:
-            rez = str(data[formula])
+        formula_splited =_formula.split(":")
+        fmt = ""
+        if _formula in data:
+            rez = str(data[_formula])
+            if len(formula_splited) > 1:
+                if len(formula_splited) == 2 and _formula.split(":")[0] not in ["sum"]:
+                    fmt = formula_splited[-1]
+                elif len(formula_splited) == 3 and _formula.split(":")[0] in ["sum"]:
+                    fmt = formula_splited[-1]
+                # if fmt:
+                #     rez = self.q2_formatter(rez, fmt)
         else:
-            rez = self.evaluator(formula)
+            if len(formula_splited) > 1:
+                fmt = formula_splited[-1]
+                _formula = formula_splited[0]
+            rez = self.evaluator(_formula)
+        if fmt:
+            rez = self.q2_formatter(rez, fmt)
         return html.escape(rez)
 
     def evaluator(self, formula):
@@ -548,14 +562,18 @@ class Q2Report:
             rez = f"Evaluating error: {formula}"
         return rez
 
-    def format(self, cell):
+    def format_cell_text(self, cell):
         cell["xlsx_data"] = cell["data"]
-        isNumber = reDecimal.match(cell["data"])
-        _fmt = fmt = cell.get("format", "")
+        cell["data"] = self.q2_formatter(cell["data"],  cell.get("format", ""))
+
+    def q2_formatter(self, text, _fmt):
+        cell_value = num(text)
+        isNumber = reDecimal.match(text)
+        fmt = _fmt
         dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
         if fmt == "D":
             try:
-                cell["data"] = datetime.datetime.strptime(cell["data"], "%Y-%m-%d").strftime("%d.%m.%Y")
+                text = datetime.datetime.strptime(text, "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
         elif isNumber and fmt and dec is not None:
@@ -564,18 +582,20 @@ class Q2Report:
                     fmt = "{:,.%sf}" % int(dec)
                 else:
                     fmt = "{:,.2f}"
-                cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
+                text = (fmt.format(num(text))).replace(",", " ")
             elif "N" in fmt.upper():
                 if dec and dec != "":
                     fmt = "{:.%sf}" % int(dec)
-                    cell["data"] = (fmt.format(num(cell["data"]))).replace(",", " ")
-            if "Z" not in _fmt and num(cell["xlsx_data"]) == 0:
-                cell["data"] = ""
+                    text = (fmt.format(num(text))).replace(",", " ")
+
+            if "Z" not in _fmt and cell_value == 0:
+                text = ""
 
         if fmt.startswith("$"):
-            cell["data"] = self.currency + cell["data"]
+            text = self.currency + text
         elif fmt.endswith("$"):
-            cell["data"] += self.currency
+            text += self.currency
+        return text
 
     def render_rows_section(self, rows_section, column_style, aggregator=None):
         if aggregator is None:
@@ -609,7 +629,7 @@ class Q2Report:
                 rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
                 if rows_section["cells"][cell].get("name"):
                     self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
-                self.format(rows_section["cells"][cell])
+                self.format_cell_text(rows_section["cells"][cell])
 
         self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
 
@@ -791,7 +811,8 @@ class Q2Report:
                 if formula.lower().startswith(f"{mode}:"):
                     aggregator[formula] = {
                         "a": mode,  # aggregate function - sum, avg and etc
-                        "f": formula[1 + len(mode) :],  # cell formula  # noqa: E203
+                        # "f": formula[1 + len(mode) :],  # cell formula  # noqa: E203
+                        "f": formula.split(":")[1],
                         "v": num(0),  # initial value
                         "n": cell_name,  # cell name
                     }
