@@ -807,9 +807,24 @@ class Q2Report:
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self.aggregators_detect(rows_section.get("table_footer", {}), self.table_aggregators)
+        if "init_table_groups" not in rows_section:
+            rows_section["init_table_groups"] = rows_section["table_groups"][:]
+            rows_section["init_table_groups_index"] = {
+                grp["group_footer"]["groupby"].strip(): grp for grp in rows_section["table_groups"]
+            }
+
+        if rows_section["groupby"].strip():
+            rows_section["table_groups"] = []
+            for key in rows_section["groupby"].split(","):
+                if key.strip() in rows_section["init_table_groups_index"]:
+                    rows_section["table_groups"].append(rows_section["init_table_groups_index"][key.strip()])
+        elif rows_section["table_groups"] != rows_section["init_table_groups"]:
+            rows_section["table_groups"] = rows_section[:]
+
         grouper = []
         for group in rows_section["table_groups"]:
             grouper.append(group["group_footer"]["groupby"])
+            # print(grouper)
             aggr = {
                 "groupby_list": grouper[:],
                 "groupby_values": [],

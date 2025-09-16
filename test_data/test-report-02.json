@@ -1,0 +1,378 @@
+{
+  "queries": [
+    {
+      "name": "111",
+      "sql": "select * from konto"
+    },
+    {
+      "name": "222",
+      "sql": "select 3333\nunion all\nselect 3333"
+    }
+  ],
+  "params": {},
+  "pages": [
+    {
+      "page_width": "21.00",
+      "page_height": "29.70",
+      "page_margin_left": "2.00",
+      "page_margin_right": "1.00",
+      "page_margin_top": "1.00",
+      "page_margin_bottom": "1.00",
+      "style": {
+        "vertical-align": "top",
+        "border-width": "1 1 1 1"
+      },
+      "columns": [
+        {
+          "widths": [
+            "50%",
+            "2",
+            "0",
+            "4"
+          ],
+          "style": {
+            "vertical-align": "bottom"
+          },
+          "rows": [
+            {
+              "style": {
+                "background": "#AABBFF",
+                "text-align": "right"
+              },
+              "role": "table",
+              "data_source": "cursor",
+              "groupby": "",
+              "table_page_footer": {},
+              "table_groups": [
+                {
+                  "group_header": {
+                    "cells": {
+                      "0,0": {
+                        "data": "Header grp___{grp}",
+                        "style": {
+                          "text-align": "left",
+                          "font-weight": "bold",
+                          "font-size": "26pt",
+                          "vertical-align": "middle"
+                        },
+                        "rowspan": 1,
+                        "colspan": 4
+                      }
+                    },
+                    "role": "group_header",
+                    "data_source": "",
+                    "groupby": "grp",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0"
+                    ],
+                    "style": {
+                      "background": "#FF9990"
+                    }
+                  },
+                  "group_footer": {
+                    "cells": {
+                      "0,0": {
+                        "data": "footer GRP",
+                        "style": {
+                          "text-align": "left",
+                          "font-weight": "bold"
+                        }
+                      },
+                      "0,3": {
+                        "data": "{sum:num1}",
+                        "format": "F2",
+                        "style": {
+                          "text-align": "right"
+                        }
+                      },
+                      "0,2": {
+                        "data": "row count:{_row_number}  grp {grp}:",
+                        "style": {}
+                      },
+                      "0,1": {
+                        "style": {}
+                      }
+                    },
+                    "role": "group_footer",
+                    "data_source": "",
+                    "groupby": "grp",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0"
+                    ],
+                    "style": {
+                      "background": "#FF99AF"
+                    }
+                  }
+                },
+                {
+                  "group_header": {
+                    "cells": {
+                      "0,0": {
+                        "data": "Header tom {tom}",
+                        "style": {
+                          "text-align": "left",
+                          "font-weight": "bold"
+                        },
+                        "rowspan": 1,
+                        "colspan": 4
+                      }
+                    },
+                    "role": "group_header",
+                    "data_source": "",
+                    "groupby": "tom",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0"
+                    ],
+                    "style": {
+                      "background": "#00EE99"
+                    }
+                  },
+                  "group_footer": {
+                    "cells": {
+                      "0,3": {
+                        "data": "{sum:num1}",
+                        "format": "N2",
+                        "style": {
+                          "text-align": "right"
+                        }
+                      },
+                      "0,2": {
+                        "data": "Total tom {tom}",
+                        "style": {
+                          "text-align": "right"
+                        }
+                      },
+                      "0,0": {
+                        "data": "footer TOM",
+                        "style": {
+                          "font-weight": "bold"
+                        }
+                      },
+                      "0,1": {
+                        "style": {}
+                      }
+                    },
+                    "role": "group_footer",
+                    "data_source": "",
+                    "groupby": "tom",
+                    "table_groups": [],
+                    "print_when": "",
+                    "print_after": "",
+                    "new_page_before": "",
+                    "new_page_after": "",
+                    "heights": [
+                      "0-0"
+                    ],
+                    "style": {
+                      "background": "#00FFDD"
+                    }
+                  }
+                }
+              ],
+              "heights": [
+                "1.00-0",
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "{grp}",
+                  "style": {
+                    "font-size": "11pt",
+                    "text-align": "center",
+                    "vertical-align": "middle",
+                    "border-width": "1"
+                  }
+                },
+                "0,1": {
+                  "data": "{_row_number} from {_row_count}",
+                  "style": {
+                    "font-size": "15pt",
+                    "text-align": "center"
+                  },
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "1,2": {
+                  "data": "{num(num1)+num(100)} <b>{data1}</b>",
+                  "style": {}
+                },
+                "1,3": {
+                  "data": "{num1}",
+                  "style": {}
+                },
+                "1,0": {
+                  "data": "grp:{grp} tom:{tom}",
+                  "style": {}
+                },
+                "1,1": {
+                  "style": {}
+                }
+              },
+              "group": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "table_header": {
+                "role": "table_header",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "2-0"
+                ],
+                "cells": {
+                  "0,0": {
+                    "data": "{p1}Header 1",
+                    "style": {},
+                    "format": ""
+                  },
+                  "0,1": {
+                    "data": "Header 2",
+                    "style": {
+                      "font-size": "9pt"
+                    }
+                  },
+                  "0,2": {
+                    "data": "Header 13",
+                    "rowspan": 1,
+                    "colspan": 2,
+                    "style": {}
+                  }
+                },
+                "style": {
+                  "border-width": "2 2 2 2",
+                  "text-align": "center",
+                  "vertical-align": "middle"
+                }
+              },
+              "table_footer": {
+                "role": "table_footer",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,0": {
+                    "data": "table footer:",
+                    "style": {}
+                  },
+                  "0,3": {
+                    "data": "Text {sum:num1} total",
+                    "style": {
+                      "font-weight": "bold"
+                    }
+                  },
+                  "0,1": {
+                    "data": "{sum:num1} ",
+                    "style": {
+                      "font-weight": "bold"
+                    }
+                  },
+                  "0,2": {
+                    "style": {}
+                  }
+                },
+                "style": {
+                  "text-align": "right"
+                }
+              }
+            },
+            {
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "333ggggggggggg",
+                  "style": {
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,1": {
+                  "style": {}
+                },
+                "0,2": {
+                  "style": {}
+                },
+                "0,3": {
+                  "style": {}
+                }
+              },
+              "style": {}
+            },
+            {
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "QQQQQQQ{p1}QQQQQQQQ",
+                  "style": {
+                    "vertical-align": "middle",
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4
+                }
+              },
+              "style": {}
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "style": {
+    "font-family": "Arial",
+    "font-size": "10pt",
+    "font-weight": true,
+    "border-width": "0 0 0 0",
+    "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+    "text-align": "left",
+    "vertical-align": "top",
+    "font-italic": false,
+    "font-underline": false
+  }
+}
