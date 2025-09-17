@@ -305,6 +305,10 @@ class Q2PrinterXlsx(Q2Printer):
                     efmt += "0" * dec
                     zero = efmt if "Z" in fmt else ""
                     self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                elif dec is None:
+                    efmt = "#,###0.############"
+                    zero = efmt if "Z" in fmt else ""
+                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
                 else:
                     if "Z" in fmt:
                         self.num_fmts[idx] = "General"

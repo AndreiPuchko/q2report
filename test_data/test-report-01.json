@@ -111,9 +111,9 @@
                   "style": {
                     "border-color": "black",
                     "color": "red",
-                    "text-align": "right"
+                    "text-align": "center"
                   },
-                  "format": "F2Z"
+                  "format": "N2"
                 }
               },
               "table_header": {

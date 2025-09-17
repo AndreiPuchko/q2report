@@ -6,7 +6,7 @@ import os
 def demo():
     report = Q2Report()
     report.load(open("test_data/test-report-01.json").read())
-    res_file = report.run("temp/result.docx", data=json.load(open("test_data/test-data-01.json")))
+    res_file = report.run("temp/result.xlsx", data=json.load(open("test_data/test-data-01.json")))
     
     os.system(os.path.abspath(res_file))
 

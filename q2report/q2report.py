@@ -576,17 +576,21 @@ class Q2Report:
                 text = datetime.datetime.strptime(text, "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
-        elif isNumber and fmt and dec is not None:
+        elif isNumber and fmt:
             if "F" in fmt.upper():
-                if dec and dec != "":
-                    fmt = "{:,.%sf}" % int(dec)
+                if dec is not None:
+                    fmt = "{:,.0%sf}" % int(dec)
                 else:
-                    fmt = "{:,.2f}"
+                    fmt = "{:,}"
+                # else:
+                #     fmt = "{:,.2f}"
                 text = (fmt.format(num(text))).replace(",", " ")
             elif "N" in fmt.upper():
-                if dec and dec != "":
-                    fmt = "{:.%sf}" % int(dec)
+                if dec is not None:
+                    fmt = "{:.0%sf}" % int(dec)
                     text = (fmt.format(num(text))).replace(",", " ")
+                else:
+                    fmt = "{:,}"
 
             if "Z" not in _fmt and cell_value == 0:
                 text = ""
