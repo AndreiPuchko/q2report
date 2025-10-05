@@ -38,7 +38,10 @@ class Q2PrinterXlsx(Q2Printer):
         self.sheet_current_row = 1
 
         self.fonts = ["""<sz val="10"/><name val="Calibri"/>"""]
-        self.fills = ["""<fill><patternFill patternType="none"/></fill>"""]
+        self.fills = [
+            """<fill><patternFill patternType="none"/></fill>""",
+            """<fill><patternFill patternType="none"/></fill>""",
+        ]
         self.borders = ["""<left/><right/><top/><bottom/><diagonal/>"""]
         self.cell_xfs = ["""<xf borderId="0" fillId="0" fontId="0" numFmtId="0" xfId="0"/>"""]
         self.num_fmts = []
