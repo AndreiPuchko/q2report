@@ -1,0 +1,62 @@
+{
+    "params": {
+        ":id": "1"
+    },
+    "header": [
+        {
+            "id": "1",
+            "invoice_number": "INV-2025-11-100",
+            "invoice_date": "2025-11-26",
+            "seller_id": "1",
+            "buyer_id": "2",
+            "currency_id": "978",
+            "payment_terms_days": "14",
+            "due_date": "2025-12-10",
+            "net_amount": "18315.00",
+            "gross_amount": "21794.85",
+            "q2_time": "20251127214533",
+            "q2_mode": "u",
+            "q2_hidden": "",
+            "q2_bcolor": "0",
+            "q2_fcolor": "0",
+            "delivery_date": "2025-12-01",
+            "skonto_rate": "3.00",
+            "skonto_days": "7",
+            "skonto_due_date": "2025-12-03",
+            "skonto_amount": "15.35",
+            "initial_note": "Einleitungstext * 1",
+            "closing_note": "Schlusstext * 2",
+            "buyer_name": "Agoratech",
+            "buyer_street": "Teichstr. 14-16",
+            "buyer_postal_code": "34130",
+            "buyer_city": "Kassel",
+            "buyer_country_code": "",
+            "buyer_vat_id": "",
+            "seller_name": "Webware Internet Solutions GmbH",
+            "seller_street": "Einbahn Stra\u00dfe 19",
+            "seller_postal_code": "12345",
+            "seller_city": "Hremen",
+            "seller_country_code": "",
+            "seller_vat_id": "DE279247134",
+            "currency_code": "EUR"
+        }
+    ],
+    "lines": [
+        {
+            "line_number": "1",
+            "description": "Rolle Netzwerkkabel, 100 Meter.",
+            "quantity": "333.0000",
+            "unit_code": "",
+            "net_price": "55.0000",
+            "net_line_total": "0.00",
+            "vat_rate": "19.00"
+        }
+    ],
+    "vat_breakdown": [
+        {
+            "vat_rate": "19.00",
+            "tax_base_amount": "18315.00",
+            "tax_amount": "3479.85"
+        }
+    ]
+}

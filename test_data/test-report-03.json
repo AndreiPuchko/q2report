@@ -1,0 +1,240 @@
+{
+  "queries": {
+    "header": "select \n    i.*, \n    \r\n    bp.name as buyer_name\r\n    , bp.street as buyer_street\r\n    , bp.postal_code as buyer_postal_code\r\n    , bp.city as buyer_city\r\n    , bp.country_code as buyer_country_code\r\n    , bp.vat_id as buyer_vat_id\r\n    \r\n    , sp.name as seller_name\r\n    , sp.street as seller_street\r\n    , sp.postal_code as seller_postal_code\r\n    , sp.city as seller_city\r\n    , sp.country_code as seller_country_code\r\n    , sp.vat_id as seller_vat_id\r\n    \r\n    , cur.iso_code as currency_code\r\n    \nfrom invoices i\n\r\nleft join parties bp on i.buyer_id = bp.pid\nleft join parties sp on i.seller_id = sp.pid\nleft join currencies cur on i.currency_id = cur.cid\n\r\nwhere i.id = :id\n",
+    "lines": "select \n  line_number, description, quantity, unit_code, net_price, net_line_total, vat_rate\nfrom invoice_lines\nwhere invoice_id = :id\norder by line_number",
+    "vat_breakdown": "select vat_rate, tax_base_amount, tax_amount from vat_breakdown where invoice_id = :id order by vat_rate"
+  },
+  "params": {
+    "id": "1"
+  },
+  "pages": [
+    {
+      "columns": [
+        {
+          "rows": [
+            {
+              "role": "table",
+              "data_source": "header",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0",
+                "0-0"
+              ],
+              "style": {
+                "border-width": "1 1 1 1"
+              },
+              "cells": {
+                "0,4": {
+                  "data": "Rechnung",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "0,0": {
+                  "data": "Absender (Verk\u00e4ufer):",
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  },
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "0,3": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "0,1": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "0,2": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,2": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,0": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,1": {
+                  "data": "1",
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                }
+              },
+              "table_header": {
+                "role": "table_header",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {}
+              },
+              "table_footer": {
+                "role": "table_footer",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {}
+              }
+            },
+            {
+              "role": "table",
+              "data_source": "header",
+              "cells": {
+                "0,0": {
+                  "data": "Absender (Verk\u00e4ufer):",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "1,5": {
+                  "data": "{invoice_number}"
+                },
+                "2,5": {
+                  "data": "{invoice_date:D}"
+                },
+                "3,5": {
+                  "data": "{delivery_date:D}"
+                },
+                "0,4": {
+                  "data": "Rechnung",
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "1,4": {
+                  "data": "Rechnungs-Nr.:"
+                },
+                "2,4": {
+                  "data": "Datum:"
+                },
+                "3,4": {
+                  "data": "Lieferdatum:"
+                },
+                "1,0": {
+                  "data": "{seller_name}",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "4,0": {
+                  "data": "Kunde (Empf\u00e4nger):",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "7,0": {
+                  "data": "{buyer_postal_code} {buyer_city}",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "5,0": {
+                  "data": "{buyer_name}",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "6,0": {
+                  "data": "{buyer_street}",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "2,0": {
+                  "data": "{seller_street}",
+                  "rowspan": 1,
+                  "colspan": 3
+                },
+                "3,0": {
+                  "data": "{seller_postal_code} {seller_city}",
+                  "rowspan": 1,
+                  "colspan": 3
+                }
+              },
+              "style": {
+                "border-width": "0 0 0 0",
+                "font-size": "12pt"
+              },
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "1.00-0",
+                "1.00-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0"
+              ]
+            }
+          ],
+          "widths": [
+            "2.00",
+            "5.00",
+            "3.50",
+            "0.00",
+            "4.00",
+            "4.00"
+          ]
+        }
+      ],
+      "page_width": 21.0,
+      "page_height": 29.0,
+      "page_margin_left": 2.0,
+      "page_margin_top": 2.0,
+      "page_margin_right": 1.0,
+      "page_margin_bottom": 2.0
+    }
+  ],
+  "style": {
+    "font-family": "Arial",
+    "font-size": "10pt",
+    "font-weight": "normal",
+    "font-style": "",
+    "text-decoration": "",
+    "border-width": "0 0 0 0",
+    "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+    "background": "#FFFFFF",
+    "color": "#000000",
+    "border-color": "#000000",
+    "text-align": "left",
+    "vertical-align": "top"
+  },
+  "module": "#"
+}
