@@ -22,6 +22,7 @@ from .calc_height import estimate_cell_height_cm
 
 try:
     from PyQt6.QtGui import QTextDocument
+    from PyQt6.QtWidgets import QApplication
 
     pyqt6_installed = True
 except Exception:
@@ -38,6 +39,8 @@ def get_printer(output_file, output_type=None):
         from q2report.q2printer.q2printer_xlsx import Q2PrinterXlsx as _printer
     elif output_type == "docx":
         from q2report.q2printer.q2printer_docx import Q2PrinterDocx as _printer
+    elif output_type == "pdf":
+        from q2report.q2printer.q2printer_pdf import Q2PrinterPdf as _printer
     else:
         raise BaseException(f"format {output_type} is not supported")
     return _printer(output_file, output_type)
@@ -54,6 +57,12 @@ class Q2Printer:
         self._columns_count = None
         self._cm_columns_widths = []
         self.q2report = None
+        self._pyqt6_app = None
+        if pyqt6_installed:
+            if QApplication.instance() is None:
+                self._pyqt6_app = QApplication([])
+            else:
+                self._pyqt6_app = QApplication.instance()
         # self.open_output_file()
 
     def open_output_file(self):
