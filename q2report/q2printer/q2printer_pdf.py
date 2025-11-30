@@ -5,20 +5,6 @@ import glob
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 from q2report.q2printer.q2printer import Q2Printer, pyqt6_installed
 
-# Константы для расчетов
-points_in_cm = num(28.34645669)  # 1cm = 28.34645669 pt
-inch_in_cm = num(2.54)  # 1 дюйм = 2.54 см
-CM_TO_INCH = 0.3937007874
-
-
-# Для удобства, чтобы не зависеть от внешней getCSSvalue
-def getCSSvalue(style_dict, key, default=""):
-    """Извлекает значение из словаря стилей q2report."""
-    if isinstance(style_dict, str):
-        # Если случайно передали строку, возвращаем пустую строку
-        return default
-    return style_dict.get(key, default)
-
 
 reSpaces = re.compile(r"\s+")
 
@@ -72,18 +58,10 @@ class Q2PrinterPdf(Q2Printer):
         self.painter.setPen(QPen(self.painter.brush(), self.pen_width))
 
         self.current_y_cm = 0.0  # Текущая позиция Y в CM
-
         self.currentVAlign = Qt.AlignmentFlag.AlignTop  # Вертикальное выравнивание
 
         if not hasattr(self, "format"):
             self.format = ""
-
-        # Настройки по умолчанию
-        self.reset_page()
-
-    # def _cm_to_points(self, cm):
-    #     """Конвертирует сантиметры в точки (pt)."""
-    #     return num(cm) * points_in_cm
 
     def reset_page(self, **args):
         super().reset_page(**args)
@@ -103,15 +81,6 @@ class Q2PrinterPdf(Q2Printer):
         self.page_layout.setPageSize(page_size)
         self.page_layout.setOrientation(orientation)
 
-        # Отступы в точках (pt)
-        # margin_left_pt = self._cm_to_points(self.page_margin_left)
-        # margin_top_pt = self._cm_to_points(self.page_margin_top)
-        # margin_right_pt = self._cm_to_points(self.page_margin_right)
-        # margin_bottom_pt = self._cm_to_points(self.page_margin_bottom)
-        # self.page_layout.setMargins(
-        #     QMarginsF(margin_left_pt, margin_top_pt, margin_right_pt, margin_bottom_pt)
-        # )
-
         self.printer.setPageLayout(self.page_layout)
         self.printer.setPageOrientation(orientation)
         self.current_y_cm = self.page_margin_top
@@ -123,11 +92,11 @@ class Q2PrinterPdf(Q2Printer):
         page_end_cm = self.page_height - self.page_margin_bottom
 
         if self.current_y_cm + height_needed > page_end_cm:
-            self.painter.end()
+            # self.painter.end()
             self.printer.newPage()
             self.current_y_cm = self.page_margin_top
-            self.painter.begin(self.printer)
-            self.painter.scale(self.cm_to_points, self.cm_to_points)
+            # self.painter.begin(self.printer)
+            # self.painter.scale(self.cm_to_points, self.cm_to_points)
 
     def save(self):
         super().save()
@@ -204,10 +173,10 @@ class Q2PrinterPdf(Q2Printer):
 
     def draw_cell(self, cell_data, left_cm=0, top_cm=0, width_cm=5, height_cm=5, style=""):
         txt = cell_data.get("data", "")
+        txt = reMultiSpaceDelete.sub(" ", txt)
         rect_cm = QRectF(left_cm, top_cm, width_cm, height_cm)
         self.draw_cell_borders(rect_cm, style)
 
-        """Отрисовывает содержимое ячейки и ее рамки."""
         if txt != "":  # есть что выводить
             self.setFormats(style)
             p_top, p_right, p_bottom, p_left = self.setMargins(style)
@@ -220,10 +189,6 @@ class Q2PrinterPdf(Q2Printer):
             self.textDoc.setTextWidth(rect.width() * self.cm_to_points)
             self.textDoc.setHtml(f"<p>{txt}</p>")
 
-            # font = QFont("Times New Roman")
-            # font.setPixelSize(int(14 * self.printer_resolution / 72))
-            # self.textDoc.setDefaultFont(font)
-
             top_offset_cm = 0
             cell_height_cm = rect.height()
 
@@ -234,8 +199,6 @@ class Q2PrinterPdf(Q2Printer):
                     top_offset_cm += (cell_height_cm - docHeight_cm) / 2
                 elif self.currentVAlign == Qt.AlignmentFlag.AlignBottom:
                     top_offset_cm += cell_height_cm - docHeight_cm
-
-            # print(cell_data["height"], height_cm, txt, docHeight_cm, top_offset_cm)
 
             self.painter.save()
             self.painter.resetTransform()
