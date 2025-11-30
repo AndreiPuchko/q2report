@@ -241,9 +241,9 @@ class RichTextParser(HTMLParser):
                 if name == "size":
                     try:
                         if value.startswith("+"):
-                            style["fontsize"] = str(self.base_fontsize + int(value[1:]))
+                            style["fontsize"] = str(self.base_fontsize + 2 * int(value[1:]))
                         elif value.startswith("-"):
-                            style["fontsize"] = str(self.base_fontsize - int(value[1:]))
+                            style["fontsize"] = str(self.base_fontsize - 2 * int(value[1:]))
                         else:
                             style["fontsize"] = value
                     except Exception:
