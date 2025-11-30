@@ -35,6 +35,56 @@
           },
           "rows": [
             {
+              "role": "header",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "Page Header {_page_number}",
+                  "style": {
+                    "vertical-align": "middle",
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4
+                }
+              },
+              "style": {}
+            },
+            {
+              "role": "footer",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "Page Footer {_page_number}",
+                  "style": {
+                    "vertical-align": "middle",
+                    "text-align": "left"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4
+                }
+              },
+              "style": {}
+            },
+            {
               "style": {
                 "background": "#AABBFF",
                 "text-align": "right"

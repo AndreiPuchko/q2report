@@ -49,7 +49,7 @@ def demo(type="pdf"):
         data=" Lorem ipsum <font size=+2>sdg <b>sd</b>iog</font> isdg sdg ;sdf gskfdn gklsjdn",
     )
 
-    print(report.report_content)
+    # print(report.report_content)
     # report.set_data(b, "a")
 
     res_file = report.run(f"temp/repo.{type}", open_output_file=False)

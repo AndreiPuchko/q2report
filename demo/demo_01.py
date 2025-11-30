@@ -63,7 +63,7 @@ def demo(type="pdf"):
         # report.add_column()
         # report.add_column(width="10")
 
-        report.add_rows(heights=[0], style=report.make_style(font_size=16))
+        report.add_rows(heights=[0, 0, 1, 0, 0.6], style=report.make_style(font_size=16))
         # report.add_row(height=0)
         # report.set_cell(0, 0, "{demo_udf()}")
         # report.set_cell(0, 1, "{mydata}")
@@ -71,6 +71,9 @@ def demo(type="pdf"):
 
         report.set_cell(0, 0, "{q2image('%s',4)}" % image_data, style=report.make_style(padding="0"))
         report.set_cell(0, 1, "{13}")
+        report.set_cell(1, 0, "{q2image('%s')}" % image_data, style=report.make_style(padding="0"))
+        report.set_cell(3, 1, "%s" % image_data, format="I12.5x3.5", style=report.make_style(padding="0"))
+        report.set_cell(4, 1, "%s" % image_data, format="I", style=report.make_style(padding="0"))
 
         if 0:
             report.set_cell(0, 0, "First <b>ce</b>ll", colspan=2, rowspan=2)
@@ -128,7 +131,9 @@ def demo(type="pdf"):
             report.set_cell(2, 0, "Second page 2 -rows 2")
         # table header and footer
         table_header = Q2Report_rows(style=report.make_style(text_align="center"))
-        table_header.set_cell(0, 0, "Table", colspan=4, style=report.make_style(border_width="0", font_size=20))
+        table_header.set_cell(
+            0, 0, "Table", colspan=4, style=report.make_style(border_width="0", font_size=20)
+        )
         table_header.set_cell(1, 0, "Col 1")
 
         table_footer = Q2Report_rows()
@@ -155,7 +160,9 @@ def demo(type="pdf"):
             colspan=2,
             style=report.make_style(text_align="right", border_width="0"),
         )
-        group_footer.set_cell(0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right", font_size=6))
+        group_footer.set_cell(
+            0, 3, "{sum:num(num1)}", style=report.make_style(text_align="right", font_size=6)
+        )
 
         # Table
         table_row = Q2Report_rows(
