@@ -52,7 +52,8 @@ class Q2PrinterPdf(Q2Printer):
 
         self.page_layout = QPageLayout()
         self.painter = QPainter()
-        self.painter.begin(self.printer)
+        if not self.painter.begin(self.printer):
+            raise Exception(f"Unable to create file '%s', it is probably busy!" % output_file)
         self.painter.scale(self.cm_to_points, self.cm_to_points)
         self.pen_width = 6 / 96 / 2.54
         self.painter.setPen(QPen(self.painter.brush(), self.pen_width))
@@ -89,12 +90,18 @@ class Q2PrinterPdf(Q2Printer):
 
     def newPage(self, height_needed):
         """Проверяет, поместится ли элемент, и начинает новую страницу, если нужно."""
+        footer_height = self.q2report.get_footer_height()
         page_end_cm = self.page_height - self.page_margin_bottom
 
-        if self.current_y_cm + height_needed > page_end_cm:
+        if self.current_y_cm + height_needed + footer_height > page_end_cm:
             # self.painter.end()
+            if footer_height:
+                self.q2report.render_footer()
             self.printer.newPage()
             self.current_y_cm = self.page_margin_top
+            self.q2report.data["_page_number"] += 1
+            self.q2report.render_header()
+            self.q2report.render_table_header()
             # self.painter.begin(self.printer)
             # self.painter.scale(self.cm_to_points, self.cm_to_points)
 
@@ -251,10 +258,16 @@ class Q2PrinterPdf(Q2Printer):
     def render_rows_section(self, rows_section, style, outline_level):
         super().render_rows_section(rows_section, style, outline_level)
         spanned_cells_to_skip = {}
+
+        if rows_section["role"] == "footer":
+            # print(self.current_y_cm, self.page_margin_bottom)
+            self.current_y_cm = self.page_height - self.page_margin_bottom - rows_section["section_height"]
+        else:
+            self.newPage(rows_section["section_height"])
+
         for row in range(len(rows_section["heights"])):
             current_x_cm = self.page_margin_left
             row_height_cm = rows_section["row_height"][row]
-            self.newPage(row_height_cm)
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 if key in spanned_cells_to_skip:

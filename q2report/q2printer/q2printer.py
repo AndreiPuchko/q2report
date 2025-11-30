@@ -168,6 +168,7 @@ class Q2Printer:
                         break
         # print(rows_section["hidden_rows"])
         # print(rows_section["row_height"])
+        rows_section["section_height"] = sum(rows_section["row_height"])
 
     def render_rows_section(self, rows, style, outline_level):
         self.calculate_real_sizes(rows, style)

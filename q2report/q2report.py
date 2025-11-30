@@ -293,9 +293,13 @@ class Q2Report:
         self.currency = "€"
 
         self.data = {}  # current data
+        self.data["_page_number"] = 1
         self.data_sets = {}
         self.current_data_set_name = ""
         self.current_data_set_row_number = 0
+        self.table_header = None
+        self.header = None
+        self.footer = None
         self.heap = Q2Heap()
         self.d = D(self)
 
@@ -535,7 +539,7 @@ class Q2Report:
             data = self.prevrowdata
         else:
             data = self.data
-        formula_splited =_formula.split(":")
+        formula_splited = _formula.split(":")
         fmt = ""
         if _formula in data:
             rez = str(data[_formula])
@@ -564,7 +568,7 @@ class Q2Report:
 
     def format_cell_text(self, cell):
         cell["xlsx_data"] = cell["data"]
-        cell["data"] = self.q2_formatter(cell["data"],  cell.get("format", ""))
+        cell["data"] = self.q2_formatter(cell["data"], cell.get("format", ""))
 
     def q2_formatter(self, text, _fmt):
         cell_value = num(text)
@@ -601,7 +605,7 @@ class Q2Report:
             text += self.currency
         return text
 
-    def render_rows_section(self, rows_section, column_style, aggregator=None):
+    def render_rows_section(self, rows_section, column_style, aggregator=None, get_section_height=None):
         if aggregator is None:
             self.use_prevrowdata = False
             self.data.update({x: self.table_aggregators[x]["v"] for x in self.table_aggregators})
@@ -634,8 +638,11 @@ class Q2Report:
                 if rows_section["cells"][cell].get("name"):
                     self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
                 self.format_cell_text(rows_section["cells"][cell])
-
-        self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
+        if get_section_height is None:
+            self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
+        else:
+            Q2Printer.render_rows_section(self.printer, rows_section, rows_section_style, self.outline_level)
+            return rows_section["section_height"]
 
     def extract_images(self, cell_data):
         images_list = []
@@ -745,16 +752,59 @@ class Q2Report:
 
                         self.render_table_groups(rows_section, column_style, True)
                         self.render_table_footer(rows_section, column_style)
+                    if rows_section["role"] == "header":
+                        self.render_header(rows_section, column_style)
+                    elif rows_section["role"] == "footer":
+                        self.render_footer(rows_section, column_style)
                     else:  # Free rows
                         self.render_rows_section(rows_section, column_style)
         # print(json.dumps(self.report_content, indent=2))
+        self.render_footer()
         self.printer.save()
         if open_output_file:
             self.printer.show()
         return self.printer.output_file
 
-    def render_table_header(self, rows_section, column_style):
-        if rows_section.get("table_header"):
+    def render_footer(self, rows_section=None, column_style=None):
+        if len(printer := re.findall("Q2PrinterPdf|Q2PrinterDocx", f"{self.printer}")) == 0:
+            return
+        if rows_section is None:
+            if self.footer:
+                self.render_rows_section(**self.footer)
+        else:
+            self.footer = {
+                "rows_section": deepcopy(rows_section),
+                "column_style": deepcopy(column_style),
+            }
+            if printer == "Q2PrinterDocx":
+                self.render_rows_section(rows_section, column_style)
+
+    def get_footer_height(self):
+        if self.footer:
+            return self.render_rows_section(**self.footer, get_section_height=True)
+        else:
+            return 0
+
+    def render_header(self, rows_section=None, column_style=None):
+        if rows_section is None:
+            if self.header:
+                self.render_rows_section(**self.header)
+        else:
+            self.header = {
+                "rows_section": deepcopy(rows_section),
+                "column_style": deepcopy(column_style),
+            }
+            self.render_rows_section(rows_section, column_style)
+
+    def render_table_header(self, rows_section=None, column_style=None):
+        if rows_section is None:
+            if self.table_header:
+                self.render_rows_section(**self.table_header)
+        elif rows_section.get("table_header"):
+            self.table_header = {
+                "rows_section": deepcopy(rows_section["table_header"]),
+                "column_style": deepcopy(column_style),
+            }
             self.render_rows_section(rows_section["table_header"], column_style)
 
     def render_table_groups(self, rows_section, column_style, end_of_table=False):
@@ -796,6 +846,7 @@ class Q2Report:
                 self.render_rows_section(group_set["group_header"], column_style)
 
     def render_table_footer(self, rows_section, column_style):
+        self.table_header = None
         if rows_section.get("table_footer"):
             self.render_rows_section(rows_section["table_footer"], column_style)
 
