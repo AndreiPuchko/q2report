@@ -60,7 +60,7 @@ class Q2PrinterPdf(Q2Printer):
         self.base_font = QFont("Calibri", 10)
         self.textDoc.setDefaultFont(self.base_font)
         self.textDoc.setDocumentMargin(0)
-        
+
         self.defaultTextOption = QTextOption()
         self.defaultTextOption.setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
 
@@ -68,7 +68,7 @@ class Q2PrinterPdf(Q2Printer):
         self.painter = QPainter()
         self.painter.begin(self.printer)
         self.painter.scale(self.cm_to_points, self.cm_to_points)
-        self.pen_width = 2 / 96 / 2.54
+        self.pen_width = 6 / 96 / 2.54
         self.painter.setPen(QPen(self.painter.brush(), self.pen_width))
 
         self.current_y_cm = 0.0  # Текущая позиция Y в CM
@@ -81,9 +81,9 @@ class Q2PrinterPdf(Q2Printer):
         # Настройки по умолчанию
         self.reset_page()
 
-    def _cm_to_points(self, cm):
-        """Конвертирует сантиметры в точки (pt)."""
-        return num(cm) * points_in_cm
+    # def _cm_to_points(self, cm):
+    #     """Конвертирует сантиметры в точки (pt)."""
+    #     return num(cm) * points_in_cm
 
     def reset_page(self, **args):
         super().reset_page(**args)
@@ -104,10 +104,10 @@ class Q2PrinterPdf(Q2Printer):
         self.page_layout.setOrientation(orientation)
 
         # Отступы в точках (pt)
-        margin_left_pt = self._cm_to_points(self.page_margin_left)
-        margin_top_pt = self._cm_to_points(self.page_margin_top)
-        margin_right_pt = self._cm_to_points(self.page_margin_right)
-        margin_bottom_pt = self._cm_to_points(self.page_margin_bottom)
+        # margin_left_pt = self._cm_to_points(self.page_margin_left)
+        # margin_top_pt = self._cm_to_points(self.page_margin_top)
+        # margin_right_pt = self._cm_to_points(self.page_margin_right)
+        # margin_bottom_pt = self._cm_to_points(self.page_margin_bottom)
         # self.page_layout.setMargins(
         #     QMarginsF(margin_left_pt, margin_top_pt, margin_right_pt, margin_bottom_pt)
         # )
@@ -141,8 +141,9 @@ class Q2PrinterPdf(Q2Printer):
         font = QFont(style.get("font-family", self.base_font))
 
         if font_size := style.get("font-size", "10pt"):
-            pt_size = num(font_size.lower().replace("pt", ""))
-            font.setPixelSize(int(int(pt_size) * self.printer_resolution / 72))
+            if isinstance(font_size, str):
+                font_size = num(font_size.lower().replace("pt", ""))
+            font.setPixelSize(int(int(font_size) * self.printer_resolution / 72))
 
         if font_weight := style.get("font-weight", ""):
             font.setBold(font_weight == "bold" or num(font_weight) >= 700)
@@ -207,7 +208,6 @@ class Q2PrinterPdf(Q2Printer):
         self.draw_cell_borders(rect_cm, style)
 
         """Отрисовывает содержимое ячейки и ее рамки."""
-        # Используем переданный 'format', так как он уже содержит полный, объединенный стиль
         if txt != "":  # есть что выводить
             self.setFormats(style)
             p_top, p_right, p_bottom, p_left = self.setMargins(style)
@@ -215,13 +215,11 @@ class Q2PrinterPdf(Q2Printer):
             rect = QRectF(
                 (left_cm + p_left), top_cm + p_top, width_cm - p_left - p_right, height_cm - p_top - p_bottom
             )
-            
+
             # Установка ширины документа (в пикселях)
             self.textDoc.setTextWidth(rect.width() * self.cm_to_points)
             self.textDoc.setHtml(f"<p>{txt}</p>")
 
-            
-            
             # font = QFont("Times New Roman")
             # font.setPixelSize(int(14 * self.printer_resolution / 72))
             # self.textDoc.setDefaultFont(font)
@@ -237,11 +235,14 @@ class Q2PrinterPdf(Q2Printer):
                 elif self.currentVAlign == Qt.AlignmentFlag.AlignBottom:
                     top_offset_cm += cell_height_cm - docHeight_cm
 
-            print(cell_data["height"], height_cm, txt, docHeight_cm, top_offset_cm)
+            # print(cell_data["height"], height_cm, txt, docHeight_cm, top_offset_cm)
 
             self.painter.save()
             self.painter.resetTransform()
-            self.painter.translate(rect.left() * self.cm_to_points, rect.top() * self.cm_to_points + top_offset_cm * self.cm_to_points )
+            self.painter.translate(
+                rect.left() * self.cm_to_points,
+                rect.top() * self.cm_to_points + top_offset_cm * self.cm_to_points,
+            )
             textRect = QRectF(0, 0, rect.width() * self.cm_to_points, rect.height() * self.cm_to_points)
             # self.painter.drawRect(textRect)
             self.textDoc.drawContents(self.painter, textRect)
@@ -287,8 +288,6 @@ class Q2PrinterPdf(Q2Printer):
     def render_rows_section(self, rows_section, style, outline_level):
         super().render_rows_section(rows_section, style, outline_level)
         spanned_cells_to_skip = {}
-        # print(rows_section["heights"])
-        # print(self._cm_columns_widths)
         for row in range(len(rows_section["heights"])):
             current_x_cm = self.page_margin_left
             row_height_cm = rows_section["row_height"][row]

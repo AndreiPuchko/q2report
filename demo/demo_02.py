@@ -2,7 +2,7 @@ from q2report.q2report import Q2Report, Q2Report_rows
 import os
 
 
-def demo():
+def demo(type="pdf"):
     image_data = (
         "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBT"
         "UEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAO"
@@ -148,7 +148,7 @@ def demo():
 
     report.add_rows(rows=table_row)
 
-    res_file = report.run("temp/repo.html", data=demo_data, open_output_file=False)
+    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
     # res_file = report.run("temp/repo.docx", data=demo_data, open_output_file=False)
 

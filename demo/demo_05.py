@@ -3,7 +3,7 @@ import json
 import os
 
 
-def demo():
+def demo(type="pdf"):
     report = Q2Report()
     report.load(open("test_data/test-report-02.json").read())
     # set data grouping
@@ -13,7 +13,7 @@ def demo():
     # sort dataset
     data["cursor"].sort(key=lambda r: (r["tom"], r["grp"]))
 
-    res_file = report.run("temp/result.docx", data=data)
+    res_file = report.run(f"temp/repo.{type}", data=data)
     os.system(os.path.abspath(res_file))
 
 

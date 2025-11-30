@@ -2,7 +2,7 @@ from q2report.q2report import Q2Report
 import os
 
 
-def demo():
+def demo(type="pdf"):
     report = Q2Report()
     report.set_style(report.make_style(border_width="1"))
     report.add_page(page_margin_left=2, page_height=21, page_width=21)
@@ -28,7 +28,7 @@ def demo():
         },
     )
     report.set_cell(0, 1, data="123", style={"font-weight": "bold", "font-size": 50, "border-width": "20 1 2 12", "border-color": "green"})
-    report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=6)
+    report.set_cell(0, 2, data=" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ", rowspan=2)
     report.set_cell(
         1,
         1,
@@ -49,13 +49,10 @@ def demo():
         data=" Lorem ipsum <font size=+2>sdg <b>sd</b>iog</font> isdg sdg ;sdf gskfdn gklsjdn",
     )
 
-    # print(report.report_content)
+    print(report.report_content)
     # report.set_data(b, "a")
 
-    res_file = report.run("temp/repo.html", open_output_file=False)
-    # res_file = report.run("temp/repo.xlsx", open_output_file=False)
-    # res_file = report.run("temp/repo.docx", open_output_file=False)
-
+    res_file = report.run(f"temp/repo.{type}", open_output_file=False)
     os.system(os.path.abspath(res_file))
 
 

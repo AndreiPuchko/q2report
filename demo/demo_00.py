@@ -6,7 +6,7 @@ import os
 from io import BytesIO
 
 
-def demo():
+def demo(type="pdf"):
     demo_data = {"cursor": []}
 
     for x in range(100):
@@ -39,7 +39,7 @@ def demo():
     report.params["p1"] = " <b>123</b> "
 
     # res_file = report.run("temp/repo.html", data=demo_data)
-    res_file = report.run("temp/repo.xlsx", data=demo_data)
+    res_file = report.run(f"temp/repo.{type}", data=demo_data)
     # res_file = report.run("temp/repo.docx", output_type="docx", data=demo_data)
     os.system(os.path.abspath(res_file))
 

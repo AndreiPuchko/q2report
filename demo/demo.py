@@ -4,7 +4,10 @@ if __name__ == "__main__":
     sys.path.insert(0, ".")
 
 
-from demo.demo_06 import demo
+from demo.demo_05 import demo
 
 if __name__ == "__main__":
-    demo()
+    # demo("html")
+    # demo("xlsx")
+    # demo("docx")
+    demo("pdf")

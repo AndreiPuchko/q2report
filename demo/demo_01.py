@@ -7,7 +7,7 @@ def demo_udf():
     return "demo udf"
 
 
-def demo():
+def demo(type="pdf"):
     demo_data = {"cursor": []}
 
     # for x in range(100):
@@ -202,7 +202,7 @@ def demo():
 
     # res_file = report.run("temp/repo.html", data=demo_data, open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
-    res_file = report.run("temp/repo.docx", data=demo_data, open_output_file=False)
+    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=False)
 
     os.system(os.path.abspath(res_file))
 
