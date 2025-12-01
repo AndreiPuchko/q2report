@@ -801,9 +801,8 @@ class Q2Report:
                         self.render_header(rows_section, column_style)
                     elif rows_section["role"] == "footer":
                         self.render_footer(rows_section, column_style)
-                    else:  # Free rows
+                    elif rows_section["role"] == "free":  # Free rows
                         self.render_rows_section(rows_section, column_style)
-        # print(json.dumps(self.report_content, indent=2))
         self.render_footer()
         self.printer.save()
         if open_output_file:
