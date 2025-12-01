@@ -1,6 +1,7 @@
 import importlib
 import pkgutil
 import pathlib
+import time
 
 
 def get_test_set():
@@ -35,6 +36,7 @@ def run_demos_test(format="docx"):
             func = getattr(mod, "demo", None)
             if callable(func):
                 func(format)
+                time.sleep(2)
             else:
                 print(f"⚠ {module_name} does not have a demo() function")
 
