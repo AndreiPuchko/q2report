@@ -295,6 +295,7 @@ class Q2PrinterDocx(Q2Printer):
                         cell_width,
                         merge_str,
                         self.get_cell_images(cell_data),
+                        rows_section["row_height"][row],
                     )
                 )
 
@@ -335,13 +336,9 @@ class Q2PrinterDocx(Q2Printer):
         if row in rows_section["auto_height_rows"]:
             height = 0
         if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
-            row_xml += (
-                f'\n\t\t\t<w:trHeight  w:val="{rows_section["min_row_height"][row]*twip_in_cm}" w:hRule="atLeast"/>'
-            )
+            row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(rows_section["min_row_height"][row]*twip_in_cm)}" w:hRule="atLeast"/>'
         elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
-            row_xml += (
-                f'\n\t\t\t<w:trHeight w:val="{rows_section["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
-            )
+            row_xml += f'\n\t\t\t<w:trHeight w:val="{int(rows_section["max_row_height"][row]*twip_in_cm)}" w:hRule="exact"/>'
         elif rows_section["row_height"][row] == 0 and row in rows_section["hidden_rows"]:
             row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
         ##################################################
@@ -351,15 +348,14 @@ class Q2PrinterDocx(Q2Printer):
     def close_table_row(self):
         return "\n\t</w:tr>"
 
-    def add_table_cell(self, cell_style, cell_text, cell_width, merge_str, images=[]):
+    def add_table_cell(self, cell_style, cell_text, cell_width, merge_str, images=[], row_height=0):
         borders = self.get_cell_borders(cell_style)
         margins = self.get_cell_paddings(cell_style)
-        para_params = self.get_paragraph_params(cell_style)
+        para_params = self.get_paragraph_params(cell_style, row_height)
         para_text = self.get_paragraph_text(cell_style, cell_text, para_params)
         valign = self.get_vertical_align(cell_style)
 
         shd = self.get_cell_background(cell_style)
-        # self.document.append(
         return f"""
                 <w:tc>
                     <w:tcPr>
@@ -389,13 +385,6 @@ class Q2PrinterDocx(Q2Printer):
         cell_text = cell_text.replace("\r\n", "\n").replace("\r", "\n")
         cell_text = reMultiSpaceDelete.sub(" ", cell_text)
         cell_text = re.sub(r"(?i)<br\s*/?>\s*", "<br/>", cell_text.strip())
-
-        # if cell_style.get("font-weight", "") == "bold":
-        #     cell_text = f"<b>{cell_text}</b>"
-        # if cell_style.get("font-style", "") == "italic":
-        #     cell_text = f"<i>{cell_text}</i>"
-        # if cell_style.get("text-decoration", "") == "underline":
-        #     cell_text = f"<u>{cell_text}</u>"
 
         # Get base font size from cell style and convert to twips (×2)
         base_fontsize = float(str(cell_style.get("font-size", "10pt")).replace("pt", ""))
@@ -453,11 +442,9 @@ class Q2PrinterDocx(Q2Printer):
 
         return "".join(para_text)
 
-    def get_paragraph_params(self, cell_style):
-        # if style := cell_style.get("color"):
-        #     color = f'<w:color w:val="{css_color_to_rgb(style)[2:]}"/>'
-        # else:
-        #     color = ""
+    def get_paragraph_params(self, cell_style, row_height):
+        font_size = float(str(cell_style.get("font-size", "10pt")).replace("pt", ""))
+        sz_twips = min(int(float(row_height) * 28.346456692913385), font_size) * 2
         paragraph = f"""
                     <w:pPr>
                     \t{self.get_horizontal_align(cell_style)}
@@ -466,6 +453,7 @@ class Q2PrinterDocx(Q2Printer):
                     \t<w:autoSpaceDE w:val="0"/>
                     \t<w:autoSpaceDN w:val="0"/>
                     \t<w:spacing w:before="0" w:after="0" w:lineRule="atLeast" w:line="0"/>
+                    <w:rPr><w:sz w:val="{sz_twips}"/><w:szCs w:val="{sz_twips}"/></w:rPr>
                     </w:pPr>
                     """
         return paragraph
