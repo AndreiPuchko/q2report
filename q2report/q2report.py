@@ -27,8 +27,10 @@ from q2report.q2printer.q2printer import Q2Printer, get_printer
 from q2report.q2utils import num, Q2Heap, int_, today, float_, reDecimal, reNumber
 
 re_calc = re.compile(r"\{.*?\}")
-re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}")
+re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}|\{.*\:I.*\}")
 re_dec = re.compile(r"[^\d]")
+re_image_format_string = re.compile(r":I.*?}")
+re_image_format_data = re.compile(r",|\*|\s|[a-zA-Z_-]")
 
 engine_name = None
 
@@ -43,7 +45,10 @@ def q2image(image, width=0, height=0):
             return raw, base64.b64encode(raw).decode()
         else:
             b64 = image
-            raw = base64.b64decode(b64)
+            try:
+                raw = base64.b64decode(b64)
+            except:
+                raw = ""
             return raw, b64
 
     def get_png_size(data):
@@ -79,7 +84,8 @@ def q2image(image, width=0, height=0):
         fmt = "JPEG"
         w, h = get_jpg_size(raw)
     else:
-        raise ValueError("Unsupported image format")
+        # raise ValueError("Unsupported image format")
+        return {}
 
     return f"{image_b64}:{width}:{height}:{w}:{h}:{fmt}"
 
@@ -562,8 +568,8 @@ class Q2Report:
     def evaluator(self, formula):
         try:
             rez = str(eval(formula, self.mydata))
-        except BaseException:
-            rez = f"Evaluating error: {formula}"
+        except BaseException as e:
+            rez = f"Evaluating error: {formula} - {e}"
         return rez
 
     def format_cell_text(self, cell):
@@ -648,9 +654,24 @@ class Q2Report:
     def extract_images(self, cell_data, cell_format):
         images_list = []
 
+        def extract_fmt(fmt_string, image_data):
+            if image_format := re_image_format_data.split(fmt_string[1:]):
+                image_data[1] = image_format[0]
+                image_data[2] = image_format[1] if len(image_format) > 1 else "0"
+
         def extract_image(formula):
-            image_data = self.formulator(formula).split(":")
+            if fmt := re_image_format_string.findall(formula[0]):
+                formula = [re_image_format_string.sub("}", formula[0])]
+                image_data = q2image(self.formulator(formula))
+                if image_data == {}:
+                    return ""
+                fmt = fmt[0][:-1]
+            else:
+                image_data = self.formulator(formula)
+            image_data = image_data.split(":")
             if len(image_data) == 6:
+                if fmt:
+                    extract_fmt(fmt, image_data)
                 images_list.append(
                     {
                         "image": image_data[0],
@@ -664,20 +685,28 @@ class Q2Report:
 
         cell_data = re_q2image.sub(extract_image, cell_data)
         if cell_format.startswith("I"):
-            image_data = q2image(re_calc.sub(self.formulator, cell_data)).split(":")
-            if (imslist := cell_format[1:].split("x")):
-                image_data[1] = imslist[0]
-                image_data[2] = imslist[1] if len(imslist) > 1 else "0"
-            images_list.append(
+            image_data = q2image(re_calc.sub(self.formulator, cell_data))
+            if image_data != {}:
+                image_data = image_data.split(":")
+                extract_fmt(cell_format, image_data)
+                width = num(image_data[1])
+                height = num(image_data[2])
+                pixel_width = num(image_data[3])
+                pixel_height = num(image_data[4])
+                if width == 0 and height != 0:
+                    width = height * pixel_width / pixel_height
+                elif width != 0 and height == 0:
+                    height = width * pixel_height / pixel_width
+                images_list.append(
                     {
                         "image": image_data[0],
-                        "width": num(image_data[1]),
-                        "height": num(image_data[2]),
-                        "pixel_width": num(image_data[3]),
-                        "pixel_height": num(image_data[4]),
+                        "width": width,
+                        "height": height,
+                        "pixel_width": pixel_width,
+                        "pixel_height": pixel_height,
                     }
                 )
-            cell_data = ""
+                cell_data = ""
         return cell_data, images_list
 
     def before_run_check(self):

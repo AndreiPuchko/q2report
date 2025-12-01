@@ -72,9 +72,10 @@ def demo(type="pdf"):
         report.set_cell(0, 0, "{q2image('%s',4)}" % image_data, style=report.make_style(padding="0"))
         report.set_cell(0, 1, "{13}")
         report.set_cell(1, 0, "{q2image('%s')}" % image_data, style=report.make_style(padding="0"))
-        report.set_cell(3, 1, "%s" % image_data, format="I12.5x3.5", style=report.make_style(padding="0"))
+        report.set_cell(3, 1, "%s" % image_data, format="I12.5x3.5", style=report.make_style(padding="0.05"))
         report.set_cell(4, 1, "%s" % image_data, format="I", style=report.make_style(padding="0"))
-        report.set_cell(5, 1, "%s" % image_data, format="I1*1", style=report.make_style(padding="0"))
+        report.set_cell(5, 0, f"{image_data}" , format="I1", style=report.make_style(padding="0"))
+        report.set_cell(5, 1, "{'%s':I1.5}" % image_data, style=report.make_style(padding="0"))
 
         if 0:
             report.set_cell(0, 0, "First <b>ce</b>ll", colspan=2, rowspan=2)

@@ -149,7 +149,8 @@ class Q2Printer:
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
-                    image["height"] = max(image["height"], rows_section["row_height"][row])
+                    if image["height"] == 0:
+                        image["height"] = max(image["height"], rows_section["row_height"][row])
                     if rows_section["row_height"][row] < h:
                         rows_section["row_height"][row] = h
             if (
@@ -246,7 +247,6 @@ class Q2Printer:
             imageIndex = len(self.xmlImageList) - 1
         else:
             imageIndex = self.xmlImageList.index(image)
-
         if height == 0:
             if width == 0:
                 width = num(col_width)
