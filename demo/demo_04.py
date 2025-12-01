@@ -6,9 +6,9 @@ import os
 def demo(type="pdf"):
     report = Q2Report()
     report.load(open("test_data/test-report-01.json").read())
-    res_file = report.run(f"temp/repo.{type}", data=json.load(open("test_data/test-data-01.json")))
+    res_file = report.run(f"temp/repo.{type}", data=json.load(open("test_data/test-data-01.json")), open_output_file=1)
     
-    os.system(os.path.abspath(res_file))
+    # os.system(os.path.abspath(res_file))
 
 
 if __name__ == "__main__":  # pragma: no cover

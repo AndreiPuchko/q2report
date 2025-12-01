@@ -13,8 +13,8 @@ def demo(type="pdf"):
     # sort dataset
     data["cursor"].sort(key=lambda r: (r["tom"], r["grp"]))
 
-    res_file = report.run(f"temp/repo.{type}", data=data)
-    os.system(os.path.abspath(res_file))
+    res_file = report.run(f"temp/repo.{type}", data=data, open_output_file=1)
+    # os.system(os.path.abspath(res_file))
 
 
 if __name__ == "__main__":  # pragma: no cover

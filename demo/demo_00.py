@@ -38,10 +38,8 @@ def demo(type="pdf"):
     report.load("test_data/report_02.json")
     report.params["p1"] = " <b>123</b> "
 
-    # res_file = report.run("temp/repo.html", data=demo_data)
-    res_file = report.run(f"temp/repo.{type}", data=demo_data)
-    # res_file = report.run("temp/repo.docx", output_type="docx", data=demo_data)
-    os.system(os.path.abspath(res_file))
+    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=1)
+    # os.system(os.path.abspath(res_file))
 
 
 if __name__ == "__main__":

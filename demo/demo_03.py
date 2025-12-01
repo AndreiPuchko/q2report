@@ -52,8 +52,8 @@ def demo(type="pdf"):
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    res_file = report.run(f"temp/repo.{type}", open_output_file=False)
-    os.system(os.path.abspath(res_file))
+    res_file = report.run(f"temp/repo.{type}", open_output_file=1)
+    # os.system(os.path.abspath(res_file))
 
 
 if __name__ == "__main__":  # pragma: no cover

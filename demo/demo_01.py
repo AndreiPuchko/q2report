@@ -211,9 +211,9 @@ def demo(type="pdf"):
 
     # res_file = report.run("temp/repo.html", data=demo_data, open_output_file=False)
     # res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
-    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=False)
+    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=1)
 
-    os.system(os.path.abspath(res_file))
+    # os.system(os.path.abspath(res_file))
 
 
 if __name__ == "__main__":  # pragma: no cover
