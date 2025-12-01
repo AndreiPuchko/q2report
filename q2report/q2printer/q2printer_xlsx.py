@@ -200,25 +200,11 @@ class Q2PrinterXlsx(Q2Printer):
 
         sheet_row = {}
         for row in range(row_count):  # вывод - по строкам
-            # sheet_row["height"] = (
-            #     rows_section["real_heights"][row] if rows_section["real_heights"][row] else num(0.7)
-            # ) * points_in_cm
+            height = rows_section["row_height"][row]
+            if row in rows_section["auto_height_rows"]:
+                height = 0
 
-            height = 0
-            if rows_section["row_height"][row] == 0:
-                if row in rows_section["hidden_rows"]:
-                    height = 0
-                else:
-                    height = num(0.5) * points_in_cm
-            else:
-                if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
-                    height = rows_section["min_row_height"][row] * points_in_cm
-                elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
-                    height = rows_section["max_row_height"][row] * points_in_cm
-                else:
-                    height = rows_section["row_height"][row] * points_in_cm
-
-            sheet_row["height"] = height
+            sheet_row["height"] = height * points_in_cm
 
             sheet_row["cells"] = []
             sheet_row["outline_level"] = outline_level

@@ -63,7 +63,7 @@ def demo(type="pdf"):
         # report.add_column()
         # report.add_column(width="10")
 
-        report.add_rows(heights=[0, 0, 1, 0, 0.2], style=report.make_style(font_size=16))
+        report.add_rows(heights=[0, 0, 1, 0, 0.2, "2"], style=report.make_style(font_size=16))
         # report.add_row(height=0)
         # report.set_cell(0, 0, "{demo_udf()}")
         # report.set_cell(0, 1, "{mydata}")
@@ -74,6 +74,7 @@ def demo(type="pdf"):
         report.set_cell(1, 0, "{q2image('%s')}" % image_data, style=report.make_style(padding="0"))
         report.set_cell(3, 1, "%s" % image_data, format="I12.5x3.5", style=report.make_style(padding="0"))
         report.set_cell(4, 1, "%s" % image_data, format="I", style=report.make_style(padding="0"))
+        report.set_cell(5, 1, "%s" % image_data, format="I1*1", style=report.make_style(padding="0"))
 
         if 0:
             report.set_cell(0, 0, "First <b>ce</b>ll", colspan=2, rowspan=2)

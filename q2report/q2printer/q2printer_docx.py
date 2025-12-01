@@ -324,23 +324,27 @@ class Q2PrinterDocx(Q2Printer):
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
 
-    def open_table_row(self, row, rows):
+    def open_table_row(self, row, rows_section):
         row_xml = ""
         row_xml += "\n\t<w:tr>"
         row_xml += "\n\t\t<w:trPr>"
-        if rows["role"] == "table_header":
+        if rows_section["role"] == "table_header":
             row_xml += "<w:tblHeader/>"
-        if rows["min_row_height"][row] != 0 and rows["max_row_height"][row] == 0:
+        ##################################################
+        height = rows_section["row_height"][row]
+        if row in rows_section["auto_height_rows"]:
+            height = 0
+        if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
             row_xml += (
-                f'\n\t\t\t<w:trHeight w:val="{rows["min_row_height"][row]*twip_in_cm}" w:hRule="atLeast"/>'
+                f'\n\t\t\t<w:trHeight  w:val="{rows_section["min_row_height"][row]*twip_in_cm}" w:hRule="atLeast"/>'
             )
-        elif rows["min_row_height"][row] == 0 and rows["max_row_height"][row] != 0:
+        elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
             row_xml += (
-                f'\n\t\t\t<w:trHeight w:val="{rows["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
+                f'\n\t\t\t<w:trHeight w:val="{rows_section["max_row_height"][row]*twip_in_cm}" w:hRule="exact"/>'
             )
-        elif rows["row_height"][row] == 0 and row in rows["hidden_rows"]:
+        elif rows_section["row_height"][row] == 0 and row in rows_section["hidden_rows"]:
             row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
-
+        ##################################################
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
 

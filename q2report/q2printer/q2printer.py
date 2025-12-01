@@ -112,10 +112,13 @@ class Q2Printer:
         rows_section["row_height"] = []
         rows_section["min_row_height"] = []
         rows_section["max_row_height"] = []
+        rows_section["auto_height_rows"] = []
         for row in range(row_count):
             spltd_heights = str(rows_section["heights"][row]).split("-")
             rows_section["min_row_height"].append(num(spltd_heights[0]))
             rows_section["max_row_height"].append(num(spltd_heights[1]) if len(spltd_heights) == 2 else 0)
+            if rows_section["min_row_height"] == 0 and rows_section["max_row_height"] == 0:
+                rows_section["auto_height_rows"].append(row)
             rows_section["row_height"].append(
                 max(rows_section["max_row_height"][-1], rows_section["min_row_height"][-1])
             )
@@ -153,16 +156,20 @@ class Q2Printer:
                 rows_section["min_row_height"][row] != 0
                 and rows_section["row_height"][row] < rows_section["min_row_height"][row]
             ):
-                rows_section["row_height"] = rows_section["min_row_height"][row]
+                rows_section["row_height"][row] = rows_section["min_row_height"][row]
             if (
                 rows_section["max_row_height"][row] != 0
                 and rows_section["row_height"][row] > rows_section["max_row_height"][row]
             ):
-                rows_section["row_height"] = rows_section["max_row_height"][row]
+                rows_section["row_height"][row] = rows_section["max_row_height"][row]
+            ##################
+            if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
+                rows_section["row_height"][row] = rows_section["min_row_height"][row]
+            elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
+                rows_section["row_height"][row] = rows_section["max_row_height"][row]
+            ##################
         # calculating height for spanned cells
         rows_section["hidden_rows"] = {i for i, h in enumerate(rows_section["row_height"]) if h == 0}
-        # print(rows_section["row_height"])
-        # print(rows_section["hidden_rows"])
         for key in spanned_cells:
             start_row = int(key.split(",")[0])
             haha = 0
@@ -177,10 +184,7 @@ class Q2Printer:
                 if rest > rows_section["row_height"][uprow]:
                     if rows_section["max_row_height"][uprow] == 0:
                         rows_section["row_height"][uprow] += rest
-                        # print(uprow)
                         break
-        # print(rows_section["hidden_rows"])
-        # print(rows_section["row_height"])
         rows_section["section_height"] = sum(rows_section["row_height"])
 
     def render_rows_section(self, rows_section, style, outline_level):

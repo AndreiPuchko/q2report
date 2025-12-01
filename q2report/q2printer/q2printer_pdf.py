@@ -111,9 +111,6 @@ class Q2PrinterPdf(Q2Printer):
             self.painter.end()
 
     def setFormats(self, style):
-        """Устанавливает форматы шрифта, блока и сохраняет вертикальное выравнивание."""
-
-        # 1. Настройка Шрифта (QCharFormat)
         font = QFont(style.get("font-family", self.base_font))
 
         if font_size := style.get("font-size", "10pt"):
@@ -149,7 +146,6 @@ class Q2PrinterPdf(Q2Printer):
             self.defaultTextOption.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.textDoc.setDefaultTextOption(self.defaultTextOption)
 
-        # 3. Сохраняем Вертикальное выравнивание для putBox
         if valign := style.get("vertical-align", "top"):
             if valign == "bottom":
                 self.currentVAlign = Qt.AlignmentFlag.AlignBottom
@@ -224,21 +220,22 @@ class Q2PrinterPdf(Q2Printer):
         images_list = cell_data.get("images")
         if not images_list:
             return ""
-        cell_width = cell_data.get("width")
+        # cell_width = cell_data.get("width")
         for x in images_list:
-            # print(x)
             width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
-            png_bytes = base64.b64decode(x['image'])
+            png_bytes = base64.b64decode(x["image"])
             img = QImage()
             img.loadFromData(png_bytes)
+            img = img.scaled(
+                int(float(width) * self.cm_to_points),
+                int(float(height) * self.cm_to_points),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+
             rect.setWidth(width)
             rect.setHeight(height)
             self.painter.drawImage(rect, img)
-            # width, height, imageIndex = self.prepare_image(x, cell_width)
-
-            # width = round(num(width) * num(12700) * points_in_cm)
-            # height = round(num(height) * num(12700) * points_in_cm)
-
 
     def draw_cell_borders(self, rect_cm, style):
         self.painter.fillRect(rect_cm, QColor(style.get("background", "white")))
@@ -290,13 +287,6 @@ class Q2PrinterPdf(Q2Printer):
         for row in range(len(rows_section["heights"])):
             current_x_cm = self.page_margin_left
             row_height_cm = rows_section["row_height"][row]
-            if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
-                row_height_cm = rows_section["min_row_height"][row]
-            elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
-                row_height_cm = rows_section["max_row_height"][row]
-            else:
-                row_height_cm = rows_section["row_height"][row]
-            
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 if key in spanned_cells_to_skip:

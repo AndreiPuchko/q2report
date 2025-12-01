@@ -84,26 +84,21 @@ class Q2PrinterHtml(Q2Printer):
             self.style[style_text] = f"css{len(self.style)}"
         return self.style[style_text]
 
-    def render_rows_section(self, rows, style, outline_level):
-        super().render_rows_section(rows, style, outline_level)
-        row_count = len(rows["heights"])
+    def render_rows_section(self, rows_section, style, outline_level):
+        super().render_rows_section(rows_section, style, outline_level)
+        row_count = len(rows_section["heights"])
         spanned_cells = []
-        if rows["role"] == "table_header":
+        if rows_section["role"] == "table_header":
             self.reset_columns()
             self.html.append("\t<thead>")
         for row in range(row_count):
-
-            height = 0
-            if rows["min_row_height"][row] != 0 and rows["max_row_height"][row] == 0:
-                height = rows["min_row_height"][row]
-            elif rows["min_row_height"][row] == 0 and rows["max_row_height"][row] != 0:
-                height = rows["max_row_height"][row]
-            # else:
-            #     height = rows["row_height"][row]
+            height = rows_section["row_height"][row]
+            if row in rows_section["auto_height_rows"]:
+                height = 0
 
             if height != 0:
                 self.html.append(f'\t<tr style="height: {height}cm;">')
-            elif rows["row_height"][row] == 0 and row in rows["hidden_rows"]:
+            elif rows_section["row_height"][row] == 0 and row in rows_section["hidden_rows"]:
                 self.html.append('\t<tr  style="visibility:collapse">')
             else:
                 self.html.append("\t<tr>")
@@ -112,8 +107,7 @@ class Q2PrinterHtml(Q2Printer):
                 key = f"{row},{col}"
                 if key in spanned_cells:
                     continue
-                cell_data = rows.get("cells", {}).get(key, {})
-                # cell_text = cell_data.get("data", "&nbsp;")
+                cell_data = rows_section.get("cells", {}).get(key, {})
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = cell_data.get("style", {})
@@ -131,13 +125,14 @@ class Q2PrinterHtml(Q2Printer):
                     span_text = " "
                 self.html.append(f'\t\t<td class="{style_index}" {span_text}>{cell_text}</td>')
             self.html.append("\t</tr>")
-        if rows["role"] == "table_header":
+        if rows_section["role"] == "table_header":
             self.html.append("\t</thead>")
         # if rows["role"] == "table_footer":
         #     self.html.append("<thead></thead>")
 
     def render_cell_images(self, cell_data):
-        cell_text = cell_data.get("data", "&nbsp;")
+        # cell_text = cell_data.get("data", "&nbsp;")
+        cell_text = cell_data.get("data", "")
         if cell_data.get("images"):
             for x in cell_data.get("images"):
                 image = x["image"]
