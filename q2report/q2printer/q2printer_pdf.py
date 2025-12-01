@@ -222,7 +222,7 @@ class Q2PrinterPdf(Q2Printer):
             return ""
         # cell_width = cell_data.get("width")
         for x in images_list:
-            width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
+            width, height, _ = self.prepare_image(x, cell_data.get("width"))
             png_bytes = base64.b64decode(x["image"])
             img = QImage()
             img.loadFromData(png_bytes)
@@ -233,12 +233,13 @@ class Q2PrinterPdf(Q2Printer):
                 Qt.TransformationMode.SmoothTransformation,
             )
 
-            rect.setWidth(width)
+            rect.setWidth(float(width))
             rect.setHeight(height)
             self.painter.drawImage(rect, img)
 
     def draw_cell_borders(self, rect_cm, style):
-        self.painter.fillRect(rect_cm, QColor(style.get("background", "white")))
+        if QColor(style.get("background", "white")).name() != "#ffffff":
+            self.painter.fillRect(rect_cm, QColor(style.get("background", "white")))
 
         b_width_str = style.get("border-width", "0cm").lower().replace("cm", "")
         b_width_cm = reSpaces.split(b_width_str)
