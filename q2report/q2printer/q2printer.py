@@ -48,7 +48,7 @@ def get_printer(output_file, output_type=None):
 
 class Q2Printer:
     def __init__(self, output_file, output_type=None):
-        self.output_file = output_file
+        self.output_file = self.checkOutputFileName(output_file)
         if output_type is None and isinstance(self.output_file, str):
             output_type = os.path.splitext(output_file)[1]
         self.output_type = output_type.lower().replace(".", "")
@@ -63,7 +63,22 @@ class Q2Printer:
                 self._pyqt6_app = QApplication([])
             else:
                 self._pyqt6_app = QApplication.instance()
-        # self.open_output_file()
+
+    def checkOutputFileName(self, fileName=""):
+        if not os.path.isdir(os.path.dirname(fileName)):
+            os.mkdir(os.path.dirname(fileName))
+        co = 0
+        name, ext = os.path.splitext(fileName)
+        while True:
+            if os.path.isfile(fileName):
+                try:
+                    os.remove(fileName)
+                except Exception as e:
+                    co += 1
+                    fileName = f"{name}{co:03d}{ext}"
+                    continue
+            break
+        return fileName
 
     def open_output_file(self):
         # if not os.path.isdir(os.path.dirname(self.output_file)):
@@ -94,7 +109,6 @@ class Q2Printer:
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])
         spanned_cells = {}
-        rows_section["docx_height"] = [0 for x in range(row_count)]
         rows_section["row_height"] = []
         rows_section["min_row_height"] = []
         rows_section["max_row_height"] = []
@@ -132,8 +146,7 @@ class Q2Printer:
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))
-                    if rows_section["docx_height"][row] < h:
-                        rows_section["docx_height"][row] = h
+                    image["height"] = max(image["height"], rows_section["row_height"][row])
                     if rows_section["row_height"][row] < h:
                         rows_section["row_height"][row] = h
             if (
@@ -170,8 +183,8 @@ class Q2Printer:
         # print(rows_section["row_height"])
         rows_section["section_height"] = sum(rows_section["row_height"])
 
-    def render_rows_section(self, rows, style, outline_level):
-        self.calculate_real_sizes(rows, style)
+    def render_rows_section(self, rows_section, style, outline_level):
+        self.calculate_real_sizes(rows_section, style)
 
     def reset_page(
         self,

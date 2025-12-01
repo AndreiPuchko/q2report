@@ -63,7 +63,7 @@ def demo(type="pdf"):
         # report.add_column()
         # report.add_column(width="10")
 
-        report.add_rows(heights=[0, 0, 1, 0, 0.6], style=report.make_style(font_size=16))
+        report.add_rows(heights=[0, 0, 1, 0, 0.2], style=report.make_style(font_size=16))
         # report.add_row(height=0)
         # report.set_cell(0, 0, "{demo_udf()}")
         # report.set_cell(0, 1, "{mydata}")

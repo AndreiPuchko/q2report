@@ -627,12 +627,13 @@ class Q2Report:
         # rows_section["style"] = rows_section_style
         for cell in rows_section["cells"]:
             cell_text = rows_section["cells"][cell].get("data")
+            cell_format = rows_section["cells"][cell].get("format", "")
             cell_style = dict(rows_section_style)
             cell_style.update(rows_section["cells"][cell].get("style", {}))
             rows_section["cells"][cell]["style"] = cell_style
             if cell_text:
                 #  images
-                cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text)
+                cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text, cell_format)
                 #  text data
                 rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
                 if rows_section["cells"][cell].get("name"):
@@ -644,7 +645,7 @@ class Q2Report:
             Q2Printer.render_rows_section(self.printer, rows_section, rows_section_style, self.outline_level)
             return rows_section["section_height"]
 
-    def extract_images(self, cell_data):
+    def extract_images(self, cell_data, cell_format):
         images_list = []
 
         def extract_image(formula):
@@ -662,6 +663,21 @@ class Q2Report:
             return ""
 
         cell_data = re_q2image.sub(extract_image, cell_data)
+        if cell_format.startswith("I"):
+            image_data = q2image(re_calc.sub(self.formulator, cell_data)).split(":")
+            if (imslist := cell_format[1:].split("x")):
+                image_data[1] = imslist[0]
+                image_data[2] = imslist[1] if len(imslist) > 1 else "0"
+            images_list.append(
+                    {
+                        "image": image_data[0],
+                        "width": num(image_data[1]),
+                        "height": num(image_data[2]),
+                        "pixel_width": num(image_data[3]),
+                        "pixel_height": num(image_data[4]),
+                    }
+                )
+            cell_data = ""
         return cell_data, images_list
 
     def before_run_check(self):

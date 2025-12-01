@@ -217,7 +217,7 @@ class Q2PrinterDocx(Q2Printer):
                         <w:tblLayout w:type="fixed"/>
                         <w:tblInd w:w="28" w:type="dxa"/>
                         <w:tblW w:w="{round(sum(int_(x * twip_in_cm) for x in self._cm_columns_widths))}"
-                             w:type="dxa"/>
+                            w:type="dxa"/>
                         <w:tblCellMar>
                             <w:top w:w="28" w:type="dxa"/>
                             <w:left w:w="28" w:type="dxa"/>
@@ -236,8 +236,8 @@ class Q2PrinterDocx(Q2Printer):
         super().render_rows_section(rows_section, style, outline_level)
         spanned_cells_first_column_cell = {}
         spanned_cells_empty_column_cell = {}
-        if rows_section["role"] == "table_header":
-            self.reset_columns()
+        # if rows_section["role"] == "table_header":
+        #     self.reset_columns()
 
         row_section_xml = []
 

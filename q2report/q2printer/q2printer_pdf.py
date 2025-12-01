@@ -4,7 +4,7 @@ import re
 import glob
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 from q2report.q2printer.q2printer import Q2Printer, pyqt6_installed
-
+import base64
 
 reSpaces = re.compile(r"\s+")
 
@@ -183,6 +183,7 @@ class Q2PrinterPdf(Q2Printer):
         txt = reMultiSpaceDelete.sub(" ", txt)
         rect_cm = QRectF(left_cm, top_cm, width_cm, height_cm)
         self.draw_cell_borders(rect_cm, style)
+        self.draw_cell_images(rect_cm, cell_data)
 
         if txt != "":  # есть что выводить
             self.setFormats(style)
@@ -217,6 +218,27 @@ class Q2PrinterPdf(Q2Printer):
             # self.painter.drawRect(textRect)
             self.textDoc.drawContents(self.painter, textRect)
             self.painter.restore()
+
+    def draw_cell_images(self, rect_cm, cell_data):
+        rect = QRectF(rect_cm)
+        images_list = cell_data.get("images")
+        if not images_list:
+            return ""
+        cell_width = cell_data.get("width")
+        for x in images_list:
+            # print(x)
+            width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
+            png_bytes = base64.b64decode(x['image'])
+            img = QImage()
+            img.loadFromData(png_bytes)
+            rect.setWidth(width)
+            rect.setHeight(height)
+            self.painter.drawImage(rect, img)
+            # width, height, imageIndex = self.prepare_image(x, cell_width)
+
+            # width = round(num(width) * num(12700) * points_in_cm)
+            # height = round(num(height) * num(12700) * points_in_cm)
+
 
     def draw_cell_borders(self, rect_cm, style):
         self.painter.fillRect(rect_cm, QColor(style.get("background", "white")))
@@ -268,6 +290,13 @@ class Q2PrinterPdf(Q2Printer):
         for row in range(len(rows_section["heights"])):
             current_x_cm = self.page_margin_left
             row_height_cm = rows_section["row_height"][row]
+            if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
+                row_height_cm = rows_section["min_row_height"][row]
+            elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
+                row_height_cm = rows_section["max_row_height"][row]
+            else:
+                row_height_cm = rows_section["row_height"][row]
+            
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 if key in spanned_cells_to_skip:
