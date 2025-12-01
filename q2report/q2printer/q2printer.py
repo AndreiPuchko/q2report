@@ -126,8 +126,6 @@ class Q2Printer:
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 cell_data = rows_section.get("cells", {}).get(key, {})
-                if cell_data.get("rowspan", 0) > 1 or cell_data.get("colspan", 0) > 1:
-                    spanned_cells[key] = 0
 
                 if not cell_data:
                     continue
@@ -146,6 +144,10 @@ class Q2Printer:
                         ):
                             if rows_section["row_height"][row] < cell_data["height"]:
                                 rows_section["row_height"][row] = cell_data["height"]
+
+                if cell_data.get("rowspan", 0) > 1 or cell_data.get("colspan", 0) > 1:
+                    spanned_cells[key] = 0
+
                 # TODO: if background image (how to know?) - do not change height
                 for image in cell_data.get("images", []):
                     w, h, i = self.prepare_image(image, cell_data.get("width"))

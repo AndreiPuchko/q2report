@@ -523,7 +523,9 @@ class Q2Report:
         return rows
 
     def load(self, content):
-        if os.path.isfile(content):
+        if isinstance(content, dict):
+            self.report_content = content
+        elif os.path.isfile(content):
             self.report_content = json.load(open(content))
         else:
             if content != "":
