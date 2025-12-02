@@ -319,7 +319,8 @@ class Q2PrinterXlsx(Q2Printer):
         return xf_id
 
     def get_font_id(self, style):
-        font_size = num(str(style["font-size"]).replace("pt", ""))
+        # font_size = num(str(style["font-size"]).replace("pt", ""))
+        font_size = num(str(style["font-size"]).replace("pt", "")) * num(0.93)
         font_family = style["font-family"]
         font_weight = "<b/>" if style.get("font-weight", "") == "bold" else ""
         font_color = f'<color rgb="{css_color_to_rgb(color)}"/>' if (color := style.get("color", "")) else ""
