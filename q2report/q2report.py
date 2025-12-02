@@ -812,8 +812,6 @@ class Q2Report:
         return self.printer.output_file
 
     def render_footer(self, rows_section=None, column_style=None):
-        if len(printer := re.findall("Q2PrinterPdf|Q2PrinterDocx", f"{self.printer}")) == 0:
-            return
         if rows_section is None:
             if self.footer:
                 self.render_rows_section(**self.footer)
@@ -822,7 +820,7 @@ class Q2Report:
                 "rows_section": deepcopy(rows_section),
                 "column_style": deepcopy(column_style),
             }
-            if printer == "Q2PrinterDocx":
+            if "Q2PrinterDocx" in f"{self.printer}":
                 self.render_rows_section(rows_section, column_style)
 
     def get_footer_height(self):
