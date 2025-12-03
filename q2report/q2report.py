@@ -160,7 +160,7 @@ class Q2Report_rows:
         if row == -1:
             row = len(self.rows.get("heights", [])) - 1
             row = 0 if row < 0 else row
-        self.extend_rows(row)
+        self._extend_rows(row)
         cell = deepcopy(Q2Report.default_cell)
         cell["data"] = data
         cell["style"] = self.check_style(style)
@@ -176,7 +176,7 @@ class Q2Report_rows:
         self.rows["cells"][f"{row},{col}"] = cell
 
     def set_row_height(self, row=0, height=0):
-        self.extend_rows(row)
+        self._extend_rows(row)
         self.rows["heights"][row] = height
 
     def set_table_header(self, rows):
@@ -205,7 +205,7 @@ class Q2Report_rows:
         else:
             return {}
 
-    def extend_rows(self, row):
+    def _extend_rows(self, row):
         while row + 1 > len(self.rows["heights"]):
             self.rows["heights"].append("0")
 
@@ -417,18 +417,17 @@ class Q2Report:
             page["style"] = deepcopy(style)
         self.report_content["pages"].append(page)
 
-    def check_page_index(self, page_index):
+    def _check_page_index(self, page_index):
         if page_index is None:
             page_index = len(self.report_content.get("pages", [])) - 1
         if page_index < 0:
-            # self.report_content["pages"] = []
             page_index = 0
         while page_index > len(self.report_content.get("pages", [])) - 1:
             self.add_page()
         return page_index
 
     def add_columns(self, page_index=None, widths=[], style={}):
-        page_index = self.check_page_index(page_index)
+        page_index = self._check_page_index(page_index)
         columns = deepcopy(self.default_columns)
 
         if widths != []:
@@ -438,17 +437,17 @@ class Q2Report:
 
         self.report_content["pages"][page_index]["columns"].append(columns)
 
-    def check_columns_index(self, page_index, columns_index):
+    def _check_columns_index(self, page_index, columns_index):
         if columns_index is None:
             columns_index = len(self.report_content["pages"][page_index]["columns"]) - 1
         if columns_index < 0:
             columns_index = 0
-        page_index = self.check_page_index(page_index)
+        page_index = self._check_page_index(page_index)
         while columns_index > len(self.report_content["pages"][page_index]["columns"]) - 1:
             self.add_columns(page_index)
         return columns_index
 
-    def check_rows_index(self, page_index, columns_index, rows_index):
+    def _check_rows_index(self, page_index, columns_index, rows_index):
         if rows_index is None:
             rows_index = len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
         if rows_index < 0:
@@ -460,13 +459,13 @@ class Q2Report:
         return rows_index
 
     def add_column(self, page_index=None, columns_index=None, width=0):
-        page_index = self.check_page_index(page_index)
-        columns_index = self.check_columns_index(page_index, columns_index)
+        page_index = self._check_page_index(page_index)
+        columns_index = self._check_columns_index(page_index, columns_index)
         self.report_content["pages"][page_index]["columns"][columns_index]["widths"].append(f"{width}")
 
     def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
-        page_index = self.check_page_index(page_index)
-        columns_index = self.check_columns_index(page_index, columns_index)
+        page_index = self._check_page_index(page_index)
+        columns_index = self._check_columns_index(page_index, columns_index)
         if isinstance(rows, Q2Report_rows):
             rows = rows.rows
         else:
@@ -478,31 +477,30 @@ class Q2Report:
         return Q2Report_rows(rows)
 
     def add_row(self, page_index=None, columns_index=None, rows_index=None, height=0):
-        page_index = self.check_page_index(page_index)
-        columns_index = self.check_columns_index(page_index, columns_index)
-        rows_index = self.check_rows_index(page_index, columns_index, rows_index)
+        page_index = self._check_page_index(page_index)
+        columns_index = self._check_columns_index(page_index, columns_index)
+        rows_index = self._check_rows_index(page_index, columns_index, rows_index)
 
         if height is not None:
             self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index][
                 "heights"
             ].append(f"{height}")
 
-    def get_rows(self, page_index=None, columns_index=None, rows_index=None):
-        page_index = self.check_page_index(page_index)
-        columns_index = self.check_columns_index(page_index, columns_index)
-        rows_index = self.check_rows_index(page_index, columns_index, rows_index)
+    def _get_rows(self, page_index=None, columns_index=None, rows_index=None):
+        page_index = self._check_page_index(page_index)
+        columns_index = self._check_columns_index(page_index, columns_index)
+        rows_index = self._check_rows_index(page_index, columns_index, rows_index)
         return Q2Report_rows(
             self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index]
         )
 
     def set_col_width(self, page_index=None, columns_index=None, column=0, width=0):
-        page_index = self.check_page_index(page_index)
-        columns_index = self.check_columns_index(page_index, columns_index)
+        page_index = self._check_page_index(page_index)
+        columns_index = self._check_columns_index(page_index, columns_index)
         columns = self.report_content["pages"][page_index]["columns"][columns_index]
         while column > len(columns["widths"]) - 1:
             self.add_column(page_index, columns_index)
         self.report_content["pages"][page_index]["columns"][columns_index]["widths"][column] = width
-        1 + 1
 
     def set_cell(
         self,
@@ -518,7 +516,7 @@ class Q2Report:
         format=None,
         name=None,
     ):
-        rows = self.get_rows(page_index, columns_index, rows_index)
+        rows = self._get_rows(page_index, columns_index, rows_index)
         rows.set_cell(row, col, data, style, rowspan, colspan, format, name)
         return rows
 
@@ -564,7 +562,7 @@ class Q2Report:
                 _formula = formula_splited[0]
             rez = self.evaluator(_formula)
         if fmt:
-            rez = self.q2_formatter(rez, fmt)
+            rez = self._q2_formatter(rez, fmt)
         return html.escape(rez)
 
     def evaluator(self, formula):
@@ -574,11 +572,11 @@ class Q2Report:
             rez = f"Evaluating error: {formula} - {e}"
         return rez
 
-    def format_cell_text(self, cell):
+    def _format_cell_text(self, cell):
         cell["xlsx_data"] = cell["data"]
-        cell["data"] = self.q2_formatter(cell["data"], cell.get("format", ""))
+        cell["data"] = self._q2_formatter(cell["data"], cell.get("format", ""))
 
-    def q2_formatter(self, text, _fmt):
+    def _q2_formatter(self, text, _fmt):
         cell_value = num(text)
         isNumber = reDecimal.match(text)
         fmt = _fmt
@@ -646,7 +644,7 @@ class Q2Report:
                 rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
                 if rows_section["cells"][cell].get("name"):
                     self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
-                self.format_cell_text(rows_section["cells"][cell])
+                self._format_cell_text(rows_section["cells"][cell])
         if get_section_height is None:
             self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
         else:
@@ -711,7 +709,7 @@ class Q2Report:
                 cell_data = ""
         return cell_data, images_list
 
-    def before_run_check(self):
+    def _before_run_check(self):
         for page_index, page in enumerate(self.report_content.get("pages", [])):
             for columns_index, columns in enumerate(page.get("columns", [])):
                 for row_index, rows_section in enumerate(columns.get("rows", [])):
@@ -749,7 +747,7 @@ class Q2Report:
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
         if data:
             self.data_sets.update(data)
-        self.before_run_check()
+        self._before_run_check()
         self.printer: Q2Printer = get_printer(output_file, output_type)
         self.printer.q2report = self
         report_style = dict(self.report_content.get("style", self.default_style))
@@ -775,10 +773,10 @@ class Q2Report:
                             continue
                         # table rows
                         self.current_data_set_name = rows_section["data_source"]
-                        self.aggregators_reset(rows_section)
+                        self._aggregators_reset(rows_section)
                         # if hasattr(data_set, "len"):
                         self.data["_row_count"] = len(data_set)
-                        self.render_table_header(rows_section, column_style)
+                        self._render_table_header(rows_section, column_style)
 
                         # self.current_data_set += 1
                         self.data_start()
@@ -786,8 +784,8 @@ class Q2Report:
                             self.data["_row_number"] = self.current_data_set_row_number + 1
                             self.data.update(data_row)
 
-                            self.render_table_groups(rows_section, column_style)
-                            self.aggregators_calc()
+                            self._render_table_groups(rows_section, column_style)
+                            self._aggregators_calc()
                             self.outline_level += 1
                             self.render_rows_section(rows_section, column_style)
                             self.outline_level -= 1
@@ -797,21 +795,21 @@ class Q2Report:
                                 break
                         self.data_stop()
 
-                        self.render_table_groups(rows_section, column_style, True)
-                        self.render_table_footer(rows_section, column_style)
+                        self._render_table_groups(rows_section, column_style, True)
+                        self._render_table_footer(rows_section, column_style)
                     if rows_section["role"] == "header":
-                        self.render_header(rows_section, column_style)
+                        self._render_header(rows_section, column_style)
                     elif rows_section["role"] == "footer":
-                        self.render_footer(rows_section, column_style)
+                        self._render_footer(rows_section, column_style)
                     elif rows_section["role"] == "free":  # Free rows
                         self.render_rows_section(rows_section, column_style)
-        self.render_footer()
+        self._render_footer()
         self.printer.save()
         if open_output_file:
             self.printer.show()
         return self.printer.output_file
 
-    def render_footer(self, rows_section=None, column_style=None):
+    def _render_footer(self, rows_section=None, column_style=None):
         if rows_section is None:
             if self.footer:
                 self.render_rows_section(**self.footer)
@@ -823,13 +821,13 @@ class Q2Report:
             if "Q2PrinterDocx" in f"{self.printer}":
                 self.render_rows_section(rows_section, column_style)
 
-    def get_footer_height(self):
+    def _get_footer_height(self):
         if self.footer:
             return self.render_rows_section(**self.footer, get_section_height=True)
         else:
             return 0
 
-    def render_header(self, rows_section=None, column_style=None):
+    def _render_header(self, rows_section=None, column_style=None):
         if rows_section is None:
             if self.header:
                 self.render_rows_section(**self.header)
@@ -840,7 +838,7 @@ class Q2Report:
             }
             self.render_rows_section(rows_section, column_style)
 
-    def render_table_header(self, rows_section=None, column_style=None):
+    def _render_table_header(self, rows_section=None, column_style=None):
         if rows_section is None:
             if self.table_header:
                 self.render_rows_section(**self.table_header)
@@ -851,7 +849,7 @@ class Q2Report:
             }
             self.render_rows_section(rows_section["table_header"], column_style)
 
-    def render_table_groups(self, rows_section, column_style, end_of_table=False):
+    def _render_table_groups(self, rows_section, column_style, end_of_table=False):
         reset_index = None
         for index, group_set in enumerate(rows_section["table_groups"]):
             agg = self.table_group_aggregators[index]
@@ -889,12 +887,12 @@ class Q2Report:
                 self.data["_group_number"] = agg["_group_number"]
                 self.render_rows_section(group_set["group_header"], column_style)
 
-    def render_table_footer(self, rows_section, column_style):
+    def _render_table_footer(self, rows_section, column_style):
         self.table_header = None
         if rows_section.get("table_footer"):
             self.render_rows_section(rows_section["table_footer"], column_style)
 
-    def aggregators_detect(self, rows_section, aggregator):
+    def _aggregators_detect(self, rows_section, aggregator):
         if not rows_section:
             return
         formulas = []
@@ -923,10 +921,10 @@ class Q2Report:
             "n": "",  # cell name
         }
 
-    def aggregators_reset(self, rows_section):
+    def _aggregators_reset(self, rows_section):
         self.table_aggregators = {}
         self.table_group_aggregators = []
-        self.aggregators_detect(rows_section.get("table_footer", {}), self.table_aggregators)
+        self._aggregators_detect(rows_section.get("table_footer", {}), self.table_aggregators)
         if "init_table_groups" not in rows_section:
             rows_section["init_table_groups"] = rows_section["table_groups"][:]
             rows_section["init_table_groups_index"] = {
@@ -951,10 +949,10 @@ class Q2Report:
                 "_group_number": 1,
                 "aggr": {},
             }
-            self.aggregators_detect(group.get("group_footer", {}), aggr["aggr"])
+            self._aggregators_detect(group.get("group_footer", {}), aggr["aggr"])
             self.table_group_aggregators.append(aggr)
 
-    def aggregators_calc(self):
+    def _aggregators_calc(self):
         for y, x in self.table_aggregators.items():
             x["v"] += num(self.evaluator(x["f"]))
 

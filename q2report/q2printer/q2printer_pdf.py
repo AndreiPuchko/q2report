@@ -90,18 +90,18 @@ class Q2PrinterPdf(Q2Printer):
 
     def newPage(self, height_needed):
         """Проверяет, поместится ли элемент, и начинает новую страницу, если нужно."""
-        footer_height = self.q2report.get_footer_height()
+        footer_height = self.q2report._get_footer_height()
         page_end_cm = self.page_height - self.page_margin_bottom
 
         if self.current_y_cm + height_needed + footer_height > page_end_cm:
             # self.painter.end()
             if footer_height:
-                self.q2report.render_footer()
+                self.q2report._render_footer()
             self.printer.newPage()
             self.current_y_cm = self.page_margin_top
             self.q2report.data["_page_number"] += 1
-            self.q2report.render_header()
-            self.q2report.render_table_header()
+            self.q2report._render_header()
+            self.q2report._render_table_header()
             # self.painter.begin(self.printer)
             # self.painter.scale(self.cm_to_points, self.cm_to_points)
 
