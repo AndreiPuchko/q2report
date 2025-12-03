@@ -98,7 +98,7 @@
                   "group_header": {
                     "cells": {
                       "0,0": {
-                        "data": "Header grp___{grp}",
+                        "data": "Head\ner grp___{grp}",
                         "style": {
                           "text-align": "left",
                           "font-weight": "bold",

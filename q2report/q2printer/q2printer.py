@@ -133,6 +133,7 @@ class Q2Printer:
                 else:
                     cell_data["width"] = self._cm_columns_widths[col]
                 if cell_data.get("data"):
+                    cell_data["data"] = cell_data["data"].replace("\n", "<br>")
                     cell_data["height"] = self.get_cell_height(cell_data)
                     if key in spanned_cells:
                         spanned_cells[key] = cell_data["height"]
