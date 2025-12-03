@@ -2,7 +2,7 @@ from q2report.q2report import Q2Report
 import os
 
 
-def demo(type="pdf"):
+def demo(type="pdf", open_output_file = True):
     report = Q2Report()
     report.set_style(report.make_style(border_width="1"))
     report.add_page(page_margin_left=2, page_height=21, page_width=21)
@@ -52,8 +52,7 @@ def demo(type="pdf"):
     # print(report.report_content)
     # report.set_data(b, "a")
 
-    res_file = report.run(f"temp/repo.{type}", open_output_file=1)
-    # os.system(os.path.abspath(res_file))
+    report.run(f"temp/repo.{type}", open_output_file=open_output_file)
 
 
 if __name__ == "__main__":  # pragma: no cover

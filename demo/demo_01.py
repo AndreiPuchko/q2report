@@ -7,7 +7,7 @@ def demo_udf():
     return "demo udf"
 
 
-def demo(type="pdf"):
+def demo(type="pdf", open_output_file=True):
     demo_data = {"cursor": []}
 
     # for x in range(100):
@@ -74,7 +74,7 @@ def demo(type="pdf"):
         report.set_cell(1, 0, "{q2image('%s')}" % image_data, style=report.make_style(padding="0"))
         report.set_cell(3, 1, "%s" % image_data, format="I12.5x3.5", style=report.make_style(padding="0.05"))
         report.set_cell(4, 1, "%s" % image_data, format="I", style=report.make_style(padding="0"))
-        report.set_cell(5, 0, f"{image_data}" , format="I1", style=report.make_style(padding="0"))
+        report.set_cell(5, 0, f"{image_data}", format="I1", style=report.make_style(padding="0"))
         report.set_cell(5, 1, "{'%s':I1.5}" % image_data, style=report.make_style(padding="0"))
 
         if 0:
@@ -209,11 +209,7 @@ def demo(type="pdf"):
     report.params["p1"] = " <b>bold text</b> just text"
     # print(json.dumps(report.report_content, indent=2))
 
-    # res_file = report.run("temp/repo.html", data=demo_data, open_output_file=False)
-    # res_file = report.run("temp/repo.xlsx", data=demo_data, open_output_file=False)
-    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=1)
-
-    # os.system(os.path.abspath(res_file))
+    report.run(f"temp/repo.{type}", data=demo_data, open_output_file=open_output_file)
 
 
 if __name__ == "__main__":  # pragma: no cover

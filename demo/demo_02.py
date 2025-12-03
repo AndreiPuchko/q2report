@@ -2,7 +2,7 @@ from q2report.q2report import Q2Report, Q2Report_rows
 import os
 
 
-def demo(type="pdf"):
+def demo(type="pdf", open_output_file=True):
     image_data = (
         "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBT"
         "UEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAO"
@@ -148,9 +148,7 @@ def demo(type="pdf"):
 
     report.add_rows(rows=table_row)
 
-    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=1)
-
-    # os.system(os.path.abspath(res_file))
+    report.run(f"temp/repo.{type}", data=demo_data, open_output_file=open_output_file)
 
 
 if __name__ == "__main__":  # pragma: no cover

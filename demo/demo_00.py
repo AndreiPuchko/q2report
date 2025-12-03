@@ -6,7 +6,7 @@ import os
 from io import BytesIO
 
 
-def demo(type="pdf"):
+def demo(type="pdf", open_output_file=True):
     demo_data = {"cursor": []}
 
     for x in range(100):
@@ -38,8 +38,7 @@ def demo(type="pdf"):
     report.load("test_data/report_02.json")
     report.params["p1"] = " <b>123</b> "
 
-    res_file = report.run(f"temp/repo.{type}", data=demo_data, open_output_file=1)
-    # os.system(os.path.abspath(res_file))
+    report.run(f"temp/repo.{type}", data=demo_data, open_output_file=open_output_file)
 
 
 if __name__ == "__main__":

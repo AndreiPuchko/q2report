@@ -103,10 +103,10 @@ report_data = {
 }
 
 
-def demo(type="pdf"):
+def demo(type="pdf", open_output_file = True):
     report = Q2Report()
     report.load(report_content)
-    report.run(f"temp/repo.{type}", data=report_data, open_output_file=1)
+    report.run(f"temp/repo.{type}", data=report_data, open_output_file=open_output_file)
 
 
 if __name__ == "__main__":  # pragma: no cover
