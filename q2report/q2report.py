@@ -130,7 +130,7 @@ class Q2Report_rows:
         else:
             self.rows = deepcopy(Q2Report.default_rows)
             self.rows["heights"] = heights
-            self.rows["style"] = Q2Report.check_style(style)
+            self.rows["style"] = Q2Report._check_style(style)
             self.rows["role"] = role
             self.rows["data_source"] = data_source
             self.rows["groupby"] = groupby
@@ -285,6 +285,12 @@ class Q2Report:
     }
 
     def __init__(self, style={}):
+        """
+        Initialize a Q2Report instance.
+
+        Args:
+            style (dict, optional): Initial style for the report. Defaults to {}.
+        """
         self.report_content = {}
         if style:
             self.set_style(style)
@@ -310,13 +316,29 @@ class Q2Report:
         self.d = D(self)
 
     def set_data(self, data, name=None):
+        """
+        Set a data object to the report.
+
+        Args:
+            data: The data object to set.
+            name (str, optional): Name for the data object. If not provided, uses data.__name__ if available.
+        """
         if hasattr(data, "__name__") and name is None:
             self.data[data.__name__] = data
         elif isinstance(name, str):
             self.data[name] = data
 
     @staticmethod
-    def check_style(style):
+    def _check_style(style):
+        """
+        Validate and filter a style dictionary to include only supported style keys.
+
+        Args:
+            style (dict): Style dictionary.
+
+        Returns:
+            dict: Filtered style dictionary.
+        """
         if isinstance(style, dict):
             return {x: style[x] for x in style if x in Q2Report.default_style}
         else:
@@ -333,19 +355,21 @@ class Q2Report:
         vertical_align=None,
         alignment=None,
     ):
-        """_summary_
+        """
+        Create a style dictionary from provided style parameters.
 
         Args:
-            font_family (str, optional): e.g. "Arial". Defaults to None.
-            font_size (str, int, float, optional): font size in pt, e.g. 12, 12.5, "12.5" . Defaults to None.
-            font_weight str, optional): "bold" or "". Defaults to None.
-            border_width (_type_, optional): _description_. Defaults to None.
-            padding (_type_, optional): _description_. Defaults to None.
-            text_align (_type_, optional): _description_. Defaults to None.
-            vertical_align (_type_, optional): _description_. Defaults to None.
+            font_family (str, optional): Font family.
+            font_size (str/int/float, optional): Font size.
+            font_weight (str, optional): Font weight.
+            border_width (str, optional): Border width.
+            padding (str, optional): Padding.
+            text_align (str, optional): Text alignment.
+            vertical_align (str, optional): Vertical alignment.
+            alignment (int, optional): Alignment code.
 
         Returns:
-            dict: _description_
+            dict: Style dictionary.
         """
         style = {}
         if font_family:
@@ -381,11 +405,17 @@ class Q2Report:
         return style
 
     def set_style(self, style=None):
+        """
+        Update the report's style.
+
+        Args:
+            style (dict, optional): Style dictionary to update.
+        """
         if style is None or not isinstance(style, dict):
             return
         if "style" not in self.report_content:
             self.report_content["style"] = deepcopy(self.default_style)
-        self.report_content["style"].update(self.check_style(style))
+        self.report_content["style"].update(self._check_style(style))
 
     def add_page(
         self,
@@ -397,6 +427,18 @@ class Q2Report:
         page_margin_bottom=None,
         style={},
     ):
+        """
+        Add a new page to the report.
+
+        Args:
+            page_width (float, optional): Page width.
+            page_height (float, optional): Page height.
+            page_margin_left (float, optional): Left margin.
+            page_margin_right (float, optional): Right margin.
+            page_margin_top (float, optional): Top margin.
+            page_margin_bottom (float, optional): Bottom margin.
+            style (dict, optional): Page style.
+        """
         if "pages" not in self.report_content:
             self.report_content["pages"] = []
 
@@ -418,6 +460,15 @@ class Q2Report:
         self.report_content["pages"].append(page)
 
     def _check_page_index(self, page_index):
+        """
+        Ensure the page index is valid and exists.
+
+        Args:
+            page_index (int): Page index.
+
+        Returns:
+            int: Valid page index.
+        """
         if page_index is None:
             page_index = len(self.report_content.get("pages", [])) - 1
         if page_index < 0:
@@ -427,6 +478,14 @@ class Q2Report:
         return page_index
 
     def add_columns(self, page_index=None, widths=[], style={}):
+        """
+        Add a columns section to a page.
+
+        Args:
+            page_index (int, optional): Page index.
+            widths (list, optional): List of column widths.
+            style (dict, optional): Columns style.
+        """
         page_index = self._check_page_index(page_index)
         columns = deepcopy(self.default_columns)
 
@@ -438,6 +497,16 @@ class Q2Report:
         self.report_content["pages"][page_index]["columns"].append(columns)
 
     def _check_columns_index(self, page_index, columns_index):
+        """
+        Ensure the columns index is valid and exists.
+
+        Args:
+            page_index (int): Page index.
+            columns_index (int): Columns index.
+
+        Returns:
+            int: Valid columns index.
+        """
         if columns_index is None:
             columns_index = len(self.report_content["pages"][page_index]["columns"]) - 1
         if columns_index < 0:
@@ -448,6 +517,17 @@ class Q2Report:
         return columns_index
 
     def _check_rows_index(self, page_index, columns_index, rows_index):
+        """
+        Ensure the rows index is valid and exists.
+
+        Args:
+            page_index (int): Page index.
+            columns_index (int): Columns index.
+            rows_index (int): Rows index.
+
+        Returns:
+            int: Valid rows index.
+        """
         if rows_index is None:
             rows_index = len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
         if rows_index < 0:
@@ -459,11 +539,32 @@ class Q2Report:
         return rows_index
 
     def add_column(self, page_index=None, columns_index=None, width=0):
+        """
+        Add a single column width to a columns section.
+
+        Args:
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            width (float, optional): Column width.
+        """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
         self.report_content["pages"][page_index]["columns"][columns_index]["widths"].append(f"{width}")
 
     def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
+        """
+        Add a rows section to columns.
+
+        Args:
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            heights (list, optional): List of row heights.
+            style (dict, optional): Rows style.
+            rows (Q2Report_rows, optional): Rows object.
+
+        Returns:
+            Q2Report_rows: The added rows section.
+        """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
         if isinstance(rows, Q2Report_rows):
@@ -472,11 +573,20 @@ class Q2Report:
             rows = deepcopy(self.default_rows)
             if heights and isinstance(heights, list):
                 rows["heights"] = list(heights)
-            rows["style"].update(self.check_style(style))
+            rows["style"].update(self._check_style(style))
         self.report_content["pages"][page_index]["columns"][columns_index]["rows"].append(rows)
         return Q2Report_rows(rows)
 
     def add_row(self, page_index=None, columns_index=None, rows_index=None, height=0):
+        """
+        Add a single row height to a rows section.
+
+        Args:
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            rows_index (int, optional): Rows index.
+            height (float, optional): Row height.
+        """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
         rows_index = self._check_rows_index(page_index, columns_index, rows_index)
@@ -487,6 +597,17 @@ class Q2Report:
             ].append(f"{height}")
 
     def _get_rows(self, page_index=None, columns_index=None, rows_index=None):
+        """
+        Get a Q2Report_rows object for the specified location.
+
+        Args:
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            rows_index (int, optional): Rows index.
+
+        Returns:
+            Q2Report_rows: Rows object.
+        """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
         rows_index = self._check_rows_index(page_index, columns_index, rows_index)
@@ -495,6 +616,15 @@ class Q2Report:
         )
 
     def set_col_width(self, page_index=None, columns_index=None, column=0, width=0):
+        """
+        Set the width of a specific column.
+
+        Args:
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            column (int, optional): Column index.
+            width (float, optional): Column width.
+        """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
         columns = self.report_content["pages"][page_index]["columns"][columns_index]
@@ -516,11 +646,36 @@ class Q2Report:
         format=None,
         name=None,
     ):
+        """
+        Set the data and properties of a cell in the report.
+
+        Args:
+            row (int): Row index.
+            col (int): Column index.
+            data: Cell data.
+            page_index (int, optional): Page index.
+            columns_index (int, optional): Columns index.
+            rows_index (int, optional): Rows index.
+            style (dict, optional): Cell style.
+            rowspan (int, optional): Row span.
+            colspan (int, optional): Column span.
+            format (str, optional): Cell format.
+            name (str, optional): Cell name.
+
+        Returns:
+            Q2Report_rows: Rows object containing the cell.
+        """
         rows = self._get_rows(page_index, columns_index, rows_index)
         rows.set_cell(row, col, data, style, rowspan, colspan, format, name)
         return rows
 
     def load(self, content):
+        """
+        Load report content from a dictionary, file, or JSON string.
+
+        Args:
+            content (dict or str): Content to load.
+        """
         if isinstance(content, dict):
             self.report_content = content
         elif os.path.isfile(content):
@@ -531,15 +686,36 @@ class Q2Report:
         self.params = self.report_content.get("params", {})
 
     def data_start(self):
+        """
+        Initialize data set row number for iteration.
+        """
         self.current_data_set_row_number = 0
 
     def data_step(self):
+        """
+        Increment the current data set row number.
+
+        Returns:
+            int: The new row number.
+        """
         self.current_data_set_row_number += 1
 
     def data_stop(self):
+        """
+        Reset the current data set name.
+        """
         self.current_data_set_name = ""
 
     def formulator(self, formula):
+        """
+        Evaluate a formula string and format the result.
+
+        Args:
+            formula (str): Formula string.
+
+        Returns:
+            str: Formatted result.
+        """
         _formula = formula[0][1:-1]
         if self.use_prevrowdata:
             data = self.prevrowdata
@@ -566,6 +742,15 @@ class Q2Report:
         return html.escape(rez)
 
     def evaluator(self, formula):
+        """
+        Evaluate a formula using the report's data context.
+
+        Args:
+            formula (str): Formula string.
+
+        Returns:
+            str: Evaluation result.
+        """
         try:
             rez = str(eval(formula, self.mydata))
         except BaseException as e:
@@ -573,10 +758,26 @@ class Q2Report:
         return rez
 
     def _format_cell_text(self, cell):
+        """
+        Format the text of a cell and update its data.
+
+        Args:
+            cell (dict): Cell dictionary.
+        """
         cell["xlsx_data"] = cell["data"]
         cell["data"] = self._q2_formatter(cell["data"], cell.get("format", ""))
 
     def _q2_formatter(self, text, _fmt):
+        """
+        Format a value according to the specified format string.
+
+        Args:
+            text (str): Value to format.
+            _fmt (str): Format string.
+
+        Returns:
+            str: Formatted value.
+        """
         cell_value = num(text)
         isNumber = reDecimal.match(text)
         fmt = _fmt
@@ -612,6 +813,18 @@ class Q2Report:
         return text
 
     def render_rows_section(self, rows_section, column_style, aggregator=None, get_section_height=None):
+        """
+        Render a section of rows using the printer.
+
+        Args:
+            rows_section (dict): Rows section to render.
+            column_style (dict): Style for the columns.
+            aggregator (dict, optional): Aggregator data.
+            get_section_height (bool, optional): If True, return section height.
+
+        Returns:
+            int or None: Section height if requested, otherwise None.
+        """
         if aggregator is None:
             self.use_prevrowdata = False
             self.data.update({x: self.table_aggregators[x]["v"] for x in self.table_aggregators})
@@ -652,6 +865,16 @@ class Q2Report:
             return rows_section["section_height"]
 
     def extract_images(self, cell_data, cell_format):
+        """
+        Extract images from cell data and format.
+
+        Args:
+            cell_data (str): Cell data string.
+            cell_format (str): Cell format string.
+
+        Returns:
+            tuple: (cell_data, images_list)
+        """
         images_list = []
 
         def extract_fmt(fmt_string, image_data):
@@ -710,6 +933,9 @@ class Q2Report:
         return cell_data, images_list
 
     def _before_run_check(self):
+        """
+        Perform checks and adjustments before running the report.
+        """
         for page_index, page in enumerate(self.report_content.get("pages", [])):
             for columns_index, columns in enumerate(page.get("columns", [])):
                 for row_index, rows_section in enumerate(columns.get("rows", [])):
@@ -745,6 +971,18 @@ class Q2Report:
                         self.add_row(page_index, columns_index, rows_index=row_index)
 
     def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
+        """
+        Generate and output the report.
+
+        Args:
+            output_file (str, optional): Output file path.
+            output_type (str, optional): Output type.
+            data (dict, optional): Data sets for the report.
+            open_output_file (bool, optional): Whether to open the output file after generation.
+
+        Returns:
+            str: Path to the output file.
+        """
         if data:
             self.data_sets.update(data)
         self._before_run_check()
@@ -810,6 +1048,13 @@ class Q2Report:
         return self.printer.output_file
 
     def _render_footer(self, rows_section=None, column_style=None):
+        """
+        Render the footer section of the report.
+
+        Args:
+            rows_section (dict, optional): Footer rows section.
+            column_style (dict, optional): Footer column style.
+        """
         if rows_section is None:
             if self.footer:
                 self.render_rows_section(**self.footer)
@@ -822,12 +1067,25 @@ class Q2Report:
                 self.render_rows_section(rows_section, column_style)
 
     def _get_footer_height(self):
+        """
+        Get the height of the footer section.
+
+        Returns:
+            int: Footer section height.
+        """
         if self.footer:
             return self.render_rows_section(**self.footer, get_section_height=True)
         else:
             return 0
 
     def _render_header(self, rows_section=None, column_style=None):
+        """
+        Render the header section of the report.
+
+        Args:
+            rows_section (dict, optional): Header rows section.
+            column_style (dict, optional): Header column style.
+        """
         if rows_section is None:
             if self.header:
                 self.render_rows_section(**self.header)
@@ -839,6 +1097,13 @@ class Q2Report:
             self.render_rows_section(rows_section, column_style)
 
     def _render_table_header(self, rows_section=None, column_style=None):
+        """
+        Render the table header section.
+
+        Args:
+            rows_section (dict, optional): Table header rows section.
+            column_style (dict, optional): Table header column style.
+        """
         if rows_section is None:
             if self.table_header:
                 self.render_rows_section(**self.table_header)
@@ -850,6 +1115,14 @@ class Q2Report:
             self.render_rows_section(rows_section["table_header"], column_style)
 
     def _render_table_groups(self, rows_section, column_style, end_of_table=False):
+        """
+        Render table group headers and footers as needed.
+
+        Args:
+            rows_section (dict): Rows section.
+            column_style (dict): Column style.
+            end_of_table (bool, optional): If True, render group footers at end of table.
+        """
         reset_index = None
         for index, group_set in enumerate(rows_section["table_groups"]):
             agg = self.table_group_aggregators[index]
@@ -888,11 +1161,25 @@ class Q2Report:
                 self.render_rows_section(group_set["group_header"], column_style)
 
     def _render_table_footer(self, rows_section, column_style):
+        """
+        Render the table footer section.
+
+        Args:
+            rows_section (dict): Rows section.
+            column_style (dict): Column style.
+        """
         self.table_header = None
         if rows_section.get("table_footer"):
             self.render_rows_section(rows_section["table_footer"], column_style)
 
     def _aggregators_detect(self, rows_section, aggregator):
+        """
+        Detect and set up aggregators for a rows section.
+
+        Args:
+            rows_section (dict): Rows section.
+            aggregator (dict): Aggregator dictionary to populate.
+        """
         if not rows_section:
             return
         formulas = []
@@ -922,6 +1209,12 @@ class Q2Report:
         }
 
     def _aggregators_reset(self, rows_section):
+        """
+        Reset and initialize aggregators for the table and groups.
+
+        Args:
+            rows_section (dict): Rows section.
+        """
         self.table_aggregators = {}
         self.table_group_aggregators = []
         self._aggregators_detect(rows_section.get("table_footer", {}), self.table_aggregators)
@@ -953,6 +1246,9 @@ class Q2Report:
             self.table_group_aggregators.append(aggr)
 
     def _aggregators_calc(self):
+        """
+        Calculate and update aggregator values for the current row.
+        """
         for y, x in self.table_aggregators.items():
             x["v"] += num(self.evaluator(x["f"]))
 

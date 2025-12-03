@@ -17,7 +17,6 @@ import os
 from q2report.q2utils import num
 import sys
 import subprocess
-import re
 from .calc_height import estimate_cell_height_cm
 
 try:

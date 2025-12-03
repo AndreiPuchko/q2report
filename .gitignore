@@ -6,3 +6,4 @@ dist/*
 *.docx
 *.xlsx
 *.html
+.coverage
