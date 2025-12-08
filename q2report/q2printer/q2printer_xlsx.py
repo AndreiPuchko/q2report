@@ -201,8 +201,8 @@ class Q2PrinterXlsx(Q2Printer):
         sheet_row = {}
         for row in range(row_count):  # вывод - по строкам
             height = rows_section["row_height"][row]
-            if row in rows_section["auto_height_rows"]:
-                height = 0
+            # if row in rows_section["auto_height_rows"]:
+            #     height = 0
 
             sheet_row["height"] = height * points_in_cm
 

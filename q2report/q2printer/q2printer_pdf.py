@@ -45,7 +45,7 @@ class Q2PrinterPdf(Q2Printer):
         self.textDoc = QTextDocument()
         self.base_font = QFont("Calibri", 10)
         self.textDoc.setDefaultFont(self.base_font)
-        self.textDoc.setDocumentMargin(0)
+        self.textDoc.setDocumentMargin(1)
 
         self.defaultTextOption = QTextOption()
         self.defaultTextOption.setWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)

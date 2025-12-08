@@ -108,7 +108,6 @@ class Q2PrinterDocx(Q2Printer):
         page_margin_right=1,
         page_margin_bottom=1,
     ):
-
         self.close_docx_page()
 
         super().reset_page(
@@ -277,7 +276,7 @@ class Q2PrinterDocx(Q2Printer):
                         merge_str = f'<w:gridSpan w:val="{col_span}"/>'
                     for tmp_span_row in range(int_(row_span)):
                         for tmp_span_col in range(int_(col_span)):
-                            span_key = f"{tmp_span_row+row},{tmp_span_col+col}"
+                            span_key = f"{tmp_span_row + row},{tmp_span_col + col}"
                             if tmp_span_row + row != row and tmp_span_col + col == col:
                                 spanned_cells_first_column_cell[span_key] = (
                                     f'{merge_str} <w:vMerge w:val="continue"/>'
@@ -335,11 +334,18 @@ class Q2PrinterDocx(Q2Printer):
         height = rows_section["row_height"][row]
         if row in rows_section["auto_height_rows"]:
             height = 0
-        if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
-            row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(rows_section["min_row_height"][row]*twip_in_cm)}" w:hRule="atLeast"/>'
-        elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
-            row_xml += f'\n\t\t\t<w:trHeight w:val="{int(rows_section["max_row_height"][row]*twip_in_cm)}" w:hRule="exact"/>'
-        elif rows_section["row_height"][row] == 0 and row in rows_section["hidden_rows"]:
+        min_row_height = rows_section["min_row_height"][row]
+        max_row_height = rows_section["max_row_height"][row]
+        if min_row_height != 0 and max_row_height == 0:
+            row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(min_row_height * twip_in_cm)}" w:hRule="atLeast"/>'
+        elif min_row_height == 0 and max_row_height != 0:
+            if height == 0:
+                row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+            elif height >= max_row_height:
+                row_xml += f'\n\t\t\t<w:trHeight w:val="{int(max_row_height * twip_in_cm)}" w:hRule="exact"/>'
+            else:
+                row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="atLeast"/>'
+        elif height == 0 and row in rows_section["hidden_rows"]:
             row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
         ##################################################
         row_xml += "\n\t\t</w:trPr>"
@@ -435,7 +441,7 @@ class Q2PrinterDocx(Q2Printer):
 
                 para_text.append(
                     f"""<w:r>
-                            <w:rPr>{''.join(docx_rPr)}</w:rPr>
+                            <w:rPr>{"".join(docx_rPr)}</w:rPr>
                             <w:t xml:space="preserve">{text_content}</w:t>
                         </w:r>"""
                 )
@@ -492,7 +498,7 @@ class Q2PrinterDocx(Q2Printer):
         for index, side in enumerate(("top", "right", "bottom", "left")):
             if int_(border_width[index]):
                 borders.append(f'\t\t\t<w:{side} w:val="single" w:color="{border_color}" w:space="0"')
-                borders.append(f'\t\t\t\tw:sz="{int_(border_width[index])*10}"/>')
+                borders.append(f'\t\t\t\tw:sz="{int_(border_width[index]) * 10}"/>')
         borders.append("</w:tcBorders>\n")
         return "\n".join(borders)
 
@@ -503,6 +509,6 @@ class Q2PrinterDocx(Q2Printer):
         margins = []
         margins.append("\n\t<w:tcMar>")
         for index, side in enumerate(("top", "right", "bottom", "left")):
-            margins.append(f'\n\t\t<w:{side} w:w="{int(num(padding[index])*twip_in_cm)}" w:type="dxa"/>')
+            margins.append(f'\n\t\t<w:{side} w:w="{int(num(padding[index]) * twip_in_cm)}" w:type="dxa"/>')
         margins.append("\n\t</w:tcMar>\n")
         return "".join(margins)

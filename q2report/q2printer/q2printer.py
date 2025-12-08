@@ -21,11 +21,15 @@ from .calc_height import estimate_cell_height_cm
 
 try:
     from PyQt6.QtGui import QTextDocument
+    from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication
 
     pyqt6_installed = True
 except Exception:
     pyqt6_installed = False
+
+
+cm = num(96 / num(2.54))
 
 
 def get_printer(output_file, output_type=None):
@@ -91,16 +95,29 @@ class Q2Printer:
             while len(padding) < 4:
                 padding += padding
 
-            cm = num(96 / num(2.54))
-            text_doc = QTextDocument()
-
-            text_doc.setTextWidth((num(cell_data["width"]) - num(padding[1]) - num(padding[3])) * cm)
-
             style = cell_data["style"]
+            text_doc = QTextDocument()
+            text_doc.setDefaultFont(
+                QFont(
+                    style.get("font-family", "Arial"), int(num(style.get("font-size", "0").replace("pt", "")))
+                )
+            )
+            text_doc.setDocumentMargin(0)
+            frame_format = text_doc.rootFrame().format().toFrameFormat()
+            frame_format.setTopMargin(float(num(padding[0]) * cm))
+            frame_format.setRightMargin(float(num(padding[2]) * cm))
+            frame_format.setBottomMargin(float(num(padding[3]) * cm))
+            frame_format.setLeftMargin(float(num(padding[3]) * cm))
+            text_doc.rootFrame().setFormat(frame_format)
+
+            text_doc.setTextWidth(
+                float(num(cell_data["width"] - num(padding[1]) - num(padding[3])) * num(cm))
+            )
+
             style = "p {%s}" % ";".join([f"{x}:{style[x]}" for x in style])
             text_doc.setDefaultStyleSheet(style)
             text_doc.setHtml("<p>%s</p>" % cell_data["data"])
-            height = round(num(text_doc.size().height()) / cm, 2)
+            height = round((num(text_doc.size().height()) / cm) + num(padding[0]) + num(padding[2]), 2)
             return height
         else:
             return num(estimate_cell_height_cm(cell_data))
@@ -114,13 +131,13 @@ class Q2Printer:
         rows_section["auto_height_rows"] = []
         for row in range(row_count):
             spltd_heights = str(rows_section["heights"][row]).split("-")
-            rows_section["min_row_height"].append(num(spltd_heights[0]))
-            rows_section["max_row_height"].append(num(spltd_heights[1]) if len(spltd_heights) == 2 else 0)
-            if rows_section["min_row_height"] == 0 and rows_section["max_row_height"] == 0:
+            min_row_height = num(spltd_heights[0])
+            max_row_height = num(spltd_heights[1]) if len(spltd_heights) == 2 else 0
+            rows_section["min_row_height"].append(min_row_height)
+            rows_section["max_row_height"].append(max_row_height)
+            if min_row_height == 0 and max_row_height == 0:
                 rows_section["auto_height_rows"].append(row)
-            rows_section["row_height"].append(
-                max(rows_section["max_row_height"][-1], rows_section["min_row_height"][-1])
-            )
+            rows_section["row_height"].append(0)
 
             for col in range(self._columns_count):
                 key = f"{row},{col}"
@@ -135,13 +152,13 @@ class Q2Printer:
                 if cell_data.get("data"):
                     cell_data["data"] = cell_data["data"].replace("\n", "<br>")
                     cell_data["height"] = self.get_cell_height(cell_data)
+                    rows_section["row_height"][row] = max(
+                        cell_data["height"], rows_section["row_height"][row]
+                    )
                     if key in spanned_cells:
                         spanned_cells[key] = cell_data["height"]
                     else:
-                        if (
-                            rows_section["min_row_height"][row] == 0
-                            and rows_section["max_row_height"][row] == 0
-                        ):
+                        if min_row_height == 0 and max_row_height == 0:
                             if rows_section["row_height"][row] < cell_data["height"]:
                                 rows_section["row_height"][row] = cell_data["height"]
 
@@ -155,21 +172,17 @@ class Q2Printer:
                         image["height"] = max(image["height"], rows_section["row_height"][row])
                     if rows_section["row_height"][row] < h:
                         rows_section["row_height"][row] = h
-            if (
-                rows_section["min_row_height"][row] != 0
-                and rows_section["row_height"][row] < rows_section["min_row_height"][row]
-            ):
-                rows_section["row_height"][row] = rows_section["min_row_height"][row]
-            if (
-                rows_section["max_row_height"][row] != 0
-                and rows_section["row_height"][row] > rows_section["max_row_height"][row]
-            ):
-                rows_section["row_height"][row] = rows_section["max_row_height"][row]
+            if min_row_height != 0 and rows_section["row_height"][row] < min_row_height:
+                rows_section["row_height"][row] = min_row_height
+            if max_row_height != 0 and rows_section["row_height"][row] > max_row_height:
+                rows_section["row_height"][row] = max_row_height
             ##################
-            if rows_section["min_row_height"][row] != 0 and rows_section["max_row_height"][row] == 0:
-                rows_section["row_height"][row] = rows_section["min_row_height"][row]
-            elif rows_section["min_row_height"][row] == 0 and rows_section["max_row_height"][row] != 0:
-                rows_section["row_height"][row] = rows_section["max_row_height"][row]
+            if min_row_height != 0 and max_row_height == 0:
+                rows_section["row_height"][row] = min_row_height
+            elif min_row_height == 0 and max_row_height != 0:
+                rows_section["row_height"][row] = min(max_row_height, rows_section["row_height"][row])
+            elif min_row_height and min_row_height == max_row_height:
+                rows_section["row_height"][row] = max_row_height
             ##################
         # calculating height for spanned cells
         rows_section["hidden_rows"] = {i for i, h in enumerate(rows_section["row_height"]) if h == 0}
