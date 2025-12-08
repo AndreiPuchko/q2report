@@ -97,18 +97,21 @@ class Q2Printer:
 
             style = cell_data["style"]
             text_doc = QTextDocument()
+            font_size = style.get("font-size", "0")
+            if isinstance(font_size, str):
+                font_size = num(font_size.replace("pt", ""))
             text_doc.setDefaultFont(
                 QFont(
-                    style.get("font-family", "Arial"), int(num(style.get("font-size", "0").replace("pt", "")))
+                    style.get("font-family", "Arial"), int(font_size)
                 )
             )
             text_doc.setDocumentMargin(0)
-            frame_format = text_doc.rootFrame().format().toFrameFormat()
-            frame_format.setTopMargin(float(num(padding[0]) * cm))
-            frame_format.setRightMargin(float(num(padding[2]) * cm))
-            frame_format.setBottomMargin(float(num(padding[3]) * cm))
-            frame_format.setLeftMargin(float(num(padding[3]) * cm))
-            text_doc.rootFrame().setFormat(frame_format)
+            # frame_format = text_doc.rootFrame().format().toFrameFormat()
+            # frame_format.setTopMargin(float(num(padding[0]) * cm))
+            # frame_format.setRightMargin(float(num(padding[2]) * cm))
+            # frame_format.setBottomMargin(float(num(padding[3]) * cm))
+            # frame_format.setLeftMargin(float(num(padding[3]) * cm))
+            # text_doc.rootFrame().setFormat(frame_format)
 
             text_doc.setTextWidth(
                 float(num(cell_data["width"] - num(padding[1]) - num(padding[3])) * num(cm))
