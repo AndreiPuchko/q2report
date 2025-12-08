@@ -37,10 +37,10 @@ class Q2PrinterHtml(Q2Printer):
         )
         html += "".join([f"\n.{self.style[x]} {x}" for x in self.style])
         html += "@media print {body {print-color-adjust: exact;}}"
-        html += "\n\t\t</style>" "\n\t</head>" "\n\t<body>\n\n"
+        html += "\n\t\t</style>\n\t</head>\n\t<body>\n\n"
 
         html += "\n".join(self.html)
-        html += "\n\n\t</body>" "\n</html>"
+        html += "\n\n\t</body>\n</html>"
         if isinstance(self.output_file, str):
             with open(self.output_file, "w", encoding="utf8") as f:
                 f.write(html)
@@ -70,7 +70,7 @@ class Q2PrinterHtml(Q2Printer):
         self.html.append('<table style="border-collapse:collapse;">')
         self.html.append("<colgroup>")
         for col in self._cm_columns_widths:
-            self.html.append(f'\t<col span="1" style="width: {col*10}mm;">')
+            self.html.append(f'\t<col span="1" style="width: {col * 10}mm;">')
         self.html.append("</colgroup>")
 
     def close_html_table(self):
@@ -78,6 +78,13 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("</table>")
 
     def get_style_index(self, style):
+        style["padding"] = " ".join(
+            [
+                x if x.strip().endswith("cm") else f"{x}cm"
+                for x in style.get("padding", "").split(" ")
+                if x.strip()
+            ]
+        )
         style_text = "; ".join([f"{x}:{style[x]}" for x in style])
         style_text = "{" + "border: solid;" + style_text + "}"
         if style_text not in self.style:
@@ -120,7 +127,7 @@ class Q2PrinterHtml(Q2Printer):
                     span_text = f' colspan="{col_span}" rowspan="{row_span}"'
                     for span_row in range(int_(row_span)):
                         for span_col in range(int_(col_span)):
-                            spanned_cells.append(f"{span_row+row},{span_col+col}")
+                            spanned_cells.append(f"{span_row + row},{span_col + col}")
                 else:
                     span_text = " "
                 self.html.append(f'\t\t<td class="{style_index}" {span_text}>{cell_text}</td>')
