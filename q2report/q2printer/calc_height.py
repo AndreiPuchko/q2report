@@ -11,7 +11,7 @@ FONT_SIZE_ADJUST = {
 
 def parse_padding(padding_str):
     # Converts "0.05cm 0.05cm 0.05cm 0.05cm" → [top, right, bottom, left]
-    sizes = [float(x.replace("cm", "")) for x in padding_str.strip().split()]
+    sizes = [float(x.replace("cm", "")) for x in f"{padding_str}".strip().split()]
     if len(sizes) == 1:
         return [sizes[0]] * 4
     elif len(sizes) == 2:

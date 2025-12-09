@@ -15,6 +15,8 @@
 
 from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2utils import int_
+from q2report.q2printer.calc_height import parse_padding
+
 import webbrowser
 import os
 
@@ -78,13 +80,7 @@ class Q2PrinterHtml(Q2Printer):
             self.html.append("</table>")
 
     def get_style_index(self, style):
-        style["padding"] = " ".join(
-            [
-                x if x.strip().endswith("cm") else f"{x}cm"
-                for x in style.get("padding", "").split(" ")
-                if x.strip()
-            ]
-        )
+        style["padding"] = " ".join([f"{x}cm" for x in parse_padding(style.get("padding", ""))])
         style_text = "; ".join([f"{x}:{style[x]}" for x in style])
         style_text = "{" + "border: solid;" + style_text + "}"
         if style_text not in self.style:
@@ -118,7 +114,9 @@ class Q2PrinterHtml(Q2Printer):
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = cell_data.get("style", {})
-                cell_text = self.render_cell_images(cell_data)
+                cell_text = self.render_cell_images(
+                    cell_data, self._cm_columns_widths[col], rows_section["row_height"][row], cell_style
+                )
                 if cell_style:
                     style_index = self.get_style_index(cell_style)
                 else:
@@ -130,29 +128,38 @@ class Q2PrinterHtml(Q2Printer):
                             spanned_cells.append(f"{span_row + row},{span_col + col}")
                 else:
                     span_text = " "
-                self.html.append(f'\t\t<td class="{style_index}" {span_text}>{cell_text}</td>')
+                self.html.append(f'\t\t<td style="position: relative;" class="{style_index}" {span_text}>{cell_text}</td>')
             self.html.append("\t</tr>")
         if rows_section["role"] == "table_header":
             self.html.append("\t</thead>")
         # if rows["role"] == "table_footer":
         #     self.html.append("<thead></thead>")
 
-    def render_cell_images(self, cell_data):
+    def render_cell_images(self, cell_data, cell_width, cell_height, style):
         # cell_text = cell_data.get("data", "&nbsp;")
         cell_text = cell_data.get("data", "")
-        if cell_data.get("images"):
-            for x in cell_data.get("images"):
-                image = x["image"]
-                width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
-                cell_text = f"""
-                                    <div style="background-image:url(data:image/jpeg;base64,{image});
-                                                background-repeat:no-repeat;
-                                                background-size: {width}cm {height}cm;
-                                                width:{width}cm;
-                                                height:{height}cm;
-                                    ">
-                                    {cell_text}
-                                    </div>"""
+        for x in cell_data.get("images", []):
+            image = x["image"]
+            image_width, image_height, _ = self.prepare_image(x, cell_data.get("width"))
+            image_width, image_height = float(image_width), float(image_height)
+            offset_left, offset_top = self.get_image_offset(
+                float(cell_width), float(cell_height), image_width, image_height, style
+            )
+
+            cell_text = f"""
+                                <div style="
+                                            position: absolute;
+                                            top:{offset_top}cm;
+                                            left:{offset_left}cm;
+                                            width:{image_width}cm;
+                                            height:{image_height}cm;
+                                            
+                                            background-image:url(data:image/jpeg;base64,{image});
+                                            background-size: cover;
+                                            
+                                ">
+                                {cell_text}
+                                </div>"""
         return cell_text
 
     def show(self):

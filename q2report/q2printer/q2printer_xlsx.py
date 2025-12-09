@@ -17,6 +17,7 @@ from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.xlsx_parts import xlsx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete, reDecimal, reNumber
 from .rich_text_parser import RichTextParser, css_color_to_rgb
+from q2report.q2printer.calc_height import parse_padding
 
 import zipfile
 import re
@@ -121,12 +122,12 @@ class Q2PrinterXlsx(Q2Printer):
 
             sheet_data = ""
             for z in range(len(self.xlsx_sheets[x]["sheetData"])):
-                sheet_data += f'\t<row r="{z+1}" '
+                sheet_data += f'\t<row r="{z + 1}" '
                 sheet_data += f'\t customHeight="1" ht="{self.xlsx_sheets[x]["sheetData"][z]["height"]}" '
                 sheet_data += f"""\n\t{"hidden='true'" if self.xlsx_sheets[x]["sheetData"][z]["height"] == 0 else "hidden='false'"} """
                 sheet_data += f'\n\toutlineLevel="{self.xlsx_sheets[x]["sheetData"][z]["outline_level"]}" '
                 sheet_data += ' collapsed="false" >'
-                sheet_data += f'{"".join(self.xlsx_sheets[x]["sheetData"][z]["cells"])}'
+                sheet_data += f"{''.join(self.xlsx_sheets[x]['sheetData'][z]['cells'])}"
                 sheet_data += "</row>"
 
             merges = "".join(self.xlsx_sheets[x]["spans"])
@@ -168,7 +169,7 @@ class Q2PrinterXlsx(Q2Printer):
         cols = ["<cols>"]
         for col_index, col in enumerate(self._cm_columns_widths):
             cols.append(
-                f'\n\t<col min="{col_index+1}" max="{col_index+1}" '
+                f'\n\t<col min="{col_index + 1}" max="{col_index + 1}" '
                 f' width="{col * num(5.105)}" bestFit="0" customWidth="1"/>'
             )
         cols.append("\n</cols>")
@@ -176,15 +177,15 @@ class Q2PrinterXlsx(Q2Printer):
 
         self.current_sheet["page"] = (
             f"<pageMargins "
-            f'\nleft="{round(self.page_margin_left / cm_2_inch,4)}" '
-            f'\nright="{round((self.page_margin_right-num(0.01)) / cm_2_inch,4)}" '
-            f'\ntop="{round(self.page_margin_top / cm_2_inch,4)}" '
-            f'\nbottom="{round(self.page_margin_bottom / cm_2_inch,4)}" '
+            f'\nleft="{round(self.page_margin_left / cm_2_inch, 4)}" '
+            f'\nright="{round((self.page_margin_right - num(0.01)) / cm_2_inch, 4)}" '
+            f'\ntop="{round(self.page_margin_top / cm_2_inch, 4)}" '
+            f'\nbottom="{round(self.page_margin_bottom / cm_2_inch, 4)}" '
             f'\nheader="0.3" '
             f'\nfooter="0.3"/> '
             f'\n\n<pageSetup paperSize="0" '
             f' paperHeight="{self.page_height}cm" paperWidth="{self.page_width}cm" '
-            f"""orientation="{'landscape' if self.page_width > self.page_height else 'portrait'}"/>"""
+            f"""orientation="{"landscape" if self.page_width > self.page_height else "portrait"}"/>"""
         )
         self.current_sheet["sheetData"] = []
         self.current_sheet["spans"] = []
@@ -224,7 +225,7 @@ class Q2PrinterXlsx(Q2Printer):
                     cell_style = dict(style)
                     # cell_data["style"] = cell_style
 
-                self.make_image(cell_data, row, col)
+                self.make_image(cell_data, col, cell_style, height)
                 cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_data)
                 sheet_row["cells"].append(cell_xml)
                 if row_span > 1 or col_span > 1:
@@ -240,7 +241,7 @@ class Q2PrinterXlsx(Q2Printer):
                             cell_address = self.get_cell_address(
                                 self.sheet_current_row + span_row, span_col + col
                             )
-                            spanned_cells[f"{span_row+row},{span_col+col}"] = self.make_xlsx_cell(
+                            spanned_cells[f"{span_row + row},{span_col + col}"] = self.make_xlsx_cell(
                                 cell_address, cell_style
                             )
             self.current_sheet["sheetData"].append(dict(sheet_row))
@@ -266,8 +267,14 @@ class Q2PrinterXlsx(Q2Printer):
 
         self.convert_num_fmt()
         num_fmts = f"""<numFmts count="{len(self.num_fmts)}">
-                        {''.join(['<numFmt numFmtId="%s" formatCode="%s"/>' % (index+164, fmt)
-                        for index, fmt in enumerate(self.num_fmts)])}
+                        {
+            "".join(
+                [
+                    '<numFmt numFmtId="%s" formatCode="%s"/>' % (index + 164, fmt)
+                    for index, fmt in enumerate(self.num_fmts)
+                ]
+            )
+        }
                     </numFmts>
         """
 
@@ -286,7 +293,7 @@ class Q2PrinterXlsx(Q2Printer):
                     if "Z" in fmt:
                         self.num_fmts[idx] = "General"
                     else:
-                        self.num_fmts[idx] = "[=0]" ";General"
+                        self.num_fmts[idx] = "[=0];General"
             elif fmt.startswith("F"):
                 dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
                 if dec is not None:
@@ -302,7 +309,7 @@ class Q2PrinterXlsx(Q2Printer):
                     if "Z" in fmt:
                         self.num_fmts[idx] = "General"
                     else:
-                        self.num_fmts[idx] = "[=0]" ";General"
+                        self.num_fmts[idx] = "[=0];General"
 
     def get_cell_xf_id(self, style, numFmtId=0):
         border = f'borderId="{self.get_cell_borders(style)}"'
@@ -350,19 +357,30 @@ class Q2PrinterXlsx(Q2Printer):
             self.num_fmts.append(numFormat)
         return self.num_fmts.index(numFormat) + 164
 
-    def make_image(self, cell_data, row, col):
+    def make_image(self, cell_data, col, style, row_height):
         for x in cell_data.get("images", []):
-            width, height, imageIndex = self.prepare_image(x, cell_data.get("width"))
+            image_width, image_height, imageIndex = self.prepare_image(x, cell_data.get("width"))
 
-            width = num(width) * num(12700) * points_in_cm
-            height = num(height) * num(12700) * points_in_cm
+            cell_width = float(self._cm_columns_widths[col])
+            cell_height = float(row_height)
+
+            offset_left, offset_top = self.get_image_offset(
+                cell_width, cell_height, float(image_width), float(image_height), style
+            )
+
+            image_width = num(image_width) * num(12700) * points_in_cm * num(0.96)
+            image_height = num(image_height) * num(12700) * points_in_cm * num(0.96)
+            offset_left = num(offset_left) * num(12700) * points_in_cm * num(0.94)
+            offset_top = num(offset_top) * num(12700) * points_in_cm
 
             tmp_drawing = {}
             tmp_drawing["_id"] = imageIndex + 1
             tmp_drawing["_row"] = self.sheet_current_row - 1
             tmp_drawing["_col"] = col
-            tmp_drawing["_height"] = int(height)
-            tmp_drawing["_width"] = int(width)
+            tmp_drawing["_height"] = int(image_height)
+            tmp_drawing["_width"] = int(image_width)
+            tmp_drawing["_col_off_emu"] = int(offset_left)
+            tmp_drawing["_row_off_emu"] = int(offset_top)
             self.current_sheet["drawing"].append(tmp_drawing)
 
     def make_xlsx_cell(self, cell_address, cell_style, cell_data: dict = {}):
@@ -410,7 +428,6 @@ class Q2PrinterXlsx(Q2Printer):
                 return f'\n\t<c r="{cell_address}" s="{xf_id}"/>'
 
     def get_cell_align(self, cell_style):
-
         if cell_style["vertical-align"] == "middle":
             vertical = 'vertical="center"'
         elif cell_style["vertical-align"] == "top":
@@ -418,9 +435,7 @@ class Q2PrinterXlsx(Q2Printer):
         else:
             vertical = ""
 
-        padding = cell_style["padding"].replace("cm", "").split(" ")
-        while len(padding) < 4:
-            padding += padding
+        padding = parse_padding(cell_style["padding"])
 
         if cell_style["text-align"] == "center":
             horizontal = 'horizontal="center"'

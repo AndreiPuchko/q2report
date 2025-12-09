@@ -18,6 +18,7 @@ from q2report.q2utils import num
 import sys
 import subprocess
 from .calc_height import estimate_cell_height_cm
+from q2report.q2printer.calc_height import parse_padding
 
 try:
     from PyQt6.QtGui import QTextDocument
@@ -100,11 +101,7 @@ class Q2Printer:
             font_size = style.get("font-size", "0")
             if isinstance(font_size, str):
                 font_size = num(font_size.replace("pt", ""))
-            text_doc.setDefaultFont(
-                QFont(
-                    style.get("font-family", "Arial"), int(font_size)
-                )
-            )
+            text_doc.setDefaultFont(QFont(style.get("font-family", "Arial"), int(font_size)))
             text_doc.setDocumentMargin(0)
             # frame_format = text_doc.rootFrame().format().toFrameFormat()
             # frame_format.setTopMargin(float(num(padding[0]) * cm))
@@ -124,6 +121,26 @@ class Q2Printer:
             return height
         else:
             return num(estimate_cell_height_cm(cell_data))
+
+    def get_image_offset(self, cell_width, cell_height, image_width, image_height, style):
+        p_top, p_right, p_bottom, p_left = parse_padding(style.get("padding", ""))
+        offset_left = 0
+        offset_top = 0
+        if (text_align := style.get("text-align")) == "right":
+            offset_left = cell_width - image_width - p_right
+        elif text_align == "center":
+            offset_left = (cell_width - image_width + p_left - p_right) / 2
+        elif text_align == "left":
+            offset_left = p_left
+
+        if (vert_align := style.get("vertical-align")) == "top":
+            offset_top = p_top
+        elif vert_align == "middle":
+            offset_top = (cell_height - image_height + p_top - p_bottom) / 2
+        elif vert_align == "bottom":
+            offset_top = cell_height - image_height - p_bottom
+
+        return offset_left, offset_top
 
     def calculate_real_sizes(self, rows_section, style):
         row_count = len(rows_section["heights"])

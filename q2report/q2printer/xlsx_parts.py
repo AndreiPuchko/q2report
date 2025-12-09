@@ -20,9 +20,9 @@ xlsx_parts[
     <xdr:oneCellAnchor>
         <xdr:from>
             <xdr:col>%(_col)s</xdr:col>
-            <xdr:colOff>0</xdr:colOff>
-            <xdr:row>%(_row)s</xdr:row>
-            <xdr:rowOff>0</xdr:rowOff>
+            <xdr:colOff>%(_col_off_emu)s</xdr:colOff>
+            <xdr:row>%(_row)d</xdr:row>
+            <xdr:rowOff>%(_row_off_emu)d</xdr:rowOff>
         </xdr:from>
         <xdr:ext
             cx="%(_width)s"

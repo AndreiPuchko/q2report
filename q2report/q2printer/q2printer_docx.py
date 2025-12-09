@@ -16,6 +16,7 @@
 from q2report.q2printer.q2printer import Q2Printer
 from q2report.q2printer.docx_parts import docx_parts
 from q2report.q2utils import num, int_, reMultiSpaceDelete
+from q2report.q2printer.calc_height import parse_padding
 import zipfile
 import base64
 from .rich_text_parser import RichTextParser, css_color_to_rgb
@@ -503,9 +504,7 @@ class Q2PrinterDocx(Q2Printer):
         return "\n".join(borders)
 
     def get_cell_paddings(self, cell_style):
-        padding = cell_style["padding"].replace("cm", "").split(" ")
-        while len(padding) < 4:
-            padding += padding
+        padding = parse_padding(cell_style.get("padding", ""))
         margins = []
         margins.append("\n\t<w:tcMar>")
         for index, side in enumerate(("top", "right", "bottom", "left")):

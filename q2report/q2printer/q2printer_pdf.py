@@ -4,6 +4,7 @@ import re
 import glob
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 from q2report.q2printer.q2printer import Q2Printer, pyqt6_installed
+from q2report.q2printer.calc_height import parse_padding
 import base64
 
 reSpaces = re.compile(r"\s+")
@@ -156,37 +157,19 @@ class Q2PrinterPdf(Q2Printer):
         else:
             self.currentVAlign = Qt.AlignmentFlag.AlignTop
 
-    def setMargins(self, style):
-        """Устанавливает отступы в textDoc (для расчета высоты) и возвращает CM-значения."""
-        padding_cm_str = style.get("padding", "0.05cm 0.05cm 0.05cm 0.05cm")
-        padding_cm_list = reSpaces.split(padding_cm_str.lower().replace("cm", ""))
-        padding_cm = [num(v) for v in padding_cm_list]
-
-        # Нормализация до 4 значений (Top, Right, Bottom, Left)
-        if len(padding_cm) == 1:
-            padding_cm = [padding_cm[0]] * 4
-        elif len(padding_cm) == 2:
-            padding_cm = [padding_cm[0], padding_cm[1], padding_cm[0], padding_cm[1]]
-        elif len(padding_cm) == 3:
-            padding_cm = [padding_cm[0], padding_cm[1], padding_cm[2], padding_cm[1]]
-        elif len(padding_cm) != 4:
-            padding_cm = ["0.05cm"] * 4
-
-        return padding_cm[0], padding_cm[1], padding_cm[2], padding_cm[3]
-
     def draw_cell(self, cell_data, left_cm=0, top_cm=0, width_cm=5, height_cm=5, style=""):
         txt = cell_data.get("data", "")
         txt = reMultiSpaceDelete.sub(" ", txt)
         rect_cm = QRectF(left_cm, top_cm, width_cm, height_cm)
         self.draw_cell_borders(rect_cm, style)
-        self.draw_cell_images(rect_cm, cell_data)
+        self.draw_cell_images(rect_cm, cell_data, style)
 
         if txt != "":  # есть что выводить
             self.setFormats(style)
-            p_top, p_right, p_bottom, p_left = self.setMargins(style)
+            p_top, p_right, p_bottom, p_left = parse_padding(style.get("padding", ""))
 
             rect = QRectF(
-                (left_cm + p_left), top_cm + p_top, width_cm - p_left - p_right, height_cm - p_top - p_bottom
+                left_cm + p_left, top_cm + p_top, width_cm - p_left - p_right, height_cm - p_top - p_bottom
             )
 
             # Установка ширины документа (в пикселях)
@@ -215,26 +198,30 @@ class Q2PrinterPdf(Q2Printer):
             self.textDoc.drawContents(self.painter, textRect)
             self.painter.restore()
 
-    def draw_cell_images(self, rect_cm, cell_data):
+    def draw_cell_images(self, rect_cm, cell_data, style):
         rect = QRectF(rect_cm)
         images_list = cell_data.get("images")
         if not images_list:
             return ""
-        # cell_width = cell_data.get("width")
         for x in images_list:
-            width, height, _ = self.prepare_image(x, cell_data.get("width"))
+            image_width, image_height, _ = self.prepare_image(x, cell_data.get("width"))
+            image_width = float(image_width)
+            image_height = float(image_height)
             png_bytes = base64.b64decode(x["image"])
             img = QImage()
             img.loadFromData(png_bytes)
             img = img.scaled(
-                int(float(width) * self.cm_to_points),
-                int(float(height) * self.cm_to_points),
+                int(float(image_width) * self.cm_to_points),
+                int(float(image_height) * self.cm_to_points),
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
+            cell_width = rect.width()
+            cell_height = rect.height()
+            rect.setWidth(image_width)
+            rect.setHeight(image_height)
+            rect.translate(*self.get_image_offset(cell_width, cell_height, image_width, image_height, style))
 
-            rect.setWidth(float(width))
-            rect.setHeight(height)
             self.painter.drawImage(rect, img)
 
     def draw_cell_borders(self, rect_cm, style):
@@ -315,16 +302,16 @@ class Q2PrinterPdf(Q2Printer):
                 if row_span > 1 or col_span > 1:
                     for tmp_span_row in range(row_span):
                         for tmp_span_col in range(col_span):
-                            span_key = f"{tmp_span_row+row},{tmp_span_col+col}"
+                            span_key = f"{tmp_span_row + row},{tmp_span_col + col}"
                             if (tmp_span_row > 0 or tmp_span_col > 0) and span_key != key:
                                 spanned_cells_to_skip[span_key] = True
 
                 self.draw_cell(
                     cell_data,
-                    current_x_cm,
-                    self.current_y_cm,
-                    cell_width_cm,
-                    actual_row_height_cm,
+                    float(current_x_cm),
+                    float(self.current_y_cm),
+                    float(cell_width_cm),
+                    float(actual_row_height_cm),
                     final_style,
                 )
                 # return
