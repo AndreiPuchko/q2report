@@ -14,26 +14,6 @@ report_content = {
                 {
                     "rows": [
                         {
-                            "role": "footer",
-                            "data_source": "",
-                            "groupby": "",
-                            "table_groups": [],
-                            "print_when": "",
-                            "print_after": "",
-                            "new_page_before": "",
-                            "new_page_after": "",
-                            "heights": ["0-0"],
-                            "cells": {
-                                "0,1": {"format": "N0"},
-                                "0,2": {
-                                    "data": '{get("bank_accounts", f"party_id=%s order by default_account desc" % rep.d.header.seller_id, "iban")}',
-                                    "rowspan": 1,
-                                    "colspan": 6,
-                                },
-                            },
-                            "style": {"background": "#e4dbff"},
-                        },
-                        {
                             "role": "table",
                             "data_source": "header",
                             "cells": {
@@ -342,6 +322,26 @@ report_content = {
                             "cells": {
                                 "0,1": {"data": "{rep.d.header.closing_note}", "rowspan": 1, "colspan": 9}
                             },
+                        },
+                        {
+                            "role": "footer",
+                            "data_source": "",
+                            "groupby": "",
+                            "table_groups": [],
+                            "print_when": "",
+                            "print_after": "",
+                            "new_page_before": "",
+                            "new_page_after": "",
+                            "heights": ["0-0"],
+                            "cells": {
+                                "0,1": {"format": "N0"},
+                                "0,2": {
+                                    "data": '{get("bank_accounts", f"party_id=%s order by default_account desc" % rep.d.header.seller_id, "iban")}',
+                                    "rowspan": 1,
+                                    "colspan": 6,
+                                },
+                            },
+                            "style": {"background": "#e4dbff"},
                         },
                     ],
                     "widths": ["0.00", "0.00", "0.00", "0", "0", "0", "0.00", "2.00", "3.00", "2.00", "2.50"],

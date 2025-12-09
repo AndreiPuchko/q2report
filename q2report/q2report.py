@@ -103,7 +103,16 @@ def set_engine(engine2="PyQt6"):
     engine = engine2
 
 
-roles = ["free", "table", "table_header", "table_footer", "group_header", "group_footer", "header", "footer"]
+roles = [
+    "free",
+    "table",
+    "table_header",
+    "table_footer",
+    "group_header",
+    "group_footer",
+    "header",
+    "footer",
+]
 
 
 class Q2Report_rows:
@@ -145,7 +154,7 @@ class Q2Report_rows:
                 self.rows["table_footer"] = self.set_table_footer(table_footer)
 
         if self.rows["role"] not in roles:
-            raise Exception(f'Bad role {self.rows["role"]}')
+            raise Exception(f"Bad role {self.rows['role']}")
 
     def _get_rows(self, rows):
         if isinstance(rows, Q2Report_rows):
@@ -156,7 +165,17 @@ class Q2Report_rows:
             _rows = None
         return _rows
 
-    def set_cell(self, row, col, data, style=None, rowspan=None, colspan=None, format=None, name=None):
+    def set_cell(
+        self,
+        row,
+        col,
+        data,
+        style=None,
+        rowspan=None,
+        colspan=None,
+        format=None,
+        name=None,
+    ):
         if row == -1:
             row = len(self.rows.get("heights", [])) - 1
             row = 0 if row < 0 else row
@@ -192,7 +211,9 @@ class Q2Report_rows:
         header["groupby"] = groupby
         footer = self._get_rows(footer)
         footer["groupby"] = groupby
-        self.rows["table_groups"].append({"group_header": header, "group_footer": footer})
+        self.rows["table_groups"].append(
+            {"group_header": header, "group_footer": footer}
+        )
 
     def check_style(self, style):
         if isinstance(style, dict):
@@ -201,7 +222,11 @@ class Q2Report_rows:
         elif isinstance(style, str):
             if style.endswith("}") and style.startswith("{"):
                 style = style[1:-1]
-            return {x.split(":")[0]: x.split(":")[1].strip() for x in style.split(";") if ":" in x}
+            return {
+                x.split(":")[0]: x.split(":")[1].strip()
+                for x in style.split(";")
+                if ":" in x
+            }
         else:
             return {}
 
@@ -512,7 +537,9 @@ class Q2Report:
         if columns_index < 0:
             columns_index = 0
         page_index = self._check_page_index(page_index)
-        while columns_index > len(self.report_content["pages"][page_index]["columns"]) - 1:
+        while (
+            columns_index > len(self.report_content["pages"][page_index]["columns"]) - 1
+        ):
             self.add_columns(page_index)
         return columns_index
 
@@ -529,11 +556,24 @@ class Q2Report:
             int: Valid rows index.
         """
         if rows_index is None:
-            rows_index = len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
+            rows_index = (
+                len(
+                    self.report_content["pages"][page_index]["columns"][columns_index][
+                        "rows"
+                    ]
+                )
+                - 1
+            )
         if rows_index < 0:
             rows_index = 0
         while (
-            rows_index > len(self.report_content["pages"][page_index]["columns"][columns_index]["rows"]) - 1
+            rows_index
+            > len(
+                self.report_content["pages"][page_index]["columns"][columns_index][
+                    "rows"
+                ]
+            )
+            - 1
         ):
             self.add_rows(page_index, columns_index)
         return rows_index
@@ -549,9 +589,13 @@ class Q2Report:
         """
         page_index = self._check_page_index(page_index)
         columns_index = self._check_columns_index(page_index, columns_index)
-        self.report_content["pages"][page_index]["columns"][columns_index]["widths"].append(f"{width}")
+        self.report_content["pages"][page_index]["columns"][columns_index][
+            "widths"
+        ].append(f"{width}")
 
-    def add_rows(self, page_index=None, columns_index=None, heights=None, style=None, rows=None):
+    def add_rows(
+        self, page_index=None, columns_index=None, heights=None, style=None, rows=None
+    ):
         """
         Add a rows section to columns.
 
@@ -574,7 +618,9 @@ class Q2Report:
             if heights and isinstance(heights, list):
                 rows["heights"] = list(heights)
             rows["style"].update(self._check_style(style))
-        self.report_content["pages"][page_index]["columns"][columns_index]["rows"].append(rows)
+        self.report_content["pages"][page_index]["columns"][columns_index][
+            "rows"
+        ].append(rows)
         return Q2Report_rows(rows)
 
     def add_row(self, page_index=None, columns_index=None, rows_index=None, height=0):
@@ -592,9 +638,9 @@ class Q2Report:
         rows_index = self._check_rows_index(page_index, columns_index, rows_index)
 
         if height is not None:
-            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index][
-                "heights"
-            ].append(f"{height}")
+            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][
+                rows_index
+            ]["heights"].append(f"{height}")
 
     def _get_rows(self, page_index=None, columns_index=None, rows_index=None):
         """
@@ -612,7 +658,9 @@ class Q2Report:
         columns_index = self._check_columns_index(page_index, columns_index)
         rows_index = self._check_rows_index(page_index, columns_index, rows_index)
         return Q2Report_rows(
-            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][rows_index]
+            self.report_content["pages"][page_index]["columns"][columns_index]["rows"][
+                rows_index
+            ]
         )
 
     def set_col_width(self, page_index=None, columns_index=None, column=0, width=0):
@@ -630,7 +678,9 @@ class Q2Report:
         columns = self.report_content["pages"][page_index]["columns"][columns_index]
         while column > len(columns["widths"]) - 1:
             self.add_column(page_index, columns_index)
-        self.report_content["pages"][page_index]["columns"][columns_index]["widths"][column] = width
+        self.report_content["pages"][page_index]["columns"][columns_index]["widths"][
+            column
+        ] = width
 
     def set_cell(
         self,
@@ -812,7 +862,9 @@ class Q2Report:
             text += self.currency
         return text
 
-    def render_rows_section(self, rows_section, column_style, aggregator=None, get_section_height=None):
+    def render_rows_section(
+        self, rows_section, column_style, aggregator=None, get_section_height=None
+    ):
         """
         Render a section of rows using the printer.
 
@@ -827,15 +879,23 @@ class Q2Report:
         """
         if aggregator is None:
             self.use_prevrowdata = False
-            self.data.update({x: self.table_aggregators[x]["v"] for x in self.table_aggregators})
+            self.data.update(
+                {x: self.table_aggregators[x]["v"] for x in self.table_aggregators}
+            )
             self.data.update(self.params)
             if self.table_group_aggregators:
-                self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"]["_grow_number"]["v"]
+                self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"][
+                    "_grow_number"
+                ]["v"]
         else:
             self.prevrowdata.update(self.data)
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
             self.prevrowdata.update(
-                {aggregator[x]["n"]: aggregator[x]["v"] for x in aggregator if aggregator[x]["n"]}
+                {
+                    aggregator[x]["n"]: aggregator[x]["v"]
+                    for x in aggregator
+                    if aggregator[x]["n"]
+                }
             )
             self.prevrowdata.update(self.params)
             self.use_prevrowdata = True
@@ -852,16 +912,26 @@ class Q2Report:
             rows_section["cells"][cell]["style"] = cell_style
             if cell_text:
                 #  images
-                cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text, cell_format)
+                cell_text, rows_section["cells"][cell]["images"] = self.extract_images(
+                    cell_text, cell_format
+                )
                 #  text data
-                rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
+                rows_section["cells"][cell]["data"] = html.unescape(
+                    re_calc.sub(self.formulator, cell_text)
+                )
                 if rows_section["cells"][cell].get("name"):
-                    self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
+                    self.data[rows_section["cells"][cell].get("name")] = rows_section[
+                        "cells"
+                    ][cell]["data"]
                 self._format_cell_text(rows_section["cells"][cell])
         if get_section_height is None:
-            self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
+            self.printer.render_rows_section(
+                rows_section, rows_section_style, self.outline_level
+            )
         else:
-            Q2Printer.render_rows_section(self.printer, rows_section, rows_section_style, self.outline_level)
+            Q2Printer.render_rows_section(
+                self.printer, rows_section, rows_section_style, self.outline_level
+            )
             return rows_section["section_height"]
 
     def extract_images(self, cell_data, cell_format):
@@ -969,8 +1039,28 @@ class Q2Report:
                     # extend rows
                     while max_row > len(rows_section["heights"]) - 1:
                         self.add_row(page_index, columns_index, rows_index=row_index)
+                # try to lift up footer
+                footer_index = None
+                for row_index, rows_section in reversed(
+                    list(enumerate(columns.get("rows", [])))
+                ):
+                    if rows_section.get("role") == "footer":
+                        footer_index = row_index
+                    elif footer_index is not None:
+                        if rows_section.get("role") == "header" or row_index == 0:
+                            # new page header found - need new footer
+                            columns["rows"].insert(
+                                row_index, columns["rows"].pop(footer_index)
+                            )
+                            footer_index = None
 
-    def run(self, output_file="temp/repo.html", output_type=None, data={}, open_output_file=True):
+    def run(
+        self,
+        output_file="temp/repo.html",
+        output_type=None,
+        data={},
+        open_output_file=True,
+    ):
         """
         Generate and output the report.
 
@@ -992,7 +1082,9 @@ class Q2Report:
 
         pages = self.report_content.get("pages", [])
         for index, page in enumerate(pages):
-            self.printer.reset_page(**{x: page[x] for x in page if x.startswith("page_")})
+            self.printer.reset_page(
+                **{x: page[x] for x in page if x.startswith("page_")}
+            )
 
             page_style = dict(report_style)
             page_style.update(page.get("style", {}))
@@ -1019,7 +1111,9 @@ class Q2Report:
                         # self.current_data_set += 1
                         self.data_start()
                         for data_row in data_set:
-                            self.data["_row_number"] = self.current_data_set_row_number + 1
+                            self.data["_row_number"] = (
+                                self.current_data_set_row_number + 1
+                            )
                             self.data.update(data_row)
 
                             self._render_table_groups(rows_section, column_style)
@@ -1129,13 +1223,21 @@ class Q2Report:
             group_value = []
             for group in agg["groupby_list"]:
                 group_value.append(self.evaluator(group))
-            if agg["groupby_values"] != group_value and agg["groupby_values"] != [] or end_of_table:
+            if (
+                agg["groupby_values"] != group_value
+                and agg["groupby_values"] != []
+                or end_of_table
+            ):
                 reset_index = index
                 break
         if reset_index is not None:
             for index in range(len(rows_section["table_groups"]) - 1, index - 1, -1):
                 agg = self.table_group_aggregators[index]
-                agg["aggr"]["_group_number"] = {"v": agg["_group_number"], "f": "", "n": ""}
+                agg["aggr"]["_group_number"] = {
+                    "v": agg["_group_number"],
+                    "f": "",
+                    "n": "",
+                }
                 self.render_rows_section(
                     rows_section["table_groups"][index]["group_footer"],
                     column_style,
@@ -1217,18 +1319,23 @@ class Q2Report:
         """
         self.table_aggregators = {}
         self.table_group_aggregators = []
-        self._aggregators_detect(rows_section.get("table_footer", {}), self.table_aggregators)
+        self._aggregators_detect(
+            rows_section.get("table_footer", {}), self.table_aggregators
+        )
         if "init_table_groups" not in rows_section:
             rows_section["init_table_groups"] = rows_section["table_groups"][:]
             rows_section["init_table_groups_index"] = {
-                grp["group_footer"]["groupby"].strip(): grp for grp in rows_section["table_groups"]
+                grp["group_footer"]["groupby"].strip(): grp
+                for grp in rows_section["table_groups"]
             }
 
         if rows_section["groupby"].strip():
             rows_section["table_groups"] = []
             for key in rows_section["groupby"].split(","):
                 if key.strip() in rows_section["init_table_groups_index"]:
-                    rows_section["table_groups"].append(rows_section["init_table_groups_index"][key.strip()])
+                    rows_section["table_groups"].append(
+                        rows_section["init_table_groups_index"][key.strip()]
+                    )
         elif rows_section["table_groups"] != rows_section["init_table_groups"]:
             rows_section["table_groups"] = rows_section[:]
 
@@ -1274,7 +1381,10 @@ class D:
                 return self.__dict__[atr]
             elif atr == "r":
                 return self.getrow
-            elif self.row_number < len(self.data_set) and atr in self.data_set[self.row_number]:
+            elif (
+                self.row_number < len(self.data_set)
+                and atr in self.data_set[self.row_number]
+            ):
                 return self.data_set[self.row_number][atr]
             return ""
 
