@@ -98,6 +98,19 @@ class Q2PrinterDocx(Q2Printer):
         zipf.writestr("[Content_Types].xml", docx_parts["content_type"] % content_type)
 
         zipf.writestr("word/document.xml", "".join(self.document).encode("utf8"))
+        zipf.writestr(
+            "word/settings.xml",
+            """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+	<w:zoom w:percent="100"/>
+	<w:compat>
+		<w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="12"/>
+        <w:layoutRawTableContent w:val="0"/>
+        <w:doNotUseHtmlParagraphAutoSpacing/>
+	</w:compat>
+	<w:themeFontLang w:val="" w:eastAsia="" w:bidi=""/>
+</w:settings>""",
+        )
         zipf.close()
 
     def reset_page(
@@ -236,14 +249,10 @@ class Q2PrinterDocx(Q2Printer):
         super().render_rows_section(rows_section, style, outline_level)
         spanned_cells_first_column_cell = {}
         spanned_cells_empty_column_cell = {}
-        # if rows_section["role"] == "table_header":
-        #     self.reset_columns()
-
         row_section_xml = []
 
         if rows_section["role"] in ("header", "footer"):
             row_section_xml.append(self.open_docs_table_xml())
-
         for row in range(len(rows_section["heights"])):  # вывод - по строкам
             row_section_xml.append(self.open_table_row(row, rows_section))
 
@@ -288,13 +297,24 @@ class Q2PrinterDocx(Q2Printer):
                     if row_span > 1:
                         merge_str += '<w:vMerge w:val="restart"/>'
 
+                if col_span > 1:
+                    _cell_width = sum(self._cm_columns_widths[col : col + col_span])
+                else:
+                    _cell_width = self._cm_columns_widths[col]
+                if row_span > 1:
+                    _cell_height = sum(rows_section["row_height"][row : row + row_span])
+                else:
+                    _cell_height = rows_section["row_height"][row]
+
                 row_section_xml.append(
                     self.add_table_cell(
                         cell_style,
                         cell_text,
                         cell_width,
                         merge_str,
-                        self.get_cell_images(cell_data),
+                        self.get_cell_images(
+                            cell_data, cell_style, _cell_width, _cell_height
+                        ),
                         rows_section["row_height"][row],
                     )
                 )
@@ -310,17 +330,23 @@ class Q2PrinterDocx(Q2Printer):
         else:
             self.document.extend(row_section_xml)
 
-    def get_cell_images(self, cell_data):
+    def get_cell_images(self, cell_data, style, cell_width, cell_height):
         images_list = cell_data.get("images")
         cell_width = cell_data.get("width")
         cell_images_list = []
         if not images_list:
             return ""
         for x in images_list:
-            width, height, imageIndex = self.prepare_image(x, cell_width)
+            image_width, image_height, imageIndex = self.prepare_image(x, cell_width)
 
-            width = round(num(width) * num(12700) * points_in_cm)
-            height = round(num(height) * num(12700) * points_in_cm)
+            offset_left, offset_top = self.get_image_offset(
+                float(cell_width), float(cell_height), float(image_width), float(image_height), style
+            )
+
+            image_width = round(num(image_width) * num(12700) * points_in_cm)
+            image_height = round(num(image_height) * num(12700) * points_in_cm) * num(0.94)
+            offset_left = num(offset_left) * num(12700) * points_in_cm
+            offset_top = num(offset_top) * num(12700) * points_in_cm * num(0.94)
 
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
@@ -337,6 +363,7 @@ class Q2PrinterDocx(Q2Printer):
             height = 0
         min_row_height = rows_section["min_row_height"][row]
         max_row_height = rows_section["max_row_height"][row]
+        
         if min_row_height != 0 and max_row_height == 0:
             row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(min_row_height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif min_row_height == 0 and max_row_height != 0:
@@ -348,6 +375,8 @@ class Q2PrinterDocx(Q2Printer):
                 row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif height == 0 and row in rows_section["hidden_rows"]:
             row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+        elif height !=0:
+            row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="exact"/>'
         ##################################################
         row_xml += "\n\t\t</w:trPr>"
         return row_xml
@@ -363,6 +392,9 @@ class Q2PrinterDocx(Q2Printer):
         valign = self.get_vertical_align(cell_style)
 
         shd = self.get_cell_background(cell_style)
+        
+        # zu = zu.replace("\n", "").replace("\t", "")
+        
         return f"""
                 <w:tc>
                     <w:tcPr>
@@ -374,9 +406,19 @@ class Q2PrinterDocx(Q2Printer):
                         {shd}
                     </w:tcPr>
                     <w:p>
+                        <w:pPr>
+                            <w:spacing w:before="0" w:after="0" line="0" lineRule="atLeast"/>
+                            <w:jc w:val="center"/>
+                            <w:rPr>
+                                <w:sz w:val="1.0"/>
+                                <w:szCs w:val="1.0"/>
+                            </w:rPr>                            
+                        </w:pPr>
+                        {images}
+                    </w:p>
+                    <w:p>
                         {para_params}
                         {para_text}
-                        {images}
                     </w:p>
                 </w:tc>
         """

@@ -64,14 +64,24 @@ def demo(type="pdf", open_output_file=True):
         # report.add_column(width="10")
 
         report.add_rows(heights=[3, 3, 3, 0, 0.2, "2"], style=report.make_style(font_size=16))
-        # report.add_row(height=0)
-        # report.set_cell(0, 0, "{demo_udf()}")
-        # report.set_cell(0, 1, "{mydata}")
-        # report.set_cell(0, 2, "{13}")
+        report.add_row(height=0)
+        report.set_cell(0, 0, "{demo_udf()}")
+        report.set_cell(0, 1, "{mydata}")
+        report.set_cell(0, 2, "{13}")
 
         report.set_cell(0, 0, "{q2image('%s',4)}" % image_data, style=report.make_style(padding="0"))
         imada = "{'%s':I1*1}" % image_data
         ipada = 0.2
+
+        report.set_cell(
+            1,
+            1,
+            "{'%s':I3*3}" % image_data,
+            style=report.make_style(padding=0, alignment=5),
+            rowspan=2,
+            colspan=2,
+        )
+
         report.set_cell(0, 3, imada, style=report.make_style(padding=ipada, alignment="7"))
         report.set_cell(0, 4, imada, style=report.make_style(padding=ipada, alignment="8"))
         report.set_cell(0, 5, imada, style=report.make_style(padding=ipada, alignment="9"))
@@ -90,6 +100,10 @@ def demo(type="pdf", open_output_file=True):
         report.set_cell(5, 0, f"{image_data}", format="I1", style=report.make_style(padding="0"))
         report.set_cell(5, 1, "{'%s':I1.5}" % image_data, style=report.make_style(padding="0"))
 
+        report.set_cell(6, 3, "{'%s':I3*0.5}" % image_data, style=report.make_style(padding=0, alignment=7))
+        report.set_cell(
+            6, 4, "{'%s':I3*0.5}" % image_data, style=report.make_style(padding=0, alignment=9), colspan=2
+        )
         if 0:
             report.set_cell(0, 0, "First <b>ce</b>ll", colspan=2, rowspan=2)
             report.set_cell(2, 0, "**{mydata}")

@@ -155,8 +155,6 @@ class Q2Printer:
             max_row_height = num(spltd_heights[1]) if len(spltd_heights) == 2 else 0
             rows_section["min_row_height"].append(min_row_height)
             rows_section["max_row_height"].append(max_row_height)
-            if min_row_height == 0 and max_row_height == 0:
-                rows_section["auto_height_rows"].append(row)
             rows_section["row_height"].append(0)
 
             for col in range(self._columns_count):
@@ -204,6 +202,9 @@ class Q2Printer:
             elif min_row_height and min_row_height == max_row_height:
                 rows_section["row_height"][row] = max_row_height
             ##################
+        if min_row_height == 0 and max_row_height == 0 and rows_section["row_height"][row] == 0:
+            rows_section["auto_height_rows"].append(row)
+
         # calculating height for spanned cells
         rows_section["hidden_rows"] = {i for i, h in enumerate(rows_section["row_height"]) if h == 0}
         for key in spanned_cells:

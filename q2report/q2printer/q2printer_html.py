@@ -95,12 +95,12 @@ class Q2PrinterHtml(Q2Printer):
             self.reset_columns()
             self.html.append("\t<thead>")
         for row in range(row_count):
-            height = rows_section["row_height"][row]
-            if row in rows_section["auto_height_rows"]:
-                height = 0
+            row_height_cm = rows_section["row_height"][row]
+            # if row in rows_section["auto_height_rows"]:
+            #     height = 0
 
-            if height != 0:
-                self.html.append(f'\t<tr style="height: {height}cm;">')
+            if row_height_cm != 0:
+                self.html.append(f'\t<tr style="height: {row_height_cm}cm;">')
             elif rows_section["row_height"][row] == 0 and row in rows_section["hidden_rows"]:
                 self.html.append('\t<tr  style="visibility:collapse">')
             else:
@@ -114,9 +114,16 @@ class Q2PrinterHtml(Q2Printer):
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
                 cell_style = cell_data.get("style", {})
-                cell_text = self.render_cell_images(
-                    cell_data, self._cm_columns_widths[col], rows_section["row_height"][row], cell_style
-                )
+                if col_span > 1:
+                    _cell_width = sum(self._cm_columns_widths[col : col + col_span])
+                else:
+                    _cell_width = self._cm_columns_widths[col]
+                if row_span > 1:
+                    _cell_height = sum(rows_section["row_height"][row : row + row_span])
+                else:
+                    _cell_height = rows_section["row_height"][row]
+
+                cell_text = self.render_cell_images(cell_data, _cell_width, _cell_height, cell_style)
                 if cell_style:
                     style_index = self.get_style_index(cell_style)
                 else:
@@ -128,7 +135,15 @@ class Q2PrinterHtml(Q2Printer):
                             spanned_cells.append(f"{span_row + row},{span_col + col}")
                 else:
                     span_text = " "
-                self.html.append(f'\t\t<td style="position: relative;" class="{style_index}" {span_text}>{cell_text}</td>')
+
+                if row_span > 1:
+                    actual_row_height_cm = sum(rows_section["row_height"][row + i] for i in range(row_span))
+                else:
+                    actual_row_height_cm = rows_section["row_height"][row]
+
+                self.html.append(
+                    f'\t\t<td style="position: relative; overflow: visible; height:{row_height_cm}" class="{style_index}" {span_text}>{cell_text}</td>'
+                )
             self.html.append("\t</tr>")
         if rows_section["role"] == "table_header":
             self.html.append("\t</thead>")
@@ -138,14 +153,13 @@ class Q2PrinterHtml(Q2Printer):
     def render_cell_images(self, cell_data, cell_width, cell_height, style):
         # cell_text = cell_data.get("data", "&nbsp;")
         cell_text = cell_data.get("data", "")
-        for x in cell_data.get("images", []):
+        for idx, x in enumerate(cell_data.get("images", [])):
             image = x["image"]
             image_width, image_height, _ = self.prepare_image(x, cell_data.get("width"))
             image_width, image_height = float(image_width), float(image_height)
             offset_left, offset_top = self.get_image_offset(
                 float(cell_width), float(cell_height), image_width, image_height, style
             )
-
             cell_text = f"""
                                 <div style="
                                             position: absolute;
@@ -153,13 +167,12 @@ class Q2PrinterHtml(Q2Printer):
                                             left:{offset_left}cm;
                                             width:{image_width}cm;
                                             height:{image_height}cm;
-                                            
                                             background-image:url(data:image/jpeg;base64,{image});
-                                            background-size: cover;
-                                            
+                                            background-repeat: no-repeat;
+                                            background-size: 100% 100%;
+                                            z-index: 1;
                                 ">
-                                {cell_text}
-                                </div>"""
+                                </div>{cell_text if idx == 0 else ""}"""
         return cell_text
 
     def show(self):

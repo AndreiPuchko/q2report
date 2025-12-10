@@ -35,9 +35,22 @@ docx_parts[
 ] = """
     <w:r>
     <w:drawing>
-        <wp:inline distT="0" distB="0" distL="0" distR="0">
-            <wp:extent cx="%(width)s" cy="%(height)s"/>
+        <wp:anchor distT="0" distB="0" distL="0" distR="0" 
+            relativeHeight="251659264" 
+            behindDoc="0"
+            locked="0" 
+            layoutInCell="0"
+            allowOverlap="1">
+        
+        <wp:simplePos x="0" y="0"/>
+        <wp:positionH relativeFrom="column">
+            <wp:posOffset>%(offset_left)s</wp:posOffset> </wp:positionH>
+        <wp:positionV relativeFrom="paragraph">
+            <wp:posOffset>%(offset_top)s</wp:posOffset> </wp:positionV>
+            
+            <wp:extent cx="%(image_width)s" cy="%(image_height)s"/>
             <wp:effectExtent l="0" t="0" r="0" b="0"/>
+            <wp:wrapNone/> 
             <wp:docPr id="%(imageIndex)s" name="image%(imageIndex)s"/>
             <wp:cNvGraphicFramePr>
                 <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -64,8 +77,8 @@ docx_parts[
                                     x="0"
                                     y="0"/>
                                 <a:ext
-                                    cx="%(width)s"
-                                    cy="%(height)s"/>
+                                    cx="%(image_width)s"
+                                    cy="%(image_height)s"/>
                             </a:xfrm>
                             <a:prstGeom prst="rect">
                                 <a:avLst/>
@@ -74,7 +87,7 @@ docx_parts[
                     </pic:pic>
                 </a:graphicData>
             </a:graphic>
-        </wp:inline>
+        </wp:anchor>
     </w:drawing>
     </w:r>
     """

@@ -219,13 +219,21 @@ class Q2PrinterXlsx(Q2Printer):
 
                 row_span = cell_data.get("rowspan", 1)
                 col_span = cell_data.get("colspan", 1)
-
                 cell_style = cell_data.get("style", {})
                 if cell_style == {}:
                     cell_style = dict(style)
                     # cell_data["style"] = cell_style
+                if col_span > 1:
+                    _cell_width = sum(self._cm_columns_widths[col : col + col_span])
+                else:
+                    _cell_width = self._cm_columns_widths[col]
+                if row_span > 1:
+                    _cell_height = sum(rows_section["row_height"][row : row + row_span])
+                else:
+                    _cell_height = rows_section["row_height"][row]
 
-                self.make_image(cell_data, col, cell_style, height)
+
+                self.make_image(cell_data, col, cell_style, float(_cell_width), _cell_height)
                 cell_xml = self.make_xlsx_cell(cell_address, cell_style, cell_data)
                 sheet_row["cells"].append(cell_xml)
                 if row_span > 1 or col_span > 1:
@@ -357,20 +365,19 @@ class Q2PrinterXlsx(Q2Printer):
             self.num_fmts.append(numFormat)
         return self.num_fmts.index(numFormat) + 164
 
-    def make_image(self, cell_data, col, style, row_height):
+    def make_image(self, cell_data, col, style, cell_width, row_height):
         for x in cell_data.get("images", []):
             image_width, image_height, imageIndex = self.prepare_image(x, cell_data.get("width"))
 
-            cell_width = float(self._cm_columns_widths[col])
             cell_height = float(row_height)
 
             offset_left, offset_top = self.get_image_offset(
                 cell_width, cell_height, float(image_width), float(image_height), style
             )
 
-            image_width = num(image_width) * num(12700) * points_in_cm * num(0.96)
-            image_height = num(image_height) * num(12700) * points_in_cm * num(0.96)
-            offset_left = num(offset_left) * num(12700) * points_in_cm * num(0.94)
+            image_width = num(image_width) * num(12700) * points_in_cm * num(0.915)
+            image_height = num(image_height) * num(12700) * points_in_cm * num(0.95)
+            offset_left = num(offset_left) * num(12700) * points_in_cm * num(0.92)
             offset_top = num(offset_top) * num(12700) * points_in_cm
 
             tmp_drawing = {}
