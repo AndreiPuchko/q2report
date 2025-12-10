@@ -312,10 +312,10 @@ class Q2PrinterDocx(Q2Printer):
                         cell_text,
                         cell_width,
                         merge_str,
-                        self.get_cell_images(
-                            cell_data, cell_style, _cell_width, _cell_height
-                        ),
+                        self.get_cell_images(cell_data, cell_style, _cell_width, _cell_height),
                         rows_section["row_height"][row],
+                        cell_data.get("height", 0),
+                        _cell_height,
                     )
                 )
 
@@ -363,7 +363,7 @@ class Q2PrinterDocx(Q2Printer):
             height = 0
         min_row_height = rows_section["min_row_height"][row]
         max_row_height = rows_section["max_row_height"][row]
-        
+
         if min_row_height != 0 and max_row_height == 0:
             row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(min_row_height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif min_row_height == 0 and max_row_height != 0:
@@ -375,7 +375,7 @@ class Q2PrinterDocx(Q2Printer):
                 row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif height == 0 and row in rows_section["hidden_rows"]:
             row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
-        elif height !=0:
+        elif height != 0:
             row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="exact"/>'
         ##################################################
         row_xml += "\n\t\t</w:trPr>"
@@ -384,7 +384,17 @@ class Q2PrinterDocx(Q2Printer):
     def close_table_row(self):
         return "\n\t</w:tr>"
 
-    def add_table_cell(self, cell_style, cell_text, cell_width, merge_str, images=[], row_height=0):
+    def add_table_cell(
+        self,
+        cell_style,
+        cell_text,
+        cell_width,
+        merge_str,
+        images_xml=None,
+        row_height=0,
+        content_height=0,
+        _cell_height=0,
+    ):
         borders = self.get_cell_borders(cell_style)
         margins = self.get_cell_paddings(cell_style)
         para_params = self.get_paragraph_params(cell_style, row_height)
@@ -392,11 +402,28 @@ class Q2PrinterDocx(Q2Printer):
         valign = self.get_vertical_align(cell_style)
 
         shd = self.get_cell_background(cell_style)
-        
-        # zu = zu.replace("\n", "").replace("\t", "")
-        
+
+        image_paragraph = ""
+        if images_xml:
+            image_paragraph = f"""<w:p>
+                        <w:pPr>
+                        <w:spacing w:before="0" w:after="0" w:lineRule="exact" w:line="0"/>
+                        </w:pPr>
+                            {images_xml}
+                    </w:p>
+                """
+            v_offset = 0.0
+            if cell_text:
+                if cell_style["vertical-align"] == "bottom":
+                    v_offset = _cell_height - content_height
+                elif cell_style["vertical-align"] == "middle":
+                    v_offset = (_cell_height - content_height) / 2
+                if v_offset:
+                    para_params = para_params.replace('w:before="0"', f'w:before="{int(v_offset * twip_in_cm)}"')
+
         return f"""
                 <w:tc>
+                    {image_paragraph}
                     <w:tcPr>
                         <w:tcW w:w="{int(cell_width * twip_in_cm)}" w:type="dxa"/>
                         {valign}
@@ -405,17 +432,6 @@ class Q2PrinterDocx(Q2Printer):
                         {margins}
                         {shd}
                     </w:tcPr>
-                    <w:p>
-                        <w:pPr>
-                            <w:spacing w:before="0" w:after="0" line="0" lineRule="atLeast"/>
-                            <w:jc w:val="center"/>
-                            <w:rPr>
-                                <w:sz w:val="1.0"/>
-                                <w:szCs w:val="1.0"/>
-                            </w:rPr>                            
-                        </w:pPr>
-                        {images}
-                    </w:p>
                     <w:p>
                         {para_params}
                         {para_text}
