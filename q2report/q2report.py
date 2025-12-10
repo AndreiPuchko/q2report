@@ -958,7 +958,7 @@ class Q2Report:
                 image_data = q2image(self.formulator(formula))
                 if image_data == {}:
                     return ""
-                fmt = fmt[0][:-1]
+                fmt = fmt[0][1:-1]
             else:
                 image_data = self.formulator(formula)
             image_data = image_data.split(":")
