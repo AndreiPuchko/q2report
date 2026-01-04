@@ -388,7 +388,7 @@ class Q2Report:
             text_decoration (str, optional): 'italic'
             font_style (str, optional): 'underline'
             color (str, optional): "#ABC"
-            background (str, optional): 
+            background (str, optional): "#F00" | "gray"
             border_color (str, optional): "#F00"
             border_width (str, optional): '1' | '1 0' | '1 2 3' | '0 1 2 1'
             padding (str, optional): '0.1' | '0.1 0.2' ...
@@ -746,6 +746,17 @@ class Q2Report:
         """
         self.current_data_set_name = ""
 
+    def _split_formula_and_format(self, s):
+        if ":" not in s:
+            return s, None
+
+        formula, tail = s.rsplit(":", 1)
+
+        if "'" in tail or '"' in tail or formula[-3:] in ["sum"]:
+            return s, None
+
+        return formula, tail
+
     def formulator(self, formula):
         """
         Evaluate a formula string and format the result.
@@ -761,24 +772,13 @@ class Q2Report:
             data = self.prevrowdata
         else:
             data = self.data
-        formula_splited = _formula.split(":")
-        fmt = ""
+        _fml, _fmt = self._split_formula_and_format(_formula)
         if _formula in data:
             rez = str(data[_formula])
-            if len(formula_splited) > 1:
-                if len(formula_splited) == 2 and _formula.split(":")[0] not in ["sum"]:
-                    fmt = formula_splited[-1]
-                elif len(formula_splited) == 3 and _formula.split(":")[0] in ["sum"]:
-                    fmt = formula_splited[-1]
-                # if fmt:
-                #     rez = self.q2_formatter(rez, fmt)
         else:
-            if len(formula_splited) > 1:
-                fmt = formula_splited[-1]
-                _formula = formula_splited[0]
-            rez = self.evaluator(_formula)
-        if fmt:
-            rez = self._q2_formatter(rez, fmt)
+            rez = self.evaluator(_fml)
+        if _fmt:
+            rez = self._q2_formatter(rez, _fmt)
         return html.escape(rez)
 
     def evaluator(self, formula):

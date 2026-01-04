@@ -1,4 +1,4 @@
-from q2report.q2report import Q2Report, Q2Report_rows
+from q2report import Q2Report, Q2Report_rows
 import os
 
 
@@ -36,6 +36,7 @@ def demo(type="pdf", open_output_file=True):
     }
 
     report = Q2Report()
+    report.data["delivery_date"] = "2025-12-01"
     report.set_style(report.make_style(border_width="0"))
     report.add_page(page_margin_left=3, page_height=21, page_width=21)
 
@@ -47,7 +48,13 @@ def demo(type="pdf", open_output_file=True):
     report.add_column()
     report.add_row(height="2-0")
 
-    # report.set_cell(0, 0, "{q2image('%s')}" % image_data, colspan=2)
+    report.set_cell(
+        0,
+        0,
+        "{'Lieferdatum:' if not delivery_date <= '0001-01-01' else '':f2}",
+        style=report.make_style(background="gray"),
+        colspan=2
+    )
     report.set_cell(
         0,
         2,
@@ -162,12 +169,17 @@ def demo(type="pdf", open_output_file=True):
             font_style="italic",
             text_decoration="underline",
             color="#ABC",
-            background='#012',
-            border_color='#F00'
+            background="#012",
+            border_color="#F00",
         ),
         colspan=6,
     )
-    table_footer.set_cell(7, 0, f"{'text:123'}", colspan=3)
+    table_footer.set_cell(
+        7,
+        0,
+        "{delivery_date:D}",
+        colspan=3,
+    )
 
     table_row.set_table_header(table_header)
     table_row.set_table_footer(table_footer)
