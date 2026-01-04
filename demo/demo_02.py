@@ -51,11 +51,11 @@ def demo(type="pdf", open_output_file=True):
     report.set_cell(
         0,
         2,
-        colspan=4,
+        colspan=2,
         data="Invoice <b>{rep.d.invoice.number}<b>",
-        style=report.make_style(font_size=20),
+        style=report.make_style(font_size=20, alignment=5, border_width="1 1 1 1"),
     )
-
+    report.set_cell(0, 5, data=f"{image_data}", format="I1*1", style=report.make_style(alignment=5))
     label_style = report.make_style(text_align="right", font_size=8, padding="0.05 0.5 0.05 0.05")
 
     report.set_cell(1, 0, colspan=2, data="Date of origin:", style=label_style)
@@ -142,6 +142,32 @@ def demo(type="pdf", open_output_file=True):
         format="$f2",
         name="grand_total",
     )
+    table_footer.set_row_height(5, 1)
+    table_footer.set_row_height(6, "0-0")
+    table_footer.set_cell(
+        6,
+        0,
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+        "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+        "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+        "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
+        "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint "
+        "occaecat cupidatat non proident, sunt in culpa qui officia deserunt "
+        "mollit anim id est laborum.",
+        style=report.make_style(
+            border_width="2",
+            alignment=0,
+            font_size=10,
+            font_weight="bold",
+            font_style="italic",
+            text_decoration="underline",
+            color="#ABC",
+            background='#012',
+            border_color='#F00'
+        ),
+        colspan=6,
+    )
+    table_footer.set_cell(7, 0, f"{'text:123'}", colspan=3)
 
     table_row.set_table_header(table_header)
     table_row.set_table_footer(table_footer)
