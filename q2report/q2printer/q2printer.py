@@ -69,8 +69,9 @@ class Q2Printer:
                 self._pyqt6_app = QApplication.instance()
 
     def checkOutputFileName(self, fileName=""):
-        if not os.path.isdir(os.path.dirname(fileName)):
-            os.mkdir(os.path.dirname(fileName))
+        if not os.path.isdir(target_folder:=os.path.dirname(fileName)):
+            if target_folder:
+                os.makedirs(target_folder, exist_ok=True)
         co = 0
         name, ext = os.path.splitext(fileName)
         while True:
