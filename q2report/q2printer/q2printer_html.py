@@ -26,6 +26,7 @@ class Q2PrinterHtml(Q2Printer):
         super().__init__(output_file, output_type)
         self.html = []
         self.style = {}
+        self.table_is_opened = False
 
     def save(self):
         self.close_html_table()
@@ -69,15 +70,17 @@ class Q2PrinterHtml(Q2Printer):
         self.open_html_table()
 
     def open_html_table(self):
-        self.html.append('<table style="border-collapse:collapse;">')
+        self.table_is_opened = True
+        self.html.append('<table style="border-collapse:collapse; table-layout: fixed;">')
         self.html.append("<colgroup>")
         for col in self._cm_columns_widths:
-            self.html.append(f'\t<col span="1" style="width: {col * 10}mm;">')
+            self.html.append(f'\t<col span="1" style="width: {col * 10}mm;"/>')
         self.html.append("</colgroup>")
 
     def close_html_table(self):
-        if self.html:
+        if self.html and self.table_is_opened:
             self.html.append("</table>")
+            self.table_is_opened = False
 
     def get_style_index(self, style):
         style["padding"] = " ".join([f"{x}cm" for x in parse_padding(style.get("padding", ""))])
