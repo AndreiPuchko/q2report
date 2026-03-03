@@ -154,7 +154,7 @@ class Q2Printer:
             rows_section["min_row_height"].append(min_row_height)
             rows_section["max_row_height"].append(max_row_height)
             rows_section["row_height"].append(0)
-
+            image_height = 0
             for col in range(self._columns_count):
                 key = f"{row},{col}"
                 cell_data = rows_section.get("cells", {}).get(key, {})
@@ -188,6 +188,7 @@ class Q2Printer:
                         image["height"] = max(image["height"], rows_section["row_height"][row])
                     if rows_section["row_height"][row] < h:
                         rows_section["row_height"][row] = h
+                        image_height = h
             if min_row_height != 0 and rows_section["row_height"][row] < min_row_height:
                 rows_section["row_height"][row] = min_row_height
             if max_row_height != 0 and rows_section["row_height"][row] > max_row_height:
@@ -200,8 +201,9 @@ class Q2Printer:
             elif min_row_height and min_row_height == max_row_height:
                 rows_section["row_height"][row] = max_row_height
             ##################
-        if min_row_height == 0 and max_row_height == 0 and rows_section["row_height"][row] == 0:
-            rows_section["auto_height_rows"].append(row)
+            # if min_row_height == 0 and max_row_height == 0 and rows_section["row_height"][row] == 0:
+            if min_row_height == 0 and max_row_height == 0 and image_height == 0:
+                rows_section["auto_height_rows"].append(row)
 
         # calculating height for spanned cells
         rows_section["hidden_rows"] = {i for i, h in enumerate(rows_section["row_height"]) if h == 0}
