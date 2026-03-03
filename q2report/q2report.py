@@ -872,7 +872,8 @@ class Q2Report:
             if self.table_group_aggregators:
                 self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"]["_grow_number"]["v"]
         else:
-            self.prevrowdata.update(self.data)
+            if rows_section['role'] != 'group_footer':
+                self.prevrowdata.update(self.data)
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
             self.prevrowdata.update(
                 {aggregator[x]["n"]: aggregator[x]["v"] for x in aggregator if aggregator[x]["n"]}
