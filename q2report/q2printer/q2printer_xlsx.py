@@ -417,10 +417,7 @@ class Q2PrinterXlsx(Q2Printer):
             parser.feed(cell_text, cell_style)
             runs = parser.get_runs()
 
-            if len(runs) == 1:
-                cell_content = f"<t>{cell_text}</t>"
-            else:
-                cell_content = "".join(runs)
+            cell_content = "".join(runs)
 
             if cell_content:
                 if cell_content not in self.sharedStrings:
