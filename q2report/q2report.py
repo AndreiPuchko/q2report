@@ -872,7 +872,7 @@ class Q2Report:
             if self.table_group_aggregators:
                 self.data["_grow_number"] = self.table_group_aggregators[-1]["aggr"]["_grow_number"]["v"]
         else:
-            if rows_section['role'] != 'group_footer':
+            if rows_section["role"] != "group_footer":
                 self.prevrowdata.update(self.data)
             self.prevrowdata.update({x: aggregator[x]["v"] for x in aggregator})
             self.prevrowdata.update(
@@ -896,8 +896,9 @@ class Q2Report:
                 cell_text, rows_section["cells"][cell]["images"] = self.extract_images(cell_text, cell_format)
                 #  text data
                 rows_section["cells"][cell]["data"] = html.unescape(re_calc.sub(self.formulator, cell_text))
-                if rows_section["cells"][cell].get("name"):
-                    self.data[rows_section["cells"][cell].get("name")] = rows_section["cells"][cell]["data"]
+                if cell_name := rows_section["cells"][cell].get("name"):
+                    self.data[cell_name] = rows_section["cells"][cell]["data"]
+                    self.prevrowdata[cell_name] = rows_section["cells"][cell]["data"]
                 self._format_cell_text(rows_section["cells"][cell])
         if get_section_height is None:
             self.printer.render_rows_section(rows_section, rows_section_style, self.outline_level)
