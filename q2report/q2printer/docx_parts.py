@@ -25,7 +25,7 @@ docx_parts[
     xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
     xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
     xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:ve="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
 <w:body>
 
 """
@@ -107,11 +107,15 @@ docx_parts[
     <Default Extension="jpg" ContentType="image/jpg"/>
     <Default Extension="png" ContentType="image/png"/>
     <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Default Extension="xml" ContentType="application/xml"/>
     <Override PartName="/word/document.xml"
         ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+    <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
     %s
     </Types>"""
-docx_parts["headers_footers_content_type"] = """
+docx_parts[
+    "headers_footers_content_type"
+] = """
             <Override PartName="/word/%s%s.xml"
                 ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.%s+xml"/>
 """
@@ -180,3 +184,17 @@ docx_parts[
                     %s
                 </w:ftr>
                     """
+
+docx_parts[
+    "docProps_core"
+] = """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:dcterms="http://purl.org/dc/terms/"
+                    xmlns:dcmitype="http://purl.org/dc/dcmitype/"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <dc:title>made with q2report</dc:title>
+        <dc:creator>q2report (datatodoc.de)</dc:creator>
+    </cp:coreProperties>
+"""

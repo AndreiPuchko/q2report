@@ -188,18 +188,19 @@ class Q2PrinterDocx(Q2Printer):
                             {footer_ref_xml}
                             <w:type w:val="nextPage"/>
                             <w:pgSz
-                                w:w="{self.page_width * twip_in_cm}"
-                                w:h="{self.page_height * twip_in_cm}"/>
-                            <w:pgMar w:gutter="0" w:header="708" w:footer="708"
-                                    w:top="{self.page_margin_top * twip_in_cm}"
-                                    w:right="{self.page_margin_right * twip_in_cm}"
-                                    w:bottom="{self.page_margin_bottom * twip_in_cm}"
-                                    w:left="{self.page_margin_left * twip_in_cm}"
+                                w:w="{int(self.page_width * twip_in_cm)}"
+                                w:h="{int(self.page_height * twip_in_cm)}"/>
+                            <w:pgMar 
+                                    w:top="{int(self.page_margin_top * twip_in_cm)}"
+                                    w:right="{int(self.page_margin_right * twip_in_cm)}"
+                                    w:bottom="{int(self.page_margin_bottom * twip_in_cm)}"
+                                    w:left="{int(self.page_margin_left * twip_in_cm)}"
+                                    w:header="708"
+                                    w:footer="708"
+                                    w:gutter="0"
                             />
                             <w:cols w:space="708"/>
                             <w:docGrid w:linePitch="360"/>
-                            <w:formProt w:val="false"/>
-                            <w:textDirection w:val="lrTb"/>
                         </w:sectPr>
                 """
         page_param_xml = pre_page_param % page_param
@@ -227,10 +228,10 @@ class Q2PrinterDocx(Q2Printer):
         open_docs_table_xml.append(
             f"""<w:tbl>
                     <w:tblPr>
-                        <w:tblLayout w:type="fixed"/>
-                        <w:tblInd w:w="28" w:type="dxa"/>
                         <w:tblW w:w="{round(sum(int_(x * twip_in_cm) for x in self._cm_columns_widths))}"
                             w:type="dxa"/>
+                        <w:tblInd w:w="28" w:type="dxa"/>
+                        <w:tblLayout w:type="fixed"/>
                         <w:tblCellMar>
                             <w:top w:w="28" w:type="dxa"/>
                             <w:left w:w="28" w:type="dxa"/>
@@ -354,9 +355,10 @@ class Q2PrinterDocx(Q2Printer):
     def open_table_row(self, row, rows_section):
         row_xml = ""
         row_xml += "\n\t<w:tr>"
-        row_xml += "\n\t\t<w:trPr>"
+
+        trpr = ""
         if rows_section["role"] == "table_header":
-            row_xml += "<w:tblHeader/>"
+            trpr += "<w:tblHeader/>"
         ##################################################
         height = rows_section["row_height"][row]
         if row in rows_section["auto_height_rows"]:
@@ -365,20 +367,23 @@ class Q2PrinterDocx(Q2Printer):
         max_row_height = rows_section["max_row_height"][row]
 
         if min_row_height != 0 and max_row_height == 0:
-            row_xml += f'\n\t\t\t<w:trHeight  w:val="{int(min_row_height * twip_in_cm)}" w:hRule="atLeast"/>'
+            trpr += f'\n\t\t\t<w:trHeight  w:val="{int(min_row_height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif min_row_height == 0 and max_row_height != 0:
             if height == 0:
-                row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+                trpr += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
             elif height >= max_row_height:
-                row_xml += f'\n\t\t\t<w:trHeight w:val="{int(max_row_height * twip_in_cm)}" w:hRule="exact"/>'
+                trpr += f'\n\t\t\t<w:trHeight w:val="{int(max_row_height * twip_in_cm)}" w:hRule="exact"/>'
             else:
-                row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="atLeast"/>'
+                trpr += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="atLeast"/>'
         elif height == 0 and row in rows_section["hidden_rows"]:
-            row_xml += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
+            trpr += '\n\t\t\t<w:trHeight w:val="0" w:hRule="exact"/>'
         elif height != 0:
-            row_xml += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="exact"/>'
+            trpr += f'\n\t\t\t<w:trHeight w:val="{int(height * twip_in_cm)}" w:hRule="exact"/>'
         ##################################################
-        row_xml += "\n\t\t</w:trPr>"
+        if trpr.strip():
+            row_xml += "\n\t\t<w:trPr>"
+            row_xml += trpr
+            row_xml += "\n\t\t</w:trPr>"
         return row_xml
 
     def close_table_row(self):
@@ -429,8 +434,8 @@ class Q2PrinterDocx(Q2Printer):
                         {valign}
                         {merge_str}
                         {borders}
-                        {margins}
                         {shd}
+                        {margins}
                     </w:tcPr>
                     <w:p>
                         {para_params}
@@ -441,7 +446,7 @@ class Q2PrinterDocx(Q2Printer):
 
     def get_cell_background(self, cell_style):
         if style := cell_style.get("background"):
-            return f'<w:shd w:fill="{css_color_to_rgb(style)[2:]}" />'
+            return f'<w:shd w:val="clear" w:color="auto" w:fill="{css_color_to_rgb(style)[2:]}" />'
         else:
             return ""
 
@@ -484,7 +489,6 @@ class Q2PrinterDocx(Q2Printer):
                     sz_twips = int(float(sz_match.group(1)) * 2)
                 else:
                     sz_twips = base_fontsize_twips
-                docx_rPr.append(f'<w:sz w:val="{sz_twips}"/>')
 
                 # Styles
                 if "<b/>" in style_content:
@@ -497,6 +501,7 @@ class Q2PrinterDocx(Q2Printer):
                 color_match = re.search(r'<color rgb="([A-F0-9]+)"/>', style_content)
                 if color_match:
                     docx_rPr.append(f'<w:color w:val="{color_match.group(1)[2:]}" />')  # strip "FF" prefix
+                docx_rPr.append(f'<w:sz w:val="{sz_twips}"/>')
 
                 para_text.append(
                     f"""<w:r>
@@ -509,15 +514,15 @@ class Q2PrinterDocx(Q2Printer):
 
     def get_paragraph_params(self, cell_style, row_height):
         font_size = float(str(cell_style.get("font-size", "10pt")).replace("pt", ""))
-        sz_twips = min(int(float(row_height) * 28.346456692913385), font_size) * 2
+        sz_twips = int(min(int(float(row_height) * 28.346456692913385), font_size) * 2)
         paragraph = f"""
                     <w:pPr>
                     \t{self.get_horizontal_align(cell_style)}
                     \t<w:widowControl w:val="0"/>
-                    \t<w:adjustRightInd w:val="0"/>
                     \t<w:autoSpaceDE w:val="0"/>
                     \t<w:autoSpaceDN w:val="0"/>
-                    \t<w:spacing w:before="0" w:after="0" w:lineRule="atLeast" w:line="0"/>
+                    \t<w:adjustRightInd w:val="0"/>
+                    \t<w:spacing w:before="0" w:after="0" w:line="0" w:lineRule="atLeast"/>
                     <w:rPr><w:sz w:val="{sz_twips}"/><w:szCs w:val="{sz_twips}"/></w:rPr>
                     </w:pPr>
                     """
@@ -556,8 +561,11 @@ class Q2PrinterDocx(Q2Printer):
         borders.append("<w:tcBorders>\n")
         for index, side in enumerate(("top", "right", "bottom", "left")):
             if int_(border_width[index]):
-                borders.append(f'\t\t\t<w:{side} w:val="single" w:color="{border_color}" w:space="0"')
-                borders.append(f'\t\t\t\tw:sz="{int_(border_width[index]) * 10}"/>')
+                borders.append(f'\t\t\t<w:{side}')
+                borders.append(f'\t\t\tw:val="single" ')
+                borders.append(f'\t\t\t\tw:sz="{int_(border_width[index]) * 10}"')
+                borders.append(f'\t\t\tw:space="0" w:color="{border_color}"')
+                borders.append(f'\t\t\t\t/>')
         borders.append("</w:tcBorders>\n")
         return "\n".join(borders)
 
@@ -565,7 +573,7 @@ class Q2PrinterDocx(Q2Printer):
         padding = parse_padding(cell_style.get("padding", ""))
         margins = []
         margins.append("\n\t<w:tcMar>")
-        for index, side in enumerate(("top", "right", "bottom", "left")):
+        for index, side in enumerate(("top", "left", "bottom", "right")):
             margins.append(f'\n\t\t<w:{side} w:w="{int(num(padding[index]) * twip_in_cm)}" w:type="dxa"/>')
         margins.append("\n\t</w:tcMar>\n")
         return "".join(margins)
