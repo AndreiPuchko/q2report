@@ -230,6 +230,7 @@ class Q2PrinterDocx(Q2Printer):
                     <w:tblPr>
                         <w:tblW w:w="{round(sum(int_(x * twip_in_cm) for x in self._cm_columns_widths))}"
                             w:type="dxa"/>
+                        <w:jc w:val="left"/>
                         <w:tblInd w:w="28" w:type="dxa"/>
                         <w:tblLayout w:type="fixed"/>
                         <w:tblCellMar>
@@ -344,10 +345,10 @@ class Q2PrinterDocx(Q2Printer):
                 float(cell_width), float(cell_height), float(image_width), float(image_height), style
             )
 
-            image_width = round(num(image_width) * num(12700) * points_in_cm)
-            image_height = round(num(image_height) * num(12700) * points_in_cm) * num(0.94)
-            offset_left = num(offset_left) * num(12700) * points_in_cm
-            offset_top = num(offset_top) * num(12700) * points_in_cm * num(0.94)
+            image_width = int(round(num(image_width) * num(12700) * points_in_cm))
+            image_height = int(round(num(image_height) * num(12700) * points_in_cm) * num(0.94))
+            offset_left = int(num(offset_left) * num(12700) * points_in_cm)
+            offset_top = int(num(offset_top) * num(12700) * points_in_cm * num(0.94))
 
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
@@ -412,7 +413,17 @@ class Q2PrinterDocx(Q2Printer):
         if images_xml:
             image_paragraph = f"""<w:p>
                         <w:pPr>
-                        <w:spacing w:before="0" w:after="0" w:lineRule="exact" w:line="0"/>
+                            <w:pStyle w:val="Normal"/>
+                            <w:widowControl w:val="false"/>
+                            <w:bidi w:val="0"/>
+                            <w:spacing 
+                                w:lineRule="exact"
+                                w:line="0"
+                                w:before="0"
+                                w:after="0"
+                                />
+                            <w:jc w:val="left"/>
+                            <w:rPr/>
                         </w:pPr>
                             {images_xml}
                     </w:p>
@@ -428,7 +439,6 @@ class Q2PrinterDocx(Q2Printer):
 
         return f"""
                 <w:tc>
-                    {image_paragraph}
                     <w:tcPr>
                         <w:tcW w:w="{int(cell_width * twip_in_cm)}" w:type="dxa"/>
                         {valign}
@@ -437,6 +447,7 @@ class Q2PrinterDocx(Q2Printer):
                         {shd}
                         {margins}
                     </w:tcPr>
+                    {image_paragraph}
                     <w:p>
                         {para_params}
                         {para_text}
@@ -446,7 +457,7 @@ class Q2PrinterDocx(Q2Printer):
 
     def get_cell_background(self, cell_style):
         if style := cell_style.get("background"):
-            return f'<w:shd w:val="clear" w:color="auto" w:fill="{css_color_to_rgb(style)[2:]}" />'
+            return f'<w:shd w:color="auto" w:fill="{css_color_to_rgb(style)[2:]}" w:val="clear"/>'
         else:
             return ""
 
@@ -559,7 +570,7 @@ class Q2PrinterDocx(Q2Printer):
 
         borders = []
         borders.append("<w:tcBorders>\n")
-        for index, side in enumerate(("top", "right", "bottom", "left")):
+        for index, side in enumerate(("top", "left", "bottom", "right")):
             if int_(border_width[index]):
                 borders.append(f'\t\t\t<w:{side}')
                 borders.append(f'\t\t\tw:val="single" ')

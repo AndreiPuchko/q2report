@@ -16,16 +16,19 @@ docx_parts = {}
 docx_parts[
     "doc_start"
 ] = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document
-    xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"
-    xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-    xmlns:w10="urn:schemas-microsoft-com:office:word"
-    xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
-    xmlns:v="urn:schemas-microsoft-com:vml"
-    xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
-    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-    xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+<w:document xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+            xmlns:v="urn:schemas-microsoft-com:vml"
+            xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:w10="urn:schemas-microsoft-com:office:word"
+            xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+            xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+			xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing"
+            xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+            xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml"
+        mc:Ignorable="w14 wp14 w15">
 <w:body>
 
 """
@@ -34,19 +37,26 @@ docx_parts[
     "image"
 ] = """
     <w:r>
+    <w:rPr/>
     <w:drawing>
-        <wp:anchor distT="0" distB="0" distL="0" distR="0" 
-            relativeHeight="251659264" 
-            behindDoc="0"
+        <wp:anchor behindDoc="0"
+            distT="0"
+            distB="0"
+            distL="0"
+            distR="0"
+            simplePos="0"
             locked="0" 
             layoutInCell="0"
-            allowOverlap="1">
-        
-        <wp:simplePos x="0" y="0"/>
-        <wp:positionH relativeFrom="column">
-            <wp:posOffset>%(offset_left)s</wp:posOffset> </wp:positionH>
-        <wp:positionV relativeFrom="paragraph">
-            <wp:posOffset>%(offset_top)s</wp:posOffset> </wp:positionV>
+            allowOverlap="1"
+            relativeHeight="2">
+            
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="column">
+                <wp:posOffset>%(offset_left)s</wp:posOffset> 
+            </wp:positionH>
+            <wp:positionV relativeFrom="paragraph">
+                <wp:posOffset>%(offset_top)s</wp:posOffset> 
+            </wp:positionV>
             
             <wp:extent cx="%(image_width)s" cy="%(image_height)s"/>
             <wp:effectExtent l="0" t="0" r="0" b="0"/>
