@@ -11,6 +11,6 @@ from demo.demo_11 import demo
 
 if __name__ == "__main__":
     # demo("html")
-    # demo("xlsx")
+    demo("xlsx")
     # demo("docx")
-    demo("pdf")
+    # demo("pdf")

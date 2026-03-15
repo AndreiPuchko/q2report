@@ -10,7 +10,15 @@ report_content = {
                         {
                             "role": "table",
                             "data_source": "header",
-                            "cells": {"0,1": {"data": "{initial_note}", "rowspan": 1, "colspan": 9}},
+                            "cells": {
+                                "0,0": {"data": "2026-03-01", "format": "D"},
+                                "0,1": {"data": "{initial_note}", "rowspan": 1, "colspan": 1},
+                                "0,2": {
+                                    "data": "123456.78",
+                                    "format": "$F2",
+                                    "style": {"text-align": "right"},
+                                },
+                            },
                             "style": {"font-size": "12pt", "border-width": "1 0 1 0"},
                             "groupby": "",
                             "table_groups": [],
@@ -21,7 +29,7 @@ report_content = {
                             "heights": ["0-0"],
                         }
                     ],
-                    "widths": ["0.00", "0.00", "0.00", "0", "0", "0", "0.00", "2.00", "2.10", "2.00", "2.50"],
+                    "widths": ["0.00", "0.00", "0.00"],
                 }
             ],
             "page_width": "21.00",
@@ -67,7 +75,7 @@ report_data = {
             "skonto_due_date": "2025-12-03",
             "net_amount": "60445.00",
             "gross_amount": "67405.75",
-            "initial_note": "cdsg vsgd f;hblkd\ndfhgdfg\nh dfg\u0432\u0432\u0432\nh df\ng\nh fdgbgsdflhkg 'sdflg ;sldk g;klsdgs",
+            "initial_note": "txt",
             "closing_note": "c3402-580293485234523\n52 254\n23 9 23849523\nvdfbvsdfgbg sdfhg\n234sdfhgsdfhf\n523\n4523\n52\n3",
             "q2_time": "20260104095058",
             "q2_mode": "u",
