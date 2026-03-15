@@ -290,34 +290,39 @@ class Q2PrinterXlsx(Q2Printer):
 
     def convert_num_fmt(self):
         for idx, fmt in enumerate(self.num_fmts):
+            curr_index = fmt.index("$") if "$" in fmt else -1
+            lc = "$" if curr_index == 0 else ""
+            ec = "$" if curr_index > 0 else ""
+            fmt = fmt.replace("$", "")
+            dec = int_(_dec_part.group()) if (_dec_part := reNumber.search(fmt)) else None
             if fmt.startswith("N"):
-                dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
                 if dec is not None:
                     efmt = "0."
                     efmt += "0" * dec
                     zero = efmt if "Z" in fmt else ""
-                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                    self.num_fmts[idx] = f"{lc}{efmt}{ec};-{lc}{efmt}{ec};{zero};@"
                 else:
                     if "Z" in fmt:
                         self.num_fmts[idx] = "General"
                     else:
                         self.num_fmts[idx] = "[=0];General"
             elif fmt.startswith("F"):
-                dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
                 if dec is not None:
                     efmt = "#,###0."
                     efmt += "0" * dec
                     zero = efmt if "Z" in fmt else ""
-                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                    self.num_fmts[idx] = f"{lc}{efmt}{ec};-{lc}{efmt}{ec};{zero};@"
                 elif dec is None:
                     efmt = "#,###0.############"
                     zero = efmt if "Z" in fmt else ""
-                    self.num_fmts[idx] = f"{efmt};-{efmt};{zero};@"
+                    self.num_fmts[idx] = f"{lc}{efmt}{ec};-{lc}{efmt}{ec};{zero};@"
                 else:
                     if "Z" in fmt:
                         self.num_fmts[idx] = "General"
                     else:
                         self.num_fmts[idx] = "[=0];General"
+            else:
+                self.num_fmts[idx] = "General"
 
     def get_cell_xf_id(self, style, numFmtId=0):
         border = f'borderId="{self.get_cell_borders(style)}"'
