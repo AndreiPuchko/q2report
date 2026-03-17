@@ -19,6 +19,8 @@ import sys
 import subprocess
 from .calc_height import estimate_cell_height_cm
 from q2report.q2printer.calc_height import parse_padding
+from io import BytesIO
+
 
 try:
     from PyQt6.QtGui import QTextDocument
@@ -69,6 +71,8 @@ class Q2Printer:
                 self._pyqt6_app = QApplication.instance()
 
     def checkOutputFileName(self, fileName=""):
+        if isinstance(fileName, BytesIO):
+            return fileName
         if not os.path.isdir(target_folder:=os.path.dirname(fileName)):
             if target_folder:
                 os.makedirs(target_folder, exist_ok=True)
