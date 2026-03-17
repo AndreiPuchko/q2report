@@ -1,11 +1,11 @@
-import os
-import sys
 import re
-import glob
+import os
+import tempfile
 from q2report.q2utils import num, int_, reMultiSpaceDelete
 from q2report.q2printer.q2printer import Q2Printer, pyqt6_installed
 from q2report.q2printer.calc_height import parse_padding
 import base64
+from io import BytesIO
 
 reSpaces = re.compile(r"\s+")
 
@@ -20,10 +20,8 @@ if pyqt6_installed:
         QPainter,
         QPen,
         QTextOption,
-        QTextBlockFormat,
-        QFontMetricsF,
     )
-    from PyQt6.QtCore import QSizeF, Qt, QByteArray, QIODevice, QMarginsF, QRectF, QPointF, QSize, QRect
+    from PyQt6.QtCore import QSizeF, Qt, QRectF, QPointF
     from PyQt6.QtPrintSupport import QPrinter
 
 
@@ -39,7 +37,18 @@ class Q2PrinterPdf(Q2Printer):
         self.printer.setResolution(self.printer_resolution)
         self.cm_to_points = self.printer_resolution / 2.54
 
-        self.printer.setOutputFileName(self.output_file)
+        self.is_bytes_io = isinstance(self.output_file, BytesIO)
+
+        if self.is_bytes_io:
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+            tmp.close()
+            self._tmp_path = tmp.name
+            self.pdf_path = self._tmp_path
+        else:
+            self.pdf_path = str(output_file)
+
+        self.printer.setOutputFileName(str(self.pdf_path))
+
         self.printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
         self.printer.setFullPage(True)
 
@@ -110,6 +119,11 @@ class Q2PrinterPdf(Q2Printer):
         super().save()
         if self.painter and self.painter.isActive():
             self.painter.end()
+
+        if self.is_bytes_io:
+            with open(self._tmp_path, "rb") as f:
+                self.output_file.write(f.read())
+            os.remove(self._tmp_path)
 
     def setFormats(self, style):
         font = QFont(style.get("font-family", self.base_font))
