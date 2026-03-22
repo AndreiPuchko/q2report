@@ -306,7 +306,7 @@ class Q2Printer:
                 if sys.platform == "win32":
                     # os.startfile(os.path.abspath(self.output_file))
                     subprocess.Popen(
-                        ["start", os.path.abspath(self.output_file)],
+                        ["start", "", os.path.abspath(self.output_file)],
                         close_fds=True,
                         shell=True,
                         creationflags=subprocess.DETACHED_PROCESS,
