@@ -1347,6 +1347,9 @@ class D:
                 self.row_number = 0
             return self
 
+        row = getrow
+        get_row = getrow
+
     def __init__(self, q2report):
         self.q2report: Q2Report = q2report
 
