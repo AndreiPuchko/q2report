@@ -1084,6 +1084,7 @@ class Q2Report:
                             self._aggregators_calc()
                             self.outline_level += 1
                             self.render_rows_section(rows_section, column_style)
+                            self._aggregators_calc()
                             self.outline_level -= 1
                             self.prevrowdata.update(data_row)
 
