@@ -824,7 +824,7 @@ class Q2Report:
         dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
         if fmt == "D":
             try:
-                text = datetime.datetime.strptime(text, "%Y-%m-%d").strftime("%d.%m.%Y")
+                text = datetime.datetime.strptime(text.strip(), "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
         elif isNumber and fmt:
@@ -1081,7 +1081,6 @@ class Q2Report:
                             self.data.update(data_row)
 
                             self._render_table_groups(rows_section, column_style)
-                            self._aggregators_calc()
                             self.outline_level += 1
                             self.render_rows_section(rows_section, column_style)
                             self._aggregators_calc()

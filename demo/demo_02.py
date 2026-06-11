@@ -67,7 +67,7 @@ def demo(type="pdf", open_output_file=True):
 
     report.set_cell(1, 0, colspan=2, data="Date of origin:", style=label_style)
 
-    report.set_cell(1, 2, data="{rep.d.invoice.date}", format="D")
+    report.set_cell(1, 2, data="{rep.d.invoice.date} ", format="D")
     report.set_cell(1, 4, data="Expiry date:", style=label_style)
     report.set_cell(1, 5, data="{rep.d.invoice.expire_date}", format="D")
 
@@ -126,6 +126,17 @@ def demo(type="pdf", open_output_file=True):
         style=report.make_style(text_align="right", font_weight="bold"),
         name="sub_total",
     )
+    
+    table_footer.set_cell(
+        10,
+        5,
+        "{sum:num(price)*num(qt)}",
+        format="F",
+        style=report.make_style(text_align="right", font_weight="bold"),
+        name="sub_total",
+    )
+    
+    
     table_footer.set_cell(
         1,
         5,
