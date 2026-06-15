@@ -1198,6 +1198,7 @@ class Q2Report:
                     "f": "",
                     "n": "",
                 }
+                agg["aggr"]["_grow_number"]["v"] -= num(1)
                 self.render_rows_section(
                     rows_section["table_groups"][index]["group_footer"],
                     column_style,
@@ -1209,7 +1210,7 @@ class Q2Report:
                 agg["_group_number"] += 1
                 for cell in agg["aggr"]:
                     agg["aggr"][cell]["v"] = num(0)
-                agg["aggr"]["_grow_number"]["v"] = num(0)
+                agg["aggr"]["_grow_number"]["v"] = num(1)
         if end_of_table:
             return
         for index, group_set in enumerate(rows_section["table_groups"]):
@@ -1266,7 +1267,7 @@ class Q2Report:
         aggregator["_grow_number"] = {
             "a": "sum",  # aggregate function - sum, avg and etc
             "f": "",  # cell formula
-            "v": num(0),  # initial value
+            "v": num(1),  # initial value
             "n": "",  # cell name
         }
 
