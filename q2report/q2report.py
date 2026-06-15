@@ -818,13 +818,14 @@ class Q2Report:
         Returns:
             str: Formatted value.
         """
+        text = text.strip()
         cell_value = num(text)
         isNumber = reDecimal.match(text)
         fmt = _fmt
         dec = int_(_.group()) if (_ := reNumber.search(fmt)) else None
         if fmt == "D":
             try:
-                text = datetime.datetime.strptime(text.strip(), "%Y-%m-%d").strftime("%d.%m.%Y")
+                text = datetime.datetime.strptime(text, "%Y-%m-%d").strftime("%d.%m.%Y")
             except Exception:
                 pass
         elif isNumber and fmt:
