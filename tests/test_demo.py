@@ -35,7 +35,7 @@ def run_demos_test(format="docx"):
             # Вызываем функцию demo(), если есть
             func = getattr(mod, "demo", None)
             if callable(func):
-                func(module_name + "." +format, False)
+                func(module_name + "." + format, False)
                 time.sleep(2)
             else:
                 print(f"⚠ {module_name} does not have a demo() function")
@@ -55,6 +55,7 @@ def test_demos_pdf():
 
 def test_demos_html():
     run_demos_test("html")
+
 
 if __name__ == "__main__":
     test_demos_docx()
