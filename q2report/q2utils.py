@@ -12,9 +12,14 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import ast
 from decimal import Decimal
 import datetime
 import re
+
+class WHITE_LIST_BROKEN(Exception):
+    pass
+
 
 
 def is_sub_list(sublst, lst):
@@ -75,3 +80,105 @@ reNumber = re.compile(r"\d+")
 
 class Q2Heap:
     pass
+
+
+class TotalControlTransformer(ast.NodeTransformer):
+    def __init__(self):
+        self.placeholders = {}
+        self.counter = 0
+
+    def _next_ph(self, type_str, original_value):
+        ph_name = f"ph_{self.counter:04d}"
+        self.counter += 1
+        self.placeholders[ph_name] = {"type": type_str, "value": original_value}
+        return ph_name
+
+    def _parse_rep_chain(self, node):
+        """
+        Рекурсивный хелпер.
+        """
+        # Базовый случай: перемнная
+        if isinstance(node, ast.Name):
+            return node.id
+
+        # Случай 1: Атрибут (.supplier)
+        if isinstance(node, ast.Attribute):
+            base = self._parse_rep_chain(node.value)
+            if base is not None:
+                if node.attr.startswith("_"):
+                    raise WHITE_LIST_BROKEN(f"Access to private attribute banned: {node.attr}")
+                return f"{base}.{node.attr}"
+
+        # Случай 2: Индекс ([0] или ['phone'])
+        if isinstance(node, ast.Subscript):
+            base = self._parse_rep_chain(node.value)
+            if base is not None:
+                # Извлекаем сам индекс (поддерживаем только числа и строки)
+                if isinstance(node.slice, ast.Constant):
+                    idx_val = node.slice.value
+                    if isinstance(idx_val, str) and idx_val.startswith("_"):
+                        raise WHITE_LIST_BROKEN(f"Access to private keys banned: {idx_val}")
+                    return f"{base}[{repr(idx_val)}]"
+                else:
+                    raise WHITE_LIST_BROKEN("Dynamic/complex expressions inside brackets [] are not allowed")
+
+        # Случай 3: Вызов метода на объекте rep (.get('phone'))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            base = self._parse_rep_chain(node.func.value)
+            if base is not None:
+                method_name = node.func.attr
+                # Собираем аргументы метода (только константы для безопасности)
+                args_repr = []
+                for arg in node.args:
+                    if isinstance(arg, ast.Constant):
+                        args_repr.append(repr(arg.value))
+                    else:
+                        raise WHITE_LIST_BROKEN("Only constant arguments are allowed in data methods")
+
+                args_str = ", ".join(args_repr)
+                return f"{base}.{method_name}({args_str})"
+
+        return None
+
+    def visit_Attribute(self, node):
+        chain = self._parse_rep_chain(node)
+        if chain is not None:
+            ph_name = self._next_ph("data_chain", chain)
+            return ast.Name(id=ph_name, ctx=ast.Load())
+        return self.generic_visit(node)
+
+    def visit_Subscript(self, node):
+        chain = self._parse_rep_chain(node)
+        if chain is not None:
+            ph_name = self._next_ph("data_chain", chain)
+            return ast.Name(id=ph_name, ctx=ast.Load())
+        return self.generic_visit(node)
+
+    def visit_Call(self, node):
+        # Проверяем, не является ли весь этот вызов цепочкой данных (напр. rep.d.get('phone'))
+        chain = self._parse_rep_chain(node)
+        if chain is not None:
+            ph_name = self._next_ph("data_chain", chain)
+            return ast.Name(id=ph_name, ctx=ast.Load())
+
+        # Если это обычный вызов функции (напр. round(...)), обрабатываем внутренности
+        node.args = [self.visit(arg) for arg in node.args]
+        node.keywords = [self.visit(kw) for kw in node.keywords]
+
+        if isinstance(node.func, ast.Name):
+            func_name = node.func.id
+            if func_name.startswith("__"):
+                raise WHITE_LIST_BROKEN(f"Dunder functions are forbidden: {func_name}")
+
+            ph_name = self._next_ph("function", func_name)
+            node.func = ast.Name(id=ph_name, ctx=ast.Load())
+
+        return node
+
+    def visit_Name(self, node):
+        # Перехватываем изолированные переменные (price, qt)
+        if node.id.startswith("__"):
+            raise WHITE_LIST_BROKEN(f"Dunder names are strictly forbidden: {node.id}")
+
+        ph_name = self._next_ph("variable", node.id)
+        return ast.Name(id=ph_name, ctx=ast.Load())

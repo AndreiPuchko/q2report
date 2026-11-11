@@ -12,19 +12,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
-import json
 from copy import deepcopy
+from q2report.q2printer.q2printer import Q2Printer, get_printer
+from q2report.q2utils import num, Q2Heap, int_, today, float_, reDecimal, reNumber, TotalControlTransformer
+
+import ast
+import json
 import re
 import os
 import html
 import base64
 import datetime
-from q2report.q2utils import num
-
-
-from q2report.q2printer.q2printer import Q2Printer, get_printer
-from q2report.q2utils import num, Q2Heap, int_, today, float_, reDecimal, reNumber
+import builtins
 
 re_calc = re.compile(r"\{.*?\}")
 re_q2image = re.compile(r"\{q2image\s*\(\s*.*?\s*\)\}|\{.*\:I.*\}")
@@ -33,6 +32,11 @@ re_image_format_string = re.compile(r":I.*?}")
 re_image_format_data = re.compile(r",|\*|\s|[a-zA-Z_-]")
 
 engine_name = None
+
+
+class WHITE_LIST_BROKEN(Exception):
+    """Raised when security check or evaluation fails."""
+
 
 # TODO: before_print, after_print
 
@@ -91,6 +95,18 @@ def q2image(image, width=0, height=0):
 
 
 image = q2image
+
+
+WHITE_LIST = {
+    "abs": abs,
+    "min": min,
+    "max": max,
+    "len": len,
+    "round": round,
+    "num": num,
+    "q2image": q2image,
+    "image": q2image,
+}
 
 
 def set_engine(engine2="PyQt6"):
@@ -792,7 +808,33 @@ class Q2Report:
             str: Evaluation result.
         """
         try:
-            rez = str(eval(formula, self.mydata))
+            data = self.prevrowdata if self.use_prevrowdata else self.data
+            data.update(self.mydata)
+            tree = ast.parse(formula, mode="eval")
+            transformer = TotalControlTransformer()
+            transformed_tree = transformer.visit(tree)
+            ast.fix_missing_locations(transformed_tree)
+
+            compiled_code = compile(transformed_tree, "", "eval")
+            eval_globals = {"__builtins__": None}
+            eval_locals = {}
+            for ph_name, info in transformer.placeholders.items():
+                item_type = info["type"]
+                original_value = info["value"]
+                if item_type == "function":
+                    if original_value in WHITE_LIST:
+                        eval_locals[ph_name] = WHITE_LIST[original_value]
+                    elif original_value in data:
+                        eval_locals[ph_name] = data[original_value]
+                    else:
+                        raise WHITE_LIST_BROKEN(f"Function '{original_value}' is not allowed!")
+                elif item_type == "variable":
+                    eval_locals[ph_name] = data.get(original_value, "")
+                elif item_type == "data_chain":
+                    safe_locals = {"rep": self}
+                    safe_locals.update(data)
+                    eval_locals[ph_name] = eval(original_value, eval_globals, safe_locals)
+            rez = str(eval(compiled_code, eval_globals, eval_locals))
         except BaseException as e:
             rez = f"Evaluating error: {formula} - {e}"
         return rez
