@@ -170,7 +170,7 @@ class Q2PrinterXlsx(Q2Printer):
         for col_index, col in enumerate(self._cm_columns_widths):
             cols.append(
                 f'\n\t<col min="{col_index + 1}" max="{col_index + 1}" '
-                f' width="{col * num(5.105)}" bestFit="0" customWidth="1"/>'
+                f' width="{col * num(5.622)}" bestFit="0" customWidth="1"/>'
             )
         cols.append("\n</cols>")
         self.current_sheet["cols"] = "".join(cols)
@@ -339,8 +339,8 @@ class Q2PrinterXlsx(Q2Printer):
         return xf_id
 
     def get_font_id(self, style):
-        # font_size = num(str(style["font-size"]).replace("pt", ""))
-        font_size = num(str(style["font-size"]).replace("pt", "")) * num(0.93)
+        font_size = num(str(style["font-size"]).replace("pt", ""))
+        # font_size = num(str(style["font-size"]).replace("pt", "")) * num(0.93)
         font_family = style["font-family"]
         font_weight = "<b/>" if style.get("font-weight", "") == "bold" else ""
         font_color = f'<color rgb="{css_color_to_rgb(color)}"/>' if (color := style.get("color", "")) else ""
@@ -380,9 +380,9 @@ class Q2PrinterXlsx(Q2Printer):
                 cell_width, cell_height, float(image_width), float(image_height), style
             )
 
-            image_width = num(image_width) * num(12700) * points_in_cm * num(0.915)
-            image_height = num(image_height) * num(12700) * points_in_cm * num(0.95)
-            offset_left = num(offset_left) * num(12700) * points_in_cm * num(0.92)
+            image_width = num(image_width) * num(12700) * points_in_cm
+            image_height = num(image_height) * num(12700) * points_in_cm
+            offset_left = num(offset_left) * num(12700) * points_in_cm
             offset_top = num(offset_top) * num(12700) * points_in_cm
 
             tmp_drawing = {}
