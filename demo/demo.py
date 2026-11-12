@@ -4,7 +4,7 @@ if __name__ == "__main__":
     sys.path.insert(0, ".")
 
 
-from demo.demo_08 import demo
+from demo.demo_12 import demo
 
 # TODO: min height for row
 # TODO: parse : in formulae

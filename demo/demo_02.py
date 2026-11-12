@@ -57,12 +57,12 @@ def demo(type="pdf", open_output_file=True):
     )
     report.set_cell(
         0,
-        2,
+        4,
         colspan=2,
         data="Invoice <b>{rep.d.invoice.number}<b> {rep.d.invoice.number}",
         style=report.make_style(font_size=20, alignment=5, border_width="1 1 1 1"),
     )
-    report.set_cell(0, 5, data=f"{image_data}", format="I1*1", style=report.make_style(alignment=5))
+    report.set_cell(0, 2, data=f"{image_data}", format="I1*1", style=report.make_style(alignment=5))
     label_style = report.make_style(text_align="right", font_size=8, padding="0.05 0.5 0.05 0.05")
 
     report.set_cell(1, 0, colspan=2, data="Date of origin:", style=label_style)

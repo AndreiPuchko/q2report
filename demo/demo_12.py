@@ -1,0 +1,938 @@
+
+from q2report import Q2Report
+import json
+
+report_content = {
+  "pages": [
+    {
+      "columns": [
+        {
+          "rows": [
+            {
+              "role": "table",
+              "data_source": "header",
+              "cells": {
+                "1,0": {
+                  "data": "Absender (Verk\u00e4ufer):",
+                  "rowspan": 1,
+                  "colspan": 6,
+                  "style": {
+                    "font-weight": "bold",
+                    "border-width": "0 0 1 0",
+                    "vertical-align": "bottom"
+                  }
+                },
+                "2,0": {
+                  "data": "{seller_name}",
+                  "rowspan": 1,
+                  "colspan": 7,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "3,0": {
+                  "data": "{seller_street}",
+                  "rowspan": 1,
+                  "colspan": 7,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "4,0": {
+                  "data": "{seller_postal_code} {seller_city}",
+                  "rowspan": 1,
+                  "colspan": 7,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "1,8": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,7": {
+                  "data": "Rechnung",
+                  "style": {
+                    "font-size": "18pt",
+                    "font-weight": "bold",
+                    "text-align": "center",
+                    "border-width": "0 0 1 0",
+                    "vertical-align": "middle"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "1,9": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,10": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "2,9": {
+                  "data": "{invoice_number}",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "text-align": "center"
+                  }
+                },
+                "3,9": {
+                  "data": "{invoice_date:D}",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "text-align": "center"
+                  }
+                },
+                "4,9": {
+                  "data": "{delivery_date if not delivery_date<=\"0001-01-01\" else \"\":D}",
+                  "rowspan": 1,
+                  "colspan": 2,
+                  "style": {
+                    "text-align": "center"
+                  }
+                },
+                "1,5": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,3": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "1,4": {
+                  "style": {
+                    "font-size": "14pt",
+                    "font-weight": "bold"
+                  }
+                },
+                "2,6": {
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "3,6": {
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "4,6": {
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "2,7": {
+                  "data": "Rechnungs-Nr.",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "4,7": {
+                  "data": "{\"Lieferdatum\" if not delivery_date<=\"0001-01-01\" else \"\"}",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "3,7": {
+                  "data": "Datum",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "0,0": {
+                  "data": "{'iVBORw0KGgoAAAANSUhEUgAAAEoAAAAhCAYAAAB+4z3oAAAACXBIWXMAAA7DAAAOwwHHb6hkAAADyUlEQVRoge1aQUrsQBCt+ReQ1guIWYmCIB0FcSVIz1JXmSvEvZvoXjInGE+QwX1EXbgwg6CDMgHFjfEEEcUL1F98kp+udDoZTOZH+A8KUkl3zeuX7kp1Mh1ERPiPUvz61wR+CrRCDYdD6HQ6qfX7/Vnxah20Qt3c3Ej+6upqo2TaDK1Q4/FY8jc3Nxsl02Z0dMm80+mkx4ZhwOvr60xItRGFM2o0Gkk+57xxMm1GoVDPz8+Sv76+3jiZNqNQqDAMJX9ra6txMm1GoVA0kS8vL08d/O3tDU5PT6Hb7UplhmmacHR0BO/v75VjnZ+fw8HBAZimKcWan5+HbrcLvV4P+v1+LmXUxgcViOMYASA1wzBUzbRwXRcZY1Icaowx9H1fGycIAjQMQxsna67rNsJHKVQQBFIA27anEsm27coDY4xhFEXKOJ7nKftwzlEIoRx4EASN8FEK5bqu1HkwGFQWifZN7nIcx4iIGEURcs6l65ZlVRIpGyeBZVlSG3q9Lj5KoeiPq+6SClEU5UhNJpNcuziOc7OBxsleZ4wp4yCi1I5z3ggfxAKhaE6oCjrFi/IFIqIQonAANE7RjKZC0BRRFx9EhVA0kdO7pAOdBXQZ6Igls3aaBwldnp7n1c4nQa48eHl5kXzTNGkTJUajEXx8fKR+r9eDhYWFSn0B/pYfd3d30vnDw8PCPnTTni1h6uKTICfU7e2t5K+trVUK/PX1JfmLi4va9nTfmAzi6elJOr+yslIY4+rqSvKzXOvikyAn1PX1dWWiWdAB6hCGIURRlPqWZaXHj4+PlWIMh0MphhCiET4JckLd399L/vb2dqUfm5ubq0zs5ORE8vf29tLjz8/PSjGOj48lf2dnpxE+KbIJiz5FhBDFmZuAFqlFfWkCpsnacRxtgkZUF5C0oq6LTwJJKN/3c4VXEARay4LWIrZtS4WdaoA0hop48qiOoihX4yWmeqLVwUcplKqKLbMsBoPBVH1Vs0VV/FGzLEtqUzQL6uCjFIrWEmWmms506aisbDNctMcD+FPXTSaT3EwpQh18ckKV3UlqjuMogwZBgLZtSxU+Ywwty0LP87SFXzZGdplxztMKvazQbIJP9f1Ji0DzVNHbhzrx44Siy061028CrRKqbGbEcZx7JVL1zcZ30SqhhBAohEDf96W8Eccxep6Xe6sx7QvF70D7XW/WyH5HLAPnHC4uLqba6H4HrfmThu6jAIXjODAej2cmEkDJl+JZIwxDODs7g4eHB7i8vEzPM8ZgY2MD9vf3YXd3F5aWlmbOrVVCtRm/ARrNYfAt8eslAAAAAElFTkSuQmCC':I3x1}",
+                  "style": {
+                    "text-align": "center",
+                    "vertical-align": "middle",
+                    "border-width": "0 0 1 0"
+                  },
+                  "rowspan": 1,
+                  "colspan": 11
+                },
+                "0,10": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "7,0": {
+                  "data": "Kunde (Empf\u00e4nger):",
+                  "rowspan": 1,
+                  "colspan": 6,
+                  "style": {
+                    "font-weight": "bold",
+                    "border-width": "0 0 1 0",
+                    "vertical-align": "bottom"
+                  }
+                },
+                "10,0": {
+                  "data": "{buyer_postal_code} {buyer_city}",
+                  "rowspan": 1,
+                  "colspan": 6,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "8,0": {
+                  "data": "{buyer_name}",
+                  "rowspan": 1,
+                  "colspan": 6,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "9,0": {
+                  "data": "{buyer_street}",
+                  "rowspan": 1,
+                  "colspan": 6,
+                  "style": {
+                    "padding": "0.05cm 0.05cm 0.05cm 0.20cm"
+                  }
+                },
+                "5,7": {
+                  "data": "{\"Zahlungsfrist\" if not due_date<=\"0001-01-01\" else \"\"}",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "5,9": {
+                  "data": "{due_date if not due_date<=\"0001-01-01\" else \"\":D}",
+                  "style": {
+                    "text-align": "center"
+                  },
+                  "rowspan": 1,
+                  "colspan": 2
+                },
+                "0,9": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,8": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,7": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,6": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,1": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,2": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,3": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,4": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "0,5": {
+                  "style": {
+                    "text-align": "right",
+                    "vertical-align": "middle"
+                  }
+                },
+                "12,0": {
+                  "data": "{initial_note}",
+                  "rowspan": 1,
+                  "colspan": 11,
+                  "style": {
+                    "font-size": "12pt"
+                  }
+                }
+              },
+              "style": {
+                "font-size": "12pt"
+              },
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "1.00-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "1.00-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0.50-0",
+                "0-0"
+              ]
+            },
+            {
+              "role": "table",
+              "data_source": "lines",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "{num(line_number)}",
+                  "style": {
+                    "text-align": "center"
+                  }
+                },
+                "0,1": {
+                  "data": "{name}<br><font size=-1>{description}</font>",
+                  "rowspan": 1,
+                  "colspan": 6
+                },
+                "0,7": {
+                  "data": "{quantity}",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "format": "N4"
+                },
+                "0,8": {
+                  "data": "{net_price}",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "format": "N2"
+                },
+                "0,9": {
+                  "data": "{vat_rate}",
+                  "style": {
+                    "text-align": "right"
+                  },
+                  "format": "N2"
+                },
+                "0,10": {
+                  "data": "{net_total}",
+                  "format": "F2",
+                  "style": {
+                    "text-align": "right"
+                  }
+                }
+              },
+              "table_header": {
+                "role": "table_header",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,7": {
+                    "data": "Menge",
+                    "style": {
+                      "text-align": "center"
+                    }
+                  },
+                  "0,8": {
+                    "data": "Preis  (\u20ac)",
+                    "style": {
+                      "text-align": "center"
+                    }
+                  },
+                  "0,9": {
+                    "data": "VAT rate %",
+                    "style": {
+                      "text-align": "center"
+                    }
+                  },
+                  "0,10": {
+                    "data": "Betrag  (\u20ac)",
+                    "style": {
+                      "text-align": "center"
+                    }
+                  },
+                  "0,0": {
+                    "data": "Nr.",
+                    "style": {
+                      "text-align": "center"
+                    }
+                  },
+                  "0,1": {
+                    "data": "Beschreibung",
+                    "rowspan": 1,
+                    "colspan": 6,
+                    "style": {
+                      "text-align": "center"
+                    }
+                  }
+                },
+                "style": {
+                  "border-width": "1 1 1 1"
+                }
+              },
+              "table_footer": {
+                "role": "table_footer",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,10": {
+                    "data": "{rep.d.header.net_amount}",
+                    "style": {
+                      "text-align": "right",
+                      "border-width": "1 0 0 0"
+                    },
+                    "format": "F2"
+                  },
+                  "0,9": {
+                    "data": "Nettobetrag",
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,0": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,1": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,2": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,3": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,4": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,5": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,6": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,7": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  },
+                  "0,8": {
+                    "style": {
+                      "border-width": "1 0 0 0"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "role": "table",
+              "data_source": "vat_breakdown",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,8": {
+                  "data": "{tax_base_amount}",
+                  "style": {
+                    "text-align": "right",
+                    "border-width": "0 0 1 0"
+                  },
+                  "format": "F2"
+                },
+                "0,9": {
+                  "data": "{vat_rate}",
+                  "style": {
+                    "text-align": "right",
+                    "border-width": "0 0 1 0"
+                  },
+                  "format": "N2"
+                },
+                "0,10": {
+                  "data": "{tax_amount}",
+                  "style": {
+                    "text-align": "right",
+                    "border-width": "0 0 1 0"
+                  },
+                  "format": "F2"
+                }
+              },
+              "table_header": {
+                "role": "table_header",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "1-0",
+                  "0-0"
+                ],
+                "cells": {
+                  "1,8": {
+                    "data": "Netto (\u20ac)",
+                    "style": {
+                      "border-width": "1 1 1 1",
+                      "text-align": "center"
+                    }
+                  },
+                  "1,9": {
+                    "data": "VAT rate %",
+                    "style": {
+                      "border-width": "1 1 1 1",
+                      "text-align": "center"
+                    }
+                  },
+                  "1,10": {
+                    "data": "VAT Betrag  (\u20ac)",
+                    "style": {
+                      "border-width": "1 1 1 1",
+                      "text-align": "center"
+                    }
+                  }
+                }
+              },
+              "table_footer": {
+                "role": "table_footer",
+                "data_source": "",
+                "groupby": "",
+                "table_groups": [],
+                "print_when": "",
+                "print_after": "",
+                "new_page_before": "",
+                "new_page_after": "",
+                "heights": [
+                  "0-0"
+                ],
+                "cells": {
+                  "0,10": {
+                    "data": "{rep.d.header.gross_amount}",
+                    "style": {
+                      "font-weight": "bold",
+                      "text-align": "right",
+                      "vertical-align": "middle",
+                      "font-size": "12pt"
+                    },
+                    "format": "F2"
+                  },
+                  "0,9": {
+                    "style": {
+                      "font-weight": "bold",
+                      "text-align": "right",
+                      "vertical-align": "middle"
+                    }
+                  },
+                  "0,8": {
+                    "data": "Grossbetrag",
+                    "style": {
+                      "font-weight": "bold",
+                      "text-align": "right",
+                      "vertical-align": "middle"
+                    },
+                    "rowspan": 1,
+                    "colspan": 2
+                  }
+                }
+              }
+            },
+            {
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "{rep.d.header.closing_note}",
+                  "rowspan": 1,
+                  "colspan": 11
+                }
+              },
+              "style": {
+                "font-size": "12pt"
+              }
+            },
+            {
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "1 < 0",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "Bei Zahlung innerhalb von {rep.d.header.skonto_days} Tagen ab Rechnungsdatum, sp\u00e4testens jedoch bis zum {rep.d.header.skonto_due_date:D}, gew\u00e4hren wir {rep.d.header.skonto_rate}% % Skonto.",
+                  "rowspan": 1,
+                  "colspan": 11,
+                  "style": {
+                    "border-width": "1 1 1 1",
+                    "border-color": "#b2b2b2",
+                    "padding": "0.15cm 0.05cm 0.15cm 0.05cm"
+                  }
+                }
+              }
+            },
+            {
+              "role": "free",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0"
+              ],
+              "cells": {
+                "0,0": {
+                  "data": "Der Rechnungsbetrag ist innerhalb von {rep.d.header.payment_terms_days} Tagen ab Rechnungsdatum, sp\u00e4testens jedoch bis zum \r\n{rep.d.header.due_date:D}, ohne Abzug f\u00e4llig.",
+                  "rowspan": 1,
+                  "colspan": 11,
+                  "style": {
+                    "border-width": "1 1 1 1",
+                    "border-color": "#b2b2b2",
+                    "padding": "0.15cm 0.05cm 0.15cm 0.05cm"
+                  }
+                }
+              }
+            },
+            {
+              "role": "footer",
+              "data_source": "",
+              "groupby": "",
+              "table_groups": [],
+              "print_when": "",
+              "print_after": "",
+              "new_page_before": "",
+              "new_page_after": "",
+              "heights": [
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0",
+                "0-0"
+              ],
+              "cells": {
+                "0,1": {
+                  "format": "N0"
+                },
+                "0,0": {
+                  "style": {
+                    "border-width": "1 0 0 0"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": "{rep.d.header.seller_name}"
+                },
+                "0,8": {
+                  "data": "{rep.d.header.bank_name}",
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "9pt"
+                  },
+                  "rowspan": 2,
+                  "colspan": 3
+                },
+                "0,4": {
+                  "style": {
+                    "border-width": "1 0 0 0"
+                  },
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": " {rep.d.header.seller_commercial_register_court}"
+                },
+                "1,8": {
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "10pt"
+                  }
+                },
+                "1,0": {
+                  "data": "{rep.d.header.seller_street} {rep.d.header.seller_postal_code} {rep.d.header.seller_city}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "3,8": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "3,0": {
+                  "data": "F: {rep.d.header.seller_fax}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "2,0": {
+                  "data": "T: {rep.d.header.seller_phone}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "4,0": {
+                  "data": "{rep.d.header.seller_email}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "4,8": {
+                  "data": "BIC: {rep.d.header.bic_swift}",
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "9pt"
+                  },
+                  "rowspan": 2,
+                  "colspan": 3
+                },
+                "2,8": {
+                  "data": "IBAN: {rep.d.header.iban}",
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "9pt"
+                  },
+                  "rowspan": 2,
+                  "colspan": 3
+                },
+                "1,4": {
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": "Handelsregister-Nr.:  {rep.d.header.seller_legal_id}"
+                },
+                "2,4": {
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": "Steuernummer: {rep.d.header.seller_tax_number}"
+                },
+                "3,4": {
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": "USt-IdNr. {rep.d.header.seller_vat_id}"
+                },
+                "4,4": {
+                  "rowspan": 1,
+                  "colspan": 4,
+                  "data": "Leitweg-ID / URI: {rep.d.header.seller_uri_id}"
+                },
+                "5,4": {
+                  "data": "Gesch\u00e4ftsf\u00fchrer: {rep.d.header.seller_managing_director}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "5,0": {
+                  "data": "W: {rep.d.header.seller_webpage}",
+                  "rowspan": 1,
+                  "colspan": 4
+                },
+                "1,10": {
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "10pt"
+                  }
+                },
+                "0,9": {
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "10pt"
+                  }
+                },
+                "1,9": {
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "10pt"
+                  }
+                },
+                "0,10": {
+                  "style": {
+                    "border-width": "1 0 0 0",
+                    "font-size": "10pt"
+                  }
+                },
+                "2,9": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "2,10": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "3,10": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "3,9": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "5,8": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "4,10": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "4,9": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "5,10": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                },
+                "5,9": {
+                  "style": {
+                    "font-size": "10pt"
+                  }
+                }
+              },
+              "style": {
+                "font-size": "8pt",
+                "padding": "0.01cm 0.05cm 0.01cm 0.05cm",
+                "vertical-align": "middle"
+              }
+            }
+          ],
+          "widths": [
+            "0.00",
+            "0.00",
+            "0.00",
+            "0",
+            "0",
+            "0",
+            "0.00",
+            "2.00",
+            "2.10",
+            "2.00",
+            "2.50"
+          ]
+        }
+      ],
+      "page_width": "21.00",
+      "page_height": "29.70",
+      "page_margin_left": "2.00",
+      "page_margin_top": "1.00",
+      "page_margin_right": "1.00",
+      "page_margin_bottom": "1.00"
+    }
+  ],
+  "style": {
+    "font-family": "Arial",
+    "font-size": "10pt",
+    "font-weight": "normal",
+    "font-style": "",
+    "text-decoration": "",
+    "border-width": "0 0 0 0",
+    "padding": "0.05cm 0.05cm 0.05cm 0.05cm",
+    "background": "#FFFFFF",
+    "color": "#000000",
+    "border-color": "#000000",
+    "text-align": "left",
+    "vertical-align": "top"
+  }
+}
+
+report_data = {'params': {':id': '1'}, 'header': [{'id': '1', 'prefix': 'RE', 'invoice_number': 'INV-3035-11-103', 'invoice_date': '2026-01-07', 'delivery_date': '2026-01-20', 'buyer_id': '2', 'payment_terms_days': '14', 'due_date': '2026-01-14', 'skonto_rate': '3.00', 'skonto_days': '3', 'skonto_due_date': '2026-01-11', 'net_amount': '60445.00', 'gross_amount': '71929.55', 'initial_note': 'Vielen Dank für die gute Zusammenarbeit. Wir berechnen Ihnen vereinbarungsgemäß folgende Leistungen', 'closing_note': 'Wir bedanken uns für das entgegengebrachte Vertrauen. Bei Fragen stehen wir Ihnen gerne zur Verfügung', 'seller_id': '1', 'iban': 'DE 1231 651 6916 1981 9819 81', 'bic_swift': 'SBDEJ165', 'bank_name': 'Sparkasse Süd', 'curr_id': '978', 'zugferd_pdf_id': '684', 'q2_time': '20260422182418', 'q2_mode': 'u', 'q2_hidden': '', 'q2_bcolor': '0', 'q2_fcolor': '0', 'seller_name': 'Webware Internet Solutions GmbH', 'seller_street': 'Einbahn Straße 19', 'seller_postal_code': '12345', 'seller_city': 'Musterstadt', 'seller_country_id': 'DE', 'seller_vat_id': 'DE279247134', 'seller_legal_id': 'HRB 15635', 'seller_tax_number': '262/481/0918', 'seller_uri_id': '', 'seller_commercial_register_court': 'Amtsgericht Musterstadt', 'seller_managing_director': 'Dipl. -Kfm Ale Musterchef', 'seller_phone': '+49 (0) 123 654 78 98', 'seller_fax': '+49 (0) 123 654 44 33', 'seller_email': 'mustermail@mailmail.de', 'seller_webpage': 'wwis.de', 'buyer_name': 'Musterfirma GmbH', 'buyer_street': 'Musterstraße 14', 'buyer_postal_code': '54321', 'buyer_city': 'Musterstadt', 'buyer_country_id': 'DE', 'buyer_vat_id': '', 'currency_code': 'EUR'}], 'lines': [{'line_number': '1', 'description': 'Rolle Netzwerkkabel, 100 Meter.', 'quantity': '333.0000', 'unit_id': '4', 'net_price': '55.0000', 'net_total': '18315.00', 'vat_rate': '19.00', 'name': 'Netzwerkkabel Cat 6 (100m)'}, {'line_number': '2', 'description': 'Rolle Netzwerkkabel, 100 Meter.', 'quantity': '333.0000', 'unit_id': '4', 'net_price': '55.0000', 'net_total': '18315.00', 'vat_rate': '19.00', 'name': 'Netzwerkkabel Cat 6 (100m)'}, {'line_number': '3', 'description': 'Rolle Netzwerkkabel, 100 Meter.', 'quantity': '333.0000', 'unit_id': '4', 'net_price': '55.0000', 'net_total': '18315.00', 'vat_rate': '19.00', 'name': 'Netzwerkkabel Cat 6 (100m)'}, {'line_number': '4', 'description': 'Arbeitsstunden für die Entwicklung der Benutzeroberfläche.', 'quantity': '50.0000', 'unit_id': '2', 'net_price': '110.0000', 'net_total': '5500.00', 'vat_rate': '19.00', 'name': 'Frontend-Entwicklung'}], 'vat_breakdown': [{'vat_rate': '19.00', 'tax_base_amount': '42130.00', 'tax_amount': '8004.70'}]}
+
+def demo(type="pdf", open_output_file=True):
+    report = Q2Report()
+    report.load(report_content)
+    report.run(f"temp/repo.{type}", data=report_data, open_output_file=open_output_file)
+
+if __name__ == "__main__":  # pragma: no cover
+    demo()
