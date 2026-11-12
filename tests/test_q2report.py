@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import patch, mock_open
 from q2report import __version__
 from q2report.q2report import Q2Report, Q2Report_rows
-from q2report.q2utils import is_sub_list, float_, set_dict_default
+from q2report.q2printer.q2printer_xlsx import Q2PrinterXlsx, points_in_cm
+from q2report.q2utils import is_sub_list, float_, num, set_dict_default
 
 image_data = (
     "iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBT"
@@ -49,6 +50,47 @@ def test_utils():
     set_dict_default(dic, "key1", 333)
     assert dic["key"] == 45
     assert dic["key1"] == 333
+
+
+def test_xlsx_image_is_centered_in_spanned_cell():
+    printer = Q2PrinterXlsx("temp/test.xlsx")
+    printer._cm_columns_widths = [2, 4]
+    printer._columns_count = 2
+    printer.current_sheet = {"drawing": [], "spans": [], "sheetData": []}
+
+    style = {
+        "text-align": "center",
+        "vertical-align": "middle",
+        "padding": "0",
+        "font-size": "10pt",
+        "font-family": "Calibri",
+        "font-weight": "normal",
+        "border-width": "0",
+    }
+    rows = {
+        "heights": [0],
+        "cells": {
+            "0,0": {
+                "colspan": 2,
+                "rowspan": 1,
+                "images": [
+                    {
+                        "image": image_data,
+                        "width": 1,
+                        "height": 1,
+                        "pixel_width": 24,
+                        "pixel_height": 24,
+                    }
+                ],
+            }
+        },
+    }
+
+    printer.render_rows_section(rows, style, 0)
+
+    drawing = printer.current_sheet["drawing"][0]
+    assert drawing["_col"] == 1
+    assert drawing["_col_off_emu"] == int(num("0.5") * num(12700) * points_in_cm)
 
 
 def test_wrongs():

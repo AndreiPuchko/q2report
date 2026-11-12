@@ -380,6 +380,15 @@ class Q2PrinterXlsx(Q2Printer):
                 cell_width, cell_height, float(image_width), float(image_height), style
             )
 
+            offset_left = num(offset_left)
+            anchor_col = col
+            while anchor_col < len(self._cm_columns_widths):
+                column_width = num(self._cm_columns_widths[anchor_col])
+                if offset_left < column_width:
+                    break
+                offset_left -= column_width
+                anchor_col += 1
+
             image_width = num(image_width) * num(12700) * points_in_cm
             image_height = num(image_height) * num(12700) * points_in_cm
             offset_left = num(offset_left) * num(12700) * points_in_cm
@@ -388,7 +397,7 @@ class Q2PrinterXlsx(Q2Printer):
             tmp_drawing = {}
             tmp_drawing["_id"] = imageIndex + 1
             tmp_drawing["_row"] = self.sheet_current_row - 1
-            tmp_drawing["_col"] = col
+            tmp_drawing["_col"] = anchor_col
             tmp_drawing["_height"] = int(image_height)
             tmp_drawing["_width"] = int(image_width)
             tmp_drawing["_col_off_emu"] = int(offset_left)
