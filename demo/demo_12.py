@@ -97,7 +97,7 @@ report_content = {
                                     "colspan": 2,
                                 },
                                 "0,0": {
-                                    "data": "{'iVBORw0KGgoAAAANSUhEUgAAAEoAAAAhCAYAAAB+4z3oAAAACXBIWXMAAA7DAAAOwwHHb6hkAAADyUlEQVRoge1aQUrsQBCt+ReQ1guIWYmCIB0FcSVIz1JXmSvEvZvoXjInGE+QwX1EXbgwg6CDMgHFjfEEEcUL1F98kp+udDoZTOZH+A8KUkl3zeuX7kp1Mh1ERPiPUvz61wR+CrRCDYdD6HQ6qfX7/Vnxah20Qt3c3Ej+6upqo2TaDK1Q4/FY8jc3Nxsl02Z0dMm80+mkx4ZhwOvr60xItRGFM2o0Gkk+57xxMm1GoVDPz8+Sv76+3jiZNqNQqDAMJX9ra6txMm1GoVA0kS8vL08d/O3tDU5PT6Hb7UplhmmacHR0BO/v75VjnZ+fw8HBAZimKcWan5+HbrcLvV4P+v1+LmXUxgcViOMYASA1wzBUzbRwXRcZY1Icaowx9H1fGycIAjQMQxsna67rNsJHKVQQBFIA27anEsm27coDY4xhFEXKOJ7nKftwzlEIoRx4EASN8FEK5bqu1HkwGFQWifZN7nIcx4iIGEURcs6l65ZlVRIpGyeBZVlSG3q9Lj5KoeiPq+6SClEU5UhNJpNcuziOc7OBxsleZ4wp4yCi1I5z3ggfxAKhaE6oCjrFi/IFIqIQonAANE7RjKZC0BRRFx9EhVA0kdO7pAOdBXQZ6Igls3aaBwldnp7n1c4nQa48eHl5kXzTNGkTJUajEXx8fKR+r9eDhYWFSn0B/pYfd3d30vnDw8PCPnTTni1h6uKTICfU7e2t5K+trVUK/PX1JfmLi4va9nTfmAzi6elJOr+yslIY4+rqSvKzXOvikyAn1PX1dWWiWdAB6hCGIURRlPqWZaXHj4+PlWIMh0MphhCiET4JckLd399L/vb2dqUfm5ubq0zs5ORE8vf29tLjz8/PSjGOj48lf2dnpxE+KbIJiz5FhBDFmZuAFqlFfWkCpsnacRxtgkZUF5C0oq6LTwJJKN/3c4VXEARay4LWIrZtS4WdaoA0hop48qiOoihX4yWmeqLVwUcplKqKLbMsBoPBVH1Vs0VV/FGzLEtqUzQL6uCjFIrWEmWmms506aisbDNctMcD+FPXTSaT3EwpQh18ckKV3UlqjuMogwZBgLZtSxU+Ywwty0LP87SFXzZGdplxztMKvazQbIJP9f1Ji0DzVNHbhzrx44Siy061028CrRKqbGbEcZx7JVL1zcZ30SqhhBAohEDf96W8Eccxep6Xe6sx7QvF70D7XW/WyH5HLAPnHC4uLqba6H4HrfmThu6jAIXjODAej2cmEkDJl+JZIwxDODs7g4eHB7i8vEzPM8ZgY2MD9vf3YXd3F5aWlmbOrVVCtRm/ARrNYfAt8eslAAAAAElFTkSuQmCC':I3x1}",
+                                    "data": "{const.logo:I3x1}",
                                     "style": {
                                         "text-align": "center",
                                         "vertical-align": "middle",
@@ -395,7 +395,7 @@ report_content = {
                             "print_after": "",
                             "new_page_before": "",
                             "new_page_after": "",
-                            "heights": ["0-0"],
+                            "heights": ["0-0", "0-0"],
                             "cells": {
                                 "0,0": {
                                     "data": "Bei Zahlung innerhalb von {rep.d.header.skonto_days} Tagen ab Rechnungsdatum, sp\u00e4testens jedoch bis zum {rep.d.header.skonto_due_date:D}, gew\u00e4hren wir {rep.d.header.skonto_rate}% % Skonto.",
@@ -406,30 +406,87 @@ report_content = {
                                         "border-color": "#b2b2b2",
                                         "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
                                     },
-                                }
-                            },
-                        },
-                        {
-                            "role": "free",
-                            "data_source": "",
-                            "groupby": "",
-                            "table_groups": [],
-                            "print_when": "",
-                            "print_after": "",
-                            "new_page_before": "",
-                            "new_page_after": "",
-                            "heights": ["0-0"],
-                            "cells": {
-                                "0,0": {
+                                },
+                                "1,0": {
                                     "data": "Der Rechnungsbetrag ist innerhalb von {rep.d.header.payment_terms_days} Tagen ab Rechnungsdatum, sp\u00e4testens jedoch bis zum \r\n{rep.d.header.due_date:D}, ohne Abzug f\u00e4llig.",
-                                    "rowspan": 1,
-                                    "colspan": 11,
                                     "style": {
                                         "border-width": "1 1 1 1",
                                         "border-color": "#b2b2b2",
                                         "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
                                     },
-                                }
+                                    "rowspan": 1,
+                                    "colspan": 11,
+                                },
+                                "1,10": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,1": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,2": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,3": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,4": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,5": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,6": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,7": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,8": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
+                                "1,9": {
+                                    "style": {
+                                        "border-width": "1 1 1 1",
+                                        "border-color": "#b2b2b2",
+                                        "padding": "0.15cm 0.05cm 0.15cm 0.05cm",
+                                    }
+                                },
                             },
                         },
                         {
@@ -532,6 +589,7 @@ report_content = {
                                 "font-size": "8pt",
                                 "padding": "0.01cm 0.05cm 0.01cm 0.05cm",
                                 "vertical-align": "middle",
+                                "foo": "*",
                             },
                         },
                     ],

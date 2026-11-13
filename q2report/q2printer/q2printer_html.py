@@ -20,6 +20,9 @@ from q2report.q2printer.calc_height import parse_padding
 import webbrowser
 import os
 
+CLASS_TD = "td {position: relative; overflow: visible;}"
+CLASS_TABLE = "table {border-collapse:collapse; table-layout: fixed;}"
+
 
 class Q2PrinterHtml(Q2Printer):
     def __init__(self, output_file, output_type=None):
@@ -39,7 +42,9 @@ class Q2PrinterHtml(Q2Printer):
             '\n\t\t<style type="text/css">'
         )
         html += "".join([f"\n.{self.style[x]} {x}" for x in self.style])
-        html += "@media print {body {print-color-adjust: exact;}}"
+        html += "\n@media print {body {print-color-adjust: exact;}}"
+        html += f"\n{CLASS_TD}"
+        html += f"\n{CLASS_TABLE}"
         html += "\n\t\t</style>\n\t</head>\n\t<body>\n\n"
 
         html += "\n".join(self.html)
@@ -71,7 +76,9 @@ class Q2PrinterHtml(Q2Printer):
 
     def open_html_table(self):
         self.table_is_opened = True
-        self.html.append('<table style="border-collapse:collapse; table-layout: fixed;">')
+        # self.html.append('<table style="border-collapse:separate;border-spacing: 0; table-layout: fixed;">')
+        # self.html.append('<table style="border-collapse:collapse; table-layout: fixed;">')
+        self.html.append("<table>")
         self.html.append("<colgroup>")
         for col in self._cm_columns_widths:
             self.html.append(f'\t<col span="1" style="width: {col * 10}mm;"/>')
@@ -145,7 +152,8 @@ class Q2PrinterHtml(Q2Printer):
                     actual_row_height_cm = rows_section["row_height"][row]
 
                 self.html.append(
-                    f'\t\t<td style="position: relative; overflow: visible; height:{row_height_cm}" class="{style_index}" {span_text}>{cell_text}</td>'
+                    # f'\t\t<td style="position: relative; overflow: visible; height: {row_height_cm}cm" class="{style_index}" {span_text}>{cell_text}</td>'
+                    f'\t\t<td style="height: {row_height_cm}cm" class="{style_index}" {span_text}>{cell_text}</td>'
                 )
             self.html.append("\t</tr>")
         if rows_section["role"] == "table_header":
