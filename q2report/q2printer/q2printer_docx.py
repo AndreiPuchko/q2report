@@ -583,7 +583,7 @@ class Q2PrinterDocx(Q2Printer):
 
         borders = []
         borders.append("<w:tcBorders>\n")
-        for index, side in enumerate(("top", "left", "bottom", "right")):
+        for index, side in enumerate(("top", "right", "bottom", "left")):
             if int_(border_width[index]):
                 borders.append(f'\t\t\t<w:{side}')
                 borders.append(f'\t\t\tw:val="single" ')
