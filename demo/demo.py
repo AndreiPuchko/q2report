@@ -10,7 +10,7 @@ from demo.demo_03 import demo
 # TODO: parse : in formulae
 
 if __name__ == "__main__":
-    demo("html")
-    demo("xlsx")
-    demo("docx")
+    # demo("html")
+    # demo("xlsx")
+    # demo("docx")
     demo("pdf")

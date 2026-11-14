@@ -45,7 +45,7 @@ class Q2PrinterPdf(Q2Printer):
             self._tmp_path = tmp.name
             self.pdf_path = self._tmp_path
         else:
-            self.pdf_path = str(output_file)
+            self.pdf_path = str(self.output_file)
 
         self.printer.setOutputFileName(str(self.pdf_path))
 
