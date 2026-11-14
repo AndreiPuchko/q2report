@@ -261,19 +261,46 @@ class Q2PrinterPdf(Q2Printer):
 
         if b[0] > 0:  # top
             self.painter.setPen(QPen(color, b[0] * self.pen_width))
-            self.painter.drawLine(QPointF(leftPoint, topPoint), QPointF(leftPoint + w, topPoint))
+            delta = (b[0] * self.pen_width) / 2
+            leftBorderHalf = (b[3] * self.pen_width) / 2
+            rightBorderHalf = (b[1] * self.pen_width) / 2
+            self.painter.drawLine(
+                QPointF(leftPoint + delta - leftBorderHalf, topPoint),
+                QPointF(leftPoint + w - delta + rightBorderHalf, topPoint),
+            )
 
         if b[1] > 0:  # right
+            delta = (b[1] * self.pen_width) / 2
+            topBorderHalf = (b[0] * self.pen_width) / 2
+            bottomBorderHalf = (b[2] * self.pen_width) / 2
+
             self.painter.setPen(QPen(color, b[1] * self.pen_width))
-            self.painter.drawLine(QPointF(leftPoint + w, topPoint), QPointF(leftPoint + w, topPoint + h))
+            self.painter.drawLine(
+                QPointF(leftPoint + w, topPoint + delta - topBorderHalf),
+                QPointF(leftPoint + w, topPoint + h - delta + bottomBorderHalf),
+            )
 
         if b[2] > 0:  # bottom
+            delta = (b[2] * self.pen_width) / 2
+            leftBorderHalf = (b[3] * self.pen_width) / 2
+            rightBorderHalf = (b[1] * self.pen_width) / 2
+
             self.painter.setPen(QPen(color, b[2] * self.pen_width))
-            self.painter.drawLine(QPointF(leftPoint, topPoint + h), QPointF(leftPoint + w, topPoint + h))
+            self.painter.drawLine(
+                QPointF(leftPoint + delta - leftBorderHalf, topPoint + h),
+                QPointF(leftPoint + w - delta + rightBorderHalf, topPoint + h),
+            )
 
         if b[3] > 0:  # left
+            delta = (b[3] * self.pen_width) / 2
+            topBorderHalf = (b[0] * self.pen_width) / 2
+            bottomBorderHalf = (b[2] * self.pen_width) / 2
+
             self.painter.setPen(QPen(color, b[3] * self.pen_width))
-            self.painter.drawLine(QPointF(leftPoint, topPoint), QPointF(leftPoint, topPoint + h))
+            self.painter.drawLine(
+                QPointF(leftPoint, topPoint + delta - topBorderHalf),
+                QPointF(leftPoint, topPoint + h - delta + bottomBorderHalf),
+            )
         self.painter.setPen(lastPen)
 
     def render_rows_section(self, rows_section, style, outline_level):
