@@ -1,7 +1,9 @@
+import re
 import pytest
 from unittest.mock import patch, mock_open
 from q2report import __version__
 from q2report.q2report import Q2Report, Q2Report_rows
+from q2report.q2printer.q2printer_docx import Q2PrinterDocx, points_in_cm as docx_points_in_cm
 from q2report.q2printer.q2printer_xlsx import Q2PrinterXlsx, points_in_cm
 from q2report.q2utils import is_sub_list, float_, num, set_dict_default
 
@@ -91,6 +93,46 @@ def test_xlsx_image_is_centered_in_spanned_cell():
     drawing = printer.current_sheet["drawing"][0]
     assert drawing["_col"] == 1
     assert drawing["_col_off_emu"] == int(num("0.5") * num(12700) * points_in_cm)
+
+
+def test_docx_images_are_positioned_relative_to_their_cell():
+    printer = Q2PrinterDocx("temp/test.docx")
+    image = {
+        "image": image_data,
+        "width": 1,
+        "height": 1,
+        "pixel_width": 24,
+        "pixel_height": 24,
+    }
+    styles_and_offsets = [
+        ({"text-align": "left", "vertical-align": "top", "padding": "0.2"}, 0, 0),
+        ({"text-align": "center", "vertical-align": "middle", "padding": "0.2"}, 0.3, 0.8),
+        ({"text-align": "right", "vertical-align": "top", "padding": "0.2"}, 0.6, 0),
+    ]
+
+    for style, expected_left, expected_top in styles_and_offsets:
+        image_xml = printer.get_cell_images(
+            {"width": 2, "images": [image]}, style, cell_width=2, cell_height=3
+        )
+
+        assert 'layoutInCell="1"' in image_xml
+        assert '<wp:positionH relativeFrom="character">' in image_xml
+        assert '<wp:positionV relativeFrom="paragraph">' in image_xml
+        cell_style = {**style, "border-width": "0", "font-size": "10pt", "font-family": "Calibri"}
+        image_cell_xml = printer.add_table_cell(cell_style, "", 2, "", image_xml)
+        assert "<w:vAlign" not in image_cell_xml
+        actual_offsets = [int(offset) for offset in re.findall(r"<wp:posOffset>(\d+)</wp:posOffset>", image_xml)]
+        expected_offsets = [
+            int(num(expected_left) * num(12700) * docx_points_in_cm),
+            int(num(expected_top) * num(12700) * docx_points_in_cm * num(0.94)),
+        ]
+        assert len(actual_offsets) == 2
+        assert all(abs(actual - expected) <= 1 for actual, expected in zip(actual_offsets, expected_offsets))
+
+    text_cell_xml = printer.add_table_cell(
+        {"vertical-align": "middle", "text-align": "left", "border-width": "0", "padding": "0"}, "", 2, ""
+    )
+    assert '<w:vAlign w:val="center"/>' in text_cell_xml
 
 
 def test_wrongs():

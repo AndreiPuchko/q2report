@@ -46,18 +46,19 @@ docx_parts[
             distR="0"
             simplePos="0"
             locked="0" 
-            layoutInCell="0"
+            layoutInCell="1"
             allowOverlap="1"
             relativeHeight="2">
-            
+
             <wp:simplePos x="0" y="0"/>
             <wp:positionH relativeFrom="column">
                 <wp:posOffset>%(offset_left)s</wp:posOffset> 
             </wp:positionH>
-            <wp:positionV relativeFrom="paragraph">
+            <wp:positionV relativeFrom="insideMargin">
                 <wp:posOffset>%(offset_top)s</wp:posOffset> 
             </wp:positionV>
             
+
             <wp:extent cx="%(image_width)s" cy="%(image_height)s"/>
             <wp:effectExtent l="0" t="0" r="0" b="0"/>
             <wp:wrapNone/> 

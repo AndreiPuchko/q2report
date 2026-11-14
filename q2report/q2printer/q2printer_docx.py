@@ -346,12 +346,25 @@ class Q2PrinterDocx(Q2Printer):
             )
 
             image_width = int(round(num(image_width) * num(12700) * points_in_cm))
-            image_height = int(round(num(image_height) * num(12700) * points_in_cm) * num(0.94))
+            image_height = int(round(num(image_height) * num(12700) * points_in_cm))
             offset_left = int(num(offset_left) * num(12700) * points_in_cm)
-            offset_top = int(num(offset_top) * num(12700) * points_in_cm * num(0.94))
+            # offset_top = int(num(offset_top) * num(12700) * points_in_cm * num(0.94))
 
             cell_images_list.append(docx_parts["image"] % locals())
         return "\n".join(cell_images_list)
+
+    def get_image_offset(self, cell_width, cell_height, image_width, image_height, style):
+        p_top, p_right, p_bottom, p_left = parse_padding(style.get("padding", ""))
+        offset_left = 0
+        offset_top = 0
+        if (text_align := style.get("text-align")) == "right":
+            offset_left = cell_width - image_width - p_left - p_right
+        elif text_align == "center":
+            offset_left = (cell_width - image_width - p_left - p_right) / 2
+        elif text_align == "left":
+            offset_left = p_left*0
+
+        return offset_left, offset_top
 
     def open_table_row(self, row, rows_section):
         row_xml = ""
